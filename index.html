@@ -958,7 +958,7 @@ function startListening() {
     }
 
     if (room.status === 'game') {
-      if (cur === 'gostos' || cur === 'lobby') { showGameScreen(room, players); }
+      if (cur === 'gostos' || cur === 'lobby' || cur === 'vote-results') { showGameScreen(room, players); }
       if (cur === 'game') {
         if (room.currentRound !== S.currentRoundIdx) showGameScreen(room, players);
         if (S.isHost) hostCheckVotes(room, players);
@@ -1087,7 +1087,10 @@ async function hostCheckVotes(room, players) {
   const votes = (room.votes || {})[roundIdx] || {};
   if (Object.keys(votes).length < players.length) return;
 
-  const round   = room.rounds[roundIdx];
+  // Firebase salva arrays como objetos — normalizar
+  const rounds = Array.isArray(room.rounds) ? room.rounds : Object.values(room.rounds || {});
+  const round   = rounds[roundIdx];
+  if (!round) return;
   const correct = round.ownerId;
   const updates = {};
 
@@ -1210,11 +1213,10 @@ function showGameScreen(room, players) {
   const rounds = Array.isArray(room.rounds) ? room.rounds : Object.values(room.rounds || {});
   const round  = rounds[room.currentRound];
   if (!round) return;
-  const owner     = players.find(p=>p.id===round.ownerId);
-  const ownerColor = owner?.color ? colorHex(owner.color) : '#888';
 
   document.getElementById('round-counter').textContent = `GOSTO ${room.currentRound+1}/${rounds.length}`;
-  document.getElementById('gosto-color').style.background = ownerColor;
+  // Esconde a cor do dono — é o mistério do jogo!
+  document.getElementById('gosto-color').style.background = '#444';
   document.getElementById('gosto-text').textContent = round.gosto;
   document.getElementById('voted-msg').style.display = 'none';
 
@@ -1228,7 +1230,9 @@ function showGameScreen(room, players) {
 
 function buildVoteGrid(players, round) {
   const grid = document.getElementById('vote-grid');
-  grid.innerHTML = players.map(p => {
+  // Embaralha a ordem dos jogadores para não dar dica por posição
+  const shuffled = [...players].sort(() => Math.random() - 0.5);
+  grid.innerHTML = shuffled.map(p => {
     const hex = p.color ? colorHex(p.color) : '#888';
     return `<button class="vote-btn" id="vote-btn-${p.id}" onclick="castVote('${p.id}')">
       <div class="vote-color" style="background:${hex}"></div>
