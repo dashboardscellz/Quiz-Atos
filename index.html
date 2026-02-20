@@ -858,11 +858,23 @@ const kPlayers = c => PFX + c + '_players';
 
 // ── Storage wrappers ─────────────────────────────────────────
 async function sGet(key) {
-  try { const r = await window.storage.get(key, true); return r ? JSON.parse(r.value) : null; }
-  catch(e) { return null; }
+  try {
+    const r = await window.storage.get(key, true);
+    return r ? JSON.parse(r.value) : null;
+  } catch(e) {
+    console.warn('[sGet] key:', key, 'error:', e?.message || e);
+    return null;
+  }
 }
 async function sSet(key, val) {
-  try { await window.storage.set(key, JSON.stringify(val), true); } catch(e) {}
+  try {
+    const r = await window.storage.set(key, JSON.stringify(val), true);
+    if (!r) console.warn('[sSet] retornou falso para key:', key);
+    return !!r;
+  } catch(e) {
+    console.error('[sSet] ERRO key:', key, 'error:', e?.message || e);
+    return false;
+  }
 }
 
 // ── Utils ─────────────────────────────────────────────────────
@@ -900,18 +912,37 @@ async function createRoom() {
   S.myId = genId();
   S.myName = name;
   S.isHost = true;
-  S.roomCode = genCode();
 
-  // Write room meta
-  await sSet(kRoom(S.roomCode), {
-    code: S.roomCode,
-    host: S.myId,
-    maxPlayers: S.maxPlayers,
-    status: 'lobby',
-    currentRound: -1,
-    rounds: [],
-    roundStartTime: 0,
-  });
+  // Tenta criar sala com retry e confirma que gravou antes de prosseguir
+  let saved = false;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const code = genCode();
+    S.roomCode = code;
+
+    const ok = await sSet(kRoom(code), {
+      code,
+      host: S.myId,
+      maxPlayers: S.maxPlayers,
+      status: 'lobby',
+      currentRound: -1,
+      rounds: [],
+      roundStartTime: 0,
+    });
+
+    if (!ok) {
+      await new Promise(r => setTimeout(r, 400 + attempt * 200));
+      continue;
+    }
+
+    // Aguarda um tick e confirma que o dado chegou no storage
+    await new Promise(r => setTimeout(r, 400));
+    const verify = await sGet(kRoom(code));
+    if (verify && verify.code === code) { saved = true; break; }
+
+    await new Promise(r => setTimeout(r, 400 + attempt * 200));
+  }
+
+  if (!saved) { toast('❌ Erro ao criar sala. Tente novamente.'); return; }
 
   // Write own player entry
   await sSet(kPlayer(S.roomCode, S.myId), { id: S.myId, name, score: 0 });
@@ -930,15 +961,27 @@ async function joinRoom() {
   if (!code) { toast('⚠️ Digite o codigo!'); return; }
   if (!name) { toast('⚠️ Digite seu nome!'); return; }
 
-  // Retry busca da sala — storage compartilhado pode ter delay de propagação
-  toast('🔍 Procurando sala...');
+  // Desabilita botão para evitar duplo clique
+  const btn = document.querySelector('#screen-join-room .btn-secondary');
+  if (btn) btn.disabled = true;
+
+  // Retry busca da sala com feedback visual
+  toast('🔍 Verificando sala...', 8000);
   let room = null;
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 8; i++) {
     room = await sGet(kRoom(code));
     if (room) break;
-    await new Promise(r => setTimeout(r, 400 + i * 200));
+    console.log('[joinRoom] tentativa', i+1, 'sala ainda não encontrada para código:', code);
+    await new Promise(r => setTimeout(r, 500 + i * 300));
   }
-  if (!room) { toast('❌ Sala nao encontrada!'); return; }
+
+  if (btn) btn.disabled = false;
+
+  if (!room) {
+    toast('❌ Sala não encontrada! Verifique o código.');
+    console.error('[joinRoom] sala não encontrada após todas as tentativas. Código:', code, 'Key esperada:', 'aq_' + code + '_room');
+    return;
+  }
   if (room.status !== 'lobby') { toast('❌ O jogo ja comecou!'); return; }
 
   S.myId = genId();
