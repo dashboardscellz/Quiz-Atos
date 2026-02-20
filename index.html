@@ -619,6 +619,8 @@
     margin-left: 6px;
   }
 </style>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 </head>
 <body>
 <div id="app">
@@ -812,15 +814,11 @@
 
 <div id="toast"></div>
 
-<script type="module">
+<script>
 // =============================================
 //  ATOS QUIZ — Firebase Realtime Database
 // =============================================
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, set, get, onValue, off, update }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-// ── Firebase config (projeto público só para este jogo) ───────
 const firebaseConfig = {
   apiKey: "AIzaSyAvh5lk4V9t3PgolmLQyrkJR5b0ZUOCpH8",
   authDomain: "quiz-atos.firebaseapp.com",
@@ -832,36 +830,32 @@ const firebaseConfig = {
   measurementId: "G-FD9BR7GJ3E"
 };
 
-// INSTRUÇÕES: Crie um projeto gratuito em https://console.firebase.google.com
-// Ative o Realtime Database (modo teste por 30 dias) e substitua o firebaseConfig acima.
-// Depois publique as regras abaixo no Database > Rules:
-// { "rules": { ".read": true, ".write": true } }
-
 let db;
 try {
-  const app = initializeApp(firebaseConfig);
-  db = getDatabase(app);
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+  console.log("✅ Firebase conectado!");
 } catch(e) {
   console.error("Firebase init error:", e);
 }
 
 // ── Helpers Firebase ──────────────────────────────────────────
 async function fbSet(path, val) {
-  try { await set(ref(db, path), val); return true; }
+  try { await db.ref(path).set(val); return true; }
   catch(e) { console.error('[fbSet]', path, e.message); return false; }
 }
 async function fbGet(path) {
-  try { const snap = await get(ref(db, path)); return snap.exists() ? snap.val() : null; }
+  try { const snap = await db.ref(path).get(); return snap.exists() ? snap.val() : null; }
   catch(e) { console.error('[fbGet]', path, e.message); return null; }
 }
 async function fbUpdate(path, val) {
-  try { await update(ref(db, path), val); return true; }
+  try { await db.ref(path).update(val); return true; }
   catch(e) { console.error('[fbUpdate]', path, e.message); return false; }
 }
 function fbListen(path, cb) {
-  const r = ref(db, path);
-  onValue(r, snap => cb(snap.exists() ? snap.val() : null));
-  return () => off(r);
+  const r = db.ref(path);
+  r.on('value', snap => cb(snap.exists() ? snap.val() : null));
+  return () => r.off('value');
 }
 
 // ── Constantes ────────────────────────────────────────────────
@@ -902,7 +896,6 @@ function showScreen(id) {
   const el = document.getElementById('screen-' + id);
   if (el) el.classList.add('active');
 }
-window.showScreen = showScreen;
 
 let _toastTimer;
 function toast(msg, dur=2800) {
@@ -917,12 +910,10 @@ function adjustMax(d) {
   S.maxPlayers = Math.min(8, Math.max(2, S.maxPlayers + d));
   document.getElementById('max-players-display').textContent = S.maxPlayers;
 }
-window.adjustMax = adjustMax;
 
 function copyCode() {
   navigator.clipboard.writeText(S.roomCode).then(()=>toast('✅ Código copiado!'));
 }
-window.copyCode = copyCode;
 
 // ── Montar lista de jogadores a partir do snapshot da sala ────
 function playersFromRoom(room) {
@@ -1029,7 +1020,6 @@ async function createRoom() {
   showScreen('lobby');
   toast('✅ Sala criada!');
 }
-window.createRoom = createRoom;
 
 // ── Join Room ─────────────────────────────────────────────────
 async function joinRoom() {
@@ -1067,7 +1057,6 @@ async function joinRoom() {
   startListening();
   showScreen('lobby');
 }
-window.joinRoom = joinRoom;
 
 // ── Host helpers ──────────────────────────────────────────────
 async function hostAdvanceTo(room, status) {
@@ -1140,7 +1129,6 @@ async function startGame() {
   await hostAdvanceTo(room, 'color');
   showScreen('color');
 }
-window.startGame = startGame;
 
 // ── Color Screen ──────────────────────────────────────────────
 function buildColorGrid(players) {
@@ -1164,7 +1152,6 @@ function selectColor(colorId, taken) {
     b.classList.toggle('selected', b.dataset.color === colorId));
   document.getElementById('confirm-color-btn').disabled = false;
 }
-window.selectColor = selectColor;
 
 async function confirmColor() {
   if (!S.selectedColor) return;
@@ -1173,7 +1160,6 @@ async function confirmColor() {
   toast('🎨 Cor confirmada!');
   document.getElementById('confirm-color-btn').disabled = true;
 }
-window.confirmColor = confirmColor;
 
 // ── Gostos Screen ─────────────────────────────────────────────
 function buildGostosInputs(players) {
@@ -1215,7 +1201,6 @@ async function confirmGostos() {
   toast('✅ Gostos salvos!');
   document.getElementById('confirm-gostos-btn').disabled = true;
 }
-window.confirmGostos = confirmGostos;
 
 // ── Game Screen ───────────────────────────────────────────────
 function showGameScreen(room, players) {
@@ -1288,7 +1273,6 @@ async function castVote(targetId, auto=false) {
   }
   await fbUpdate(pRoom(S.roomCode), { [`votes/${S.currentRoundIdx}/${S.myId}`]: targetId });
 }
-window.castVote = castVote;
 
 // ── Vote Results ──────────────────────────────────────────────
 function showVoteResult(room, players) {
@@ -1357,7 +1341,6 @@ async function nextRound() {
     });
   }
 }
-window.nextRound = nextRound;
 
 // ── Final Screen ──────────────────────────────────────────────
 async function showFinalScreen(room, players) {
@@ -1422,7 +1405,6 @@ async function resetGame() {
   });
   showScreen('home');
 }
-window.resetGame = resetGame;
 
 // Input auto-uppercase
 document.getElementById('join-code')?.addEventListener('input', function(){ this.value = this.value.toUpperCase(); });
