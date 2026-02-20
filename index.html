@@ -812,15 +812,59 @@
 
 <div id="toast"></div>
 
-<script>
+<script type="module">
 // =============================================
-//  ATOS QUIZ — ENGINE v2 (race-condition-free)
-//  Architecture: each player owns their own keys.
-//  The room "meta" key (status, rounds) is only
-//  written by the HOST. Players write to their
-//  own sub-keys. Host reads all sub-keys to aggregate.
+//  ATOS QUIZ — Firebase Realtime Database
 // =============================================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, off, update }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
+// ── Firebase config (projeto público só para este jogo) ───────
+const firebaseConfig = {
+  apiKey: "AIzaSyAvh5lk4V9t3PgolmLQyrkJR5b0ZUOCpH8",
+  authDomain: "quiz-atos.firebaseapp.com",
+  databaseURL: "https://quiz-atos-default-rtdb.firebaseio.com",
+  projectId: "quiz-atos",
+  storageBucket: "quiz-atos.firebasestorage.app",
+  messagingSenderId: "193416458072",
+  appId: "1:193416458072:web:e865a004c9459910eaff2d",
+  measurementId: "G-FD9BR7GJ3E"
+};
+
+// INSTRUÇÕES: Crie um projeto gratuito em https://console.firebase.google.com
+// Ative o Realtime Database (modo teste por 30 dias) e substitua o firebaseConfig acima.
+// Depois publique as regras abaixo no Database > Rules:
+// { "rules": { ".read": true, ".write": true } }
+
+let db;
+try {
+  const app = initializeApp(firebaseConfig);
+  db = getDatabase(app);
+} catch(e) {
+  console.error("Firebase init error:", e);
+}
+
+// ── Helpers Firebase ──────────────────────────────────────────
+async function fbSet(path, val) {
+  try { await set(ref(db, path), val); return true; }
+  catch(e) { console.error('[fbSet]', path, e.message); return false; }
+}
+async function fbGet(path) {
+  try { const snap = await get(ref(db, path)); return snap.exists() ? snap.val() : null; }
+  catch(e) { console.error('[fbGet]', path, e.message); return null; }
+}
+async function fbUpdate(path, val) {
+  try { await update(ref(db, path), val); return true; }
+  catch(e) { console.error('[fbUpdate]', path, e.message); return false; }
+}
+function fbListen(path, cb) {
+  const r = ref(db, path);
+  onValue(r, snap => cb(snap.exists() ? snap.val() : null));
+  return () => off(r);
+}
+
+// ── Constantes ────────────────────────────────────────────────
 const COLORS = [
   { id: 'red',    hex: '#e8445a', name: 'Vermelho' },
   { id: 'orange', hex: '#f5a623', name: 'Laranja' },
@@ -831,55 +875,26 @@ const COLORS = [
   { id: 'purple', hex: '#9b59b6', name: 'Roxo' },
   { id: 'pink',   hex: '#ff6ba8', name: 'Rosa' },
 ];
-
 const VOTE_TIME = 20;
-const PFX = 'aq_'; // key prefix
 
-let S = {  // game state
+let S = {
   myId: null, myName: null, myColor: null, myGostos: [],
   roomCode: null, isHost: false, maxPlayers: 6,
-  selectedColor: null, pollInterval: null, timerInterval: null,
+  selectedColor: null, timerInterval: null,
   hasVoted: false, currentRoundIdx: -1,
+  unsubRoom: null,
 };
 
-// ── Key helpers ──────────────────────────────────────────────
-// Room meta (host writes, all read)
-const kRoom   = c => PFX + c + '_room';
-// Each player's registration (player writes, host reads)
-const kPlayer = (c, id) => PFX + c + '_p_' + id;
-// Each player's color choice (player writes, host reads)
-const kColor  = (c, id) => PFX + c + '_col_' + id;
-// Each player's gostos + ready flag (player writes, host reads)
-const kGostos = (c, id) => PFX + c + '_g_' + id;
-// Each player's vote for a given round (player writes, host reads)
-const kVote   = (c, round, id) => PFX + c + '_v' + round + '_' + id;
-// Player list snapshot (host writes, all read) — list of ids
-const kPlayers = c => PFX + c + '_players';
-
-// ── Storage wrappers ─────────────────────────────────────────
-async function sGet(key) {
-  try {
-    const r = await window.storage.get(key, true);
-    return r ? JSON.parse(r.value) : null;
-  } catch(e) {
-    console.warn('[sGet] key:', key, 'error:', e?.message || e);
-    return null;
-  }
-}
-async function sSet(key, val) {
-  try {
-    const r = await window.storage.set(key, JSON.stringify(val), true);
-    if (!r) console.warn('[sSet] retornou falso para key:', key);
-    return !!r;
-  } catch(e) {
-    console.error('[sSet] ERRO key:', key, 'error:', e?.message || e);
-    return false;
-  }
-}
+// ── Paths ─────────────────────────────────────────────────────
+const pRoom    = c       => `rooms/${c}`;
+const pPlayer  = (c, id) => `rooms/${c}/players/${id}`;
+const pColor   = (c, id) => `rooms/${c}/colors/${id}`;
+const pGostos  = (c, id) => `rooms/${c}/gostos/${id}`;
+const pVote    = (c, r, id) => `rooms/${c}/votes/${r}/${id}`;
 
 // ── Utils ─────────────────────────────────────────────────────
-const genCode = () => Math.random().toString(36).substring(2,8).toUpperCase();
-const genId   = () => Date.now().toString(36) + Math.random().toString(36).substr(2,4);
+const genCode  = () => Math.random().toString(36).substring(2,8).toUpperCase();
+const genId    = () => Date.now().toString(36) + Math.random().toString(36).substr(2,4);
 const colorHex = id => COLORS.find(c=>c.id===id)?.hex || '#888';
 
 function showScreen(id) {
@@ -887,39 +902,109 @@ function showScreen(id) {
   const el = document.getElementById('screen-' + id);
   if (el) el.classList.add('active');
 }
+window.showScreen = showScreen;
 
-function toast(msg, dur=2500) {
+let _toastTimer;
+function toast(msg, dur=2800) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), dur);
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(()=>t.classList.remove('show'), dur);
 }
 
 function adjustMax(d) {
   S.maxPlayers = Math.min(8, Math.max(2, S.maxPlayers + d));
   document.getElementById('max-players-display').textContent = S.maxPlayers;
 }
+window.adjustMax = adjustMax;
 
 function copyCode() {
   navigator.clipboard.writeText(S.roomCode).then(()=>toast('✅ Código copiado!'));
 }
+window.copyCode = copyCode;
+
+// ── Montar lista de jogadores a partir do snapshot da sala ────
+function playersFromRoom(room) {
+  const players = Object.values(room.players || {});
+  for (const p of players) {
+    p.color  = (room.colors  || {})[p.id] || null;
+    const g  = (room.gostos  || {})[p.id];
+    p.gostos = g ? g.gostos : [];
+    p.ready  = g ? g.ready  : false;
+  }
+  return players;
+}
+
+// ── Listener principal ────────────────────────────────────────
+function startListening() {
+  if (S.unsubRoom) S.unsubRoom();
+  S.unsubRoom = fbListen(pRoom(S.roomCode), room => {
+    if (!room) return;
+    const players = playersFromRoom(room);
+    const cur = document.querySelector('.screen.active')?.id?.replace('screen-','');
+
+    if (room.status === 'lobby') {
+      renderLobby(room, players);
+    }
+
+    if (room.status === 'color') {
+      if (cur === 'lobby') { showScreen('color'); buildColorGrid(players); }
+      if (cur === 'color')  buildColorGrid(players);
+      if (S.isHost) {
+        const allColored = players.every(p => p.color);
+        if (allColored && players.length > 0) hostAdvanceTo(room, 'gostos');
+      }
+    }
+
+    if (room.status === 'gostos') {
+      if (cur === 'color' || cur === 'lobby') { buildGostosInputs(players); }
+      if (cur === 'gostos') renderReadyList(players);
+      if (S.isHost) {
+        const allReady = players.length > 0 && players.every(p => p.ready);
+        if (allReady) hostBuildGame(room, players);
+      }
+    }
+
+    if (room.status === 'game') {
+      if (cur === 'gostos' || cur === 'lobby') { showGameScreen(room, players); }
+      if (cur === 'game') {
+        if (room.currentRound !== S.currentRoundIdx) showGameScreen(room, players);
+        if (S.isHost) hostCheckVotes(room, players);
+      }
+    }
+
+    if (room.status === 'vote_result') {
+      if (cur === 'game') showVoteResult(room, players);
+      if (cur === 'vote-results') renderVoteResult(room, players);
+    }
+
+    if (room.status === 'final') {
+      if (cur !== 'final') showFinalScreen(room, players);
+    }
+  });
+}
 
 // ── Create Room ───────────────────────────────────────────────
 async function createRoom() {
+  if (!db) { toast('❌ Firebase não conectado. Verifique a configuração.'); return; }
   const name = document.getElementById('create-name').value.trim();
   if (!name) { toast('⚠️ Digite seu nome!'); return; }
 
-  S.myId = genId();
+  const btn = document.querySelector('#screen-create-room .btn-primary');
+  if (btn) btn.disabled = true;
+  toast('⏳ Criando sala...', 6000);
+
+  S.myId   = genId();
   S.myName = name;
   S.isHost = true;
 
-  // Tenta criar sala com retry e confirma que gravou antes de prosseguir
   let saved = false;
   for (let attempt = 0; attempt < 5; attempt++) {
     const code = genCode();
     S.roomCode = code;
 
-    const ok = await sSet(kRoom(code), {
+    const ok = await fbSet(pRoom(code), {
       code,
       host: S.myId,
       maxPlayers: S.maxPlayers,
@@ -927,216 +1012,106 @@ async function createRoom() {
       currentRound: -1,
       rounds: [],
       roundStartTime: 0,
+      players: { [S.myId]: { id: S.myId, name, score: 0 } },
+      colors: {},
+      gostos: {},
+      votes: {},
     });
 
-    if (!ok) {
-      await new Promise(r => setTimeout(r, 400 + attempt * 200));
-      continue;
-    }
-
-    // Aguarda um tick e confirma que o dado chegou no storage
-    await new Promise(r => setTimeout(r, 400));
-    const verify = await sGet(kRoom(code));
-    if (verify && verify.code === code) { saved = true; break; }
-
+    if (ok) { saved = true; break; }
     await new Promise(r => setTimeout(r, 400 + attempt * 200));
   }
 
+  if (btn) btn.disabled = false;
   if (!saved) { toast('❌ Erro ao criar sala. Tente novamente.'); return; }
 
-  // Write own player entry
-  await sSet(kPlayer(S.roomCode, S.myId), { id: S.myId, name, score: 0 });
-
-  // Write player list (just ids)
-  await sSet(kPlayers(S.roomCode), [S.myId]);
-
-  startPolling();
+  startListening();
   showScreen('lobby');
+  toast('✅ Sala criada!');
 }
+window.createRoom = createRoom;
 
 // ── Join Room ─────────────────────────────────────────────────
 async function joinRoom() {
+  if (!db) { toast('❌ Firebase não conectado. Verifique a configuração.'); return; }
   const code = document.getElementById('join-code').value.trim().toUpperCase();
   const name = document.getElementById('join-name').value.trim();
-  if (!code) { toast('⚠️ Digite o codigo!'); return; }
+  if (!code) { toast('⚠️ Digite o código!'); return; }
   if (!name) { toast('⚠️ Digite seu nome!'); return; }
 
-  // Desabilita botão para evitar duplo clique
   const btn = document.querySelector('#screen-join-room .btn-secondary');
   if (btn) btn.disabled = true;
-
-  // Retry busca da sala com feedback visual
   toast('🔍 Verificando sala...', 8000);
-  let room = null;
-  for (let i = 0; i < 8; i++) {
-    room = await sGet(kRoom(code));
-    if (room) break;
-    console.log('[joinRoom] tentativa', i+1, 'sala ainda não encontrada para código:', code);
-    await new Promise(r => setTimeout(r, 500 + i * 300));
-  }
+
+  const room = await fbGet(pRoom(code));
 
   if (btn) btn.disabled = false;
 
-  if (!room) {
-    toast('❌ Sala não encontrada! Verifique o código.');
-    console.error('[joinRoom] sala não encontrada após todas as tentativas. Código:', code, 'Key esperada:', 'aq_' + code + '_room');
-    return;
-  }
-  if (room.status !== 'lobby') { toast('❌ O jogo ja comecou!'); return; }
+  if (!room) { toast('❌ Sala não encontrada! Verifique o código.'); return; }
+  if (room.status !== 'lobby') { toast('❌ O jogo já começou!'); return; }
 
-  S.myId = genId();
-  S.myName = name;
-  S.isHost = false;
+  const currentPlayers = Object.keys(room.players || {});
+  if (currentPlayers.length >= room.maxPlayers) { toast('❌ Sala cheia!'); return; }
+
+  S.myId     = genId();
+  S.myName   = name;
+  S.isHost   = false;
   S.roomCode = code;
 
-  // 1. Write own player data first
-  await sSet(kPlayer(code, S.myId), { id: S.myId, name, score: 0 });
+  const ok = await fbUpdate(pRoom(code), {
+    [`players/${S.myId}`]: { id: S.myId, name, score: 0 }
+  });
 
-  // 2. Append self to the shared player-list with retry
-  let joined = false;
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const ids = await sGet(kPlayers(code)) || [];
-    if (ids.length >= room.maxPlayers) { toast('❌ Sala cheia!'); return; }
-    if (!ids.includes(S.myId)) {
-      ids.push(S.myId);
-      await sSet(kPlayers(code), ids);
-    }
-    await new Promise(r => setTimeout(r, 200 + attempt * 100));
-    const verify = await sGet(kPlayers(code)) || [];
-    if (verify.includes(S.myId)) { joined = true; break; }
-  }
+  if (!ok) { toast('❌ Erro ao entrar na sala. Tente novamente.'); return; }
 
-  if (!joined) { toast('❌ Erro ao entrar. Tente novamente.'); return; }
-
-  startPolling();
+  startListening();
   showScreen('lobby');
 }
-
-// ── Polling ───────────────────────────────────────────────────
-function startPolling() {
-  clearInterval(S.pollInterval);
-  S.pollInterval = setInterval(poll, 1500);
-}
-
-async function poll() {
-  const room = await sGet(kRoom(S.roomCode));
-  if (!room) return;
-
-  // Build merged player list for display
-  const ids = await sGet(kPlayers(S.roomCode)) || [];
-  const players = (await Promise.all(ids.map(id => sGet(kPlayer(S.roomCode, id))))).filter(Boolean);
-  // Attach color info
-  for (const p of players) {
-    const col = await sGet(kColor(S.roomCode, p.id));
-    p.color = col || null;
-    const g = await sGet(kGostos(S.roomCode, p.id));
-    p.gostos = g ? g.gostos : [];
-    p.ready  = g ? g.ready  : false;
-  }
-
-  const cur = document.querySelector('.screen.active')?.id?.replace('screen-','');
-
-  if (room.status === 'lobby') {
-    renderLobby(room, players);
-    // HOST: check all ready to move to color phase (triggered by startGame button)
-  }
-
-  if (room.status === 'color') {
-    if (cur === 'lobby') { showScreen('color'); buildColorGrid(players); }
-    if (cur === 'color')  buildColorGrid(players);
-    // HOST: if all picked color, advance to gostos
-    if (S.isHost) {
-      const allColored = players.every(p => p.color);
-      if (allColored && players.length > 0) {
-        await hostAdvanceTo(room, 'gostos');
-      }
-    }
-  }
-
-  if (room.status === 'gostos') {
-    if (cur === 'color' || cur === 'lobby') { showScreen('gostos'); buildGostosInputs(players); }
-    if (cur === 'gostos') renderReadyList(players);
-    // HOST: if all ready, build game and advance
-    if (S.isHost) {
-      const allReady = players.length > 0 && players.every(p => p.ready);
-      if (allReady) await hostBuildGame(room, players);
-    }
-  }
-
-  if (room.status === 'game') {
-    if (cur === 'gostos' || cur === 'lobby') { showGameScreen(room, players); }
-    if (cur === 'game') {
-      if (room.currentRound !== S.currentRoundIdx) showGameScreen(room, players);
-      // HOST: check all voted
-      if (S.isHost) await hostCheckVotes(room, players);
-    }
-  }
-
-  if (room.status === 'vote_result') {
-    if (cur === 'game') showVoteResult(room, players);
-    if (cur === 'vote-results') {
-      renderVoteResult(room, players);
-    }
-  }
-
-  if (room.status === 'final') {
-    if (cur !== 'final') showFinalScreen(room, players);
-  }
-}
+window.joinRoom = joinRoom;
 
 // ── Host helpers ──────────────────────────────────────────────
 async function hostAdvanceTo(room, status) {
   if (room.status === status) return;
-  room.status = status;
-  await sSet(kRoom(S.roomCode), room);
+  await fbUpdate(pRoom(S.roomCode), { status });
 }
 
 async function hostBuildGame(room, players) {
   if (room.status !== 'gostos') return;
-  // Build shuffled gosto list
   let allGostos = [];
   for (const p of players) {
-    (p.gostos || []).forEach((g, i) => allGostos.push({ ownerId: p.id, text: g }));
+    (p.gostos || []).forEach(g => allGostos.push({ ownerId: p.id, text: g }));
   }
-  // Shuffle
   for (let i = allGostos.length-1; i>0; i--) {
     const j = Math.floor(Math.random()*(i+1));
     [allGostos[i], allGostos[j]] = [allGostos[j], allGostos[i]];
   }
-
-  room.rounds = allGostos.map(g => ({ ownerId: g.ownerId, gosto: g.text }));
-  room.currentRound = 0;
-  room.roundStartTime = Date.now();
-  room.status = 'game';
-  await sSet(kRoom(S.roomCode), room);
+  await fbUpdate(pRoom(S.roomCode), {
+    rounds: allGostos.map(g => ({ ownerId: g.ownerId, gosto: g.text })),
+    currentRound: 0,
+    roundStartTime: Date.now(),
+    status: 'game',
+  });
 }
 
 async function hostCheckVotes(room, players) {
   const roundIdx = room.currentRound;
-  const totalPlayers = players.length;
-  const votes = {};
+  const votes = (room.votes || {})[roundIdx] || {};
+  if (Object.keys(votes).length < players.length) return;
 
-  // Collect all votes for this round
-  for (const p of players) {
-    const v = await sGet(kVote(S.roomCode, roundIdx, p.id));
-    if (v !== null) votes[p.id] = v;
-  }
+  const round   = room.rounds[roundIdx];
+  const correct = round.ownerId;
+  const updates = {};
 
-  if (Object.keys(votes).length >= totalPlayers) {
-    // All voted — calculate scores
-    const round = room.rounds[roundIdx];
-    const correct = round.ownerId;
-    for (const [voterId, voted] of Object.entries(votes)) {
-      if (voted === correct && voterId !== correct) {
-        const pd = await sGet(kPlayer(S.roomCode, voterId));
-        if (pd) { pd.score = (pd.score||0) + 100; await sSet(kPlayer(S.roomCode, voterId), pd); }
-      }
+  for (const [voterId, voted] of Object.entries(votes)) {
+    if (voted === correct && voterId !== correct) {
+      const p = players.find(x => x.id === voterId);
+      if (p) updates[`players/${voterId}/score`] = (p.score || 0) + 100;
     }
-    round.votes = votes;
-    room.rounds[roundIdx] = round;
-    room.status = 'vote_result';
-    await sSet(kRoom(S.roomCode), room);
   }
+
+  updates[`rounds/${roundIdx}/votes`] = votes;
+  updates['status'] = 'vote_result';
+  await fbUpdate(pRoom(S.roomCode), updates);
 }
 
 // ── Lobby ─────────────────────────────────────────────────────
@@ -1160,11 +1135,12 @@ function renderLobby(room, players) {
 }
 
 async function startGame() {
-  const room = await sGet(kRoom(S.roomCode));
+  const room = await fbGet(pRoom(S.roomCode));
   if (!room) return;
   await hostAdvanceTo(room, 'color');
   showScreen('color');
 }
+window.startGame = startGame;
 
 // ── Color Screen ──────────────────────────────────────────────
 function buildColorGrid(players) {
@@ -1188,52 +1164,28 @@ function selectColor(colorId, taken) {
     b.classList.toggle('selected', b.dataset.color === colorId));
   document.getElementById('confirm-color-btn').disabled = false;
 }
+window.selectColor = selectColor;
 
 async function confirmColor() {
   if (!S.selectedColor) return;
-  // Check not taken by re-reading players
-  const ids = await sGet(kPlayers(S.roomCode)) || [];
-  for (const id of ids) {
-    if (id === S.myId) continue;
-    const col = await sGet(kColor(S.roomCode, id));
-    if (col === S.selectedColor) { toast('⚠️ Cor já escolhida! Selecione outra.'); S.selectedColor = null; return; }
-  }
   S.myColor = S.selectedColor;
-  // Write only own color key
-  await sSet(kColor(S.roomCode, S.myId), S.selectedColor);
+  await fbUpdate(pRoom(S.roomCode), { [`colors/${S.myId}`]: S.selectedColor });
   toast('🎨 Cor confirmada!');
   document.getElementById('confirm-color-btn').disabled = true;
-  // If host and all chose, advance (poll will also catch it)
-  if (S.isHost) {
-    const room = await sGet(kRoom(S.roomCode));
-    const players = await getAllPlayers();
-    const allColored = players.every(p => p.color);
-    if (allColored) await hostAdvanceTo(room, 'gostos');
-  }
 }
+window.confirmColor = confirmColor;
 
 // ── Gostos Screen ─────────────────────────────────────────────
-async function getAllPlayers() {
-  const ids = await sGet(kPlayers(S.roomCode)) || [];
-  const players = (await Promise.all(ids.map(id => sGet(kPlayer(S.roomCode, id))))).filter(Boolean);
-  for (const p of players) {
-    p.color  = await sGet(kColor(S.roomCode, p.id)) || null;
-    const g  = await sGet(kGostos(S.roomCode, p.id));
-    p.gostos = g ? g.gostos : [];
-    p.ready  = g ? g.ready  : false;
-  }
-  return players;
-}
-
 function buildGostosInputs(players) {
-  if (document.querySelector('.screen.active')?.id === 'screen-gostos') return;
   const myColorHex = S.myColor ? colorHex(S.myColor) : '#888';
   const wrap = document.getElementById('gostos-inputs');
-  wrap.innerHTML = Array.from({length:5},(_,i)=>`
-    <div class="gosto-row">
-      <div class="gosto-num" style="background:${myColorHex}">${i+1}</div>
-      <input type="text" placeholder="Gosto ${i+1}..." maxlength="80" id="gosto-${i}">
-    </div>`).join('');
+  if (!wrap.querySelector('#gosto-0')) {
+    wrap.innerHTML = Array.from({length:5},(_,i)=>`
+      <div class="gosto-row">
+        <div class="gosto-num" style="background:${myColorHex}">${i+1}</div>
+        <input type="text" placeholder="Gosto ${i+1}..." maxlength="80" id="gosto-${i}">
+      </div>`).join('');
+  }
   showScreen('gostos');
   renderReadyList(players);
 }
@@ -1245,7 +1197,7 @@ function renderReadyList(players) {
   list.innerHTML = players.map(p=>`
     <div class="player-item">
       <div class="player-dot" style="background:${p.color ? colorHex(p.color) : '#444'}"></div>
-      <div class="player-name">${p.color ? '' : p.name}</div>
+      <div class="player-name">${p.name}</div>
       <div class="player-ready">${p.ready
         ? '<span class="chip chip-green">✅ Pronto</span>'
         : '<span class="chip" style="background:rgba(255,255,255,0.07);color:var(--text-muted)">Escrevendo...</span>'}</div>
@@ -1259,30 +1211,30 @@ async function confirmGostos() {
   });
   if (gostos.some(g=>!g)) { toast('⚠️ Preencha todos os 5 gostos!'); return; }
   S.myGostos = gostos;
-  // Write only own gostos key
-  await sSet(kGostos(S.roomCode, S.myId), { gostos, ready: true });
+  await fbUpdate(pRoom(S.roomCode), { [`gostos/${S.myId}`]: { gostos, ready: true } });
   toast('✅ Gostos salvos!');
   document.getElementById('confirm-gostos-btn').disabled = true;
 }
+window.confirmGostos = confirmGostos;
 
 // ── Game Screen ───────────────────────────────────────────────
 function showGameScreen(room, players) {
   S.currentRoundIdx = room.currentRound;
   S.hasVoted = false;
 
-  const round = room.rounds[room.currentRound];
-  const owner = players.find(p=>p.id===round.ownerId);
+  const rounds = Array.isArray(room.rounds) ? room.rounds : Object.values(room.rounds || {});
+  const round  = rounds[room.currentRound];
+  if (!round) return;
+  const owner     = players.find(p=>p.id===round.ownerId);
   const ownerColor = owner?.color ? colorHex(owner.color) : '#888';
 
-  document.getElementById('round-counter').textContent = `GOSTO ${room.currentRound+1}/${room.rounds.length}`;
+  document.getElementById('round-counter').textContent = `GOSTO ${room.currentRound+1}/${rounds.length}`;
   document.getElementById('gosto-color').style.background = ownerColor;
   document.getElementById('gosto-text').textContent = round.gosto;
   document.getElementById('voted-msg').style.display = 'none';
 
-  // Update my score display
-  sGet(kPlayer(S.roomCode, S.myId)).then(me => {
-    document.getElementById('my-score').textContent = me?.score || 0;
-  });
+  const myPlayer = players.find(p=>p.id===S.myId);
+  document.getElementById('my-score').textContent = myPlayer?.score || 0;
 
   buildVoteGrid(players, round);
   startTimer(room);
@@ -1302,7 +1254,7 @@ function buildVoteGrid(players, round) {
 
 function startTimer(room) {
   clearInterval(S.timerInterval);
-  const total = VOTE_TIME * 1000;
+  const total   = VOTE_TIME * 1000;
   const startTs = room.roundStartTime || Date.now();
   function tick() {
     const rem = Math.max(0, total - (Date.now() - startTs));
@@ -1319,8 +1271,9 @@ function startTimer(room) {
 
 async function autoVote() {
   if (S.hasVoted) return;
-  const players = await getAllPlayers();
-  const rand = players[Math.floor(Math.random()*players.length)];
+  const room    = await fbGet(pRoom(S.roomCode));
+  const players = playersFromRoom(room);
+  const rand    = players[Math.floor(Math.random()*players.length)];
   if (rand) castVote(rand.id, true);
 }
 
@@ -1328,16 +1281,14 @@ async function castVote(targetId, auto=false) {
   if (S.hasVoted) return;
   S.hasVoted = true;
   clearInterval(S.timerInterval);
-
   if (!auto) {
     document.querySelectorAll('.vote-btn').forEach(b=>b.classList.add('disabled-vote'));
     document.getElementById('vote-btn-'+targetId)?.classList.add('voted');
     document.getElementById('voted-msg').style.display = 'block';
   }
-
-  // Write only own vote key — no shared room write, no race condition
-  await sSet(kVote(S.roomCode, S.currentRoundIdx, S.myId), targetId);
+  await fbUpdate(pRoom(S.roomCode), { [`votes/${S.currentRoundIdx}/${S.myId}`]: targetId });
 }
+window.castVote = castVote;
 
 // ── Vote Results ──────────────────────────────────────────────
 function showVoteResult(room, players) {
@@ -1347,14 +1298,16 @@ function showVoteResult(room, players) {
 }
 
 function renderVoteResult(room, players) {
-  const round = room.rounds[room.currentRound];
-  const owner = players.find(p=>p.id===round.ownerId);
+  const rounds = Array.isArray(room.rounds) ? room.rounds : Object.values(room.rounds || {});
+  const round  = rounds[room.currentRound];
+  if (!round) return;
+  const owner    = players.find(p=>p.id===round.ownerId);
   const ownerHex = owner?.color ? colorHex(owner.color) : '#888';
 
   document.getElementById('result-gosto-color').style.background = ownerHex;
   document.getElementById('result-gosto-text').textContent = round.gosto;
 
-  const votes = round.votes || {};
+  const votes      = round.votes || {};
   const totalVotes = Object.values(votes).length;
   const voteCounts = {};
   players.forEach(p => voteCounts[p.id] = 0);
@@ -1390,33 +1343,34 @@ function renderVoteResult(room, players) {
 }
 
 async function nextRound() {
-  const room = await sGet(kRoom(S.roomCode));
+  const room   = await fbGet(pRoom(S.roomCode));
   if (!room) return;
-  const next = room.currentRound + 1;
-  if (next >= room.rounds.length) {
-    room.status = 'final';
+  const rounds = Array.isArray(room.rounds) ? room.rounds : Object.values(room.rounds || {});
+  const next   = room.currentRound + 1;
+  if (next >= rounds.length) {
+    await fbUpdate(pRoom(S.roomCode), { status: 'final' });
   } else {
-    room.currentRound = next;
-    room.roundStartTime = Date.now();
-    room.status = 'game';
+    await fbUpdate(pRoom(S.roomCode), {
+      currentRound: next,
+      roundStartTime: Date.now(),
+      status: 'game',
+    });
   }
-  await sSet(kRoom(S.roomCode), room);
 }
+window.nextRound = nextRound;
 
 // ── Final Screen ──────────────────────────────────────────────
 async function showFinalScreen(room, players) {
   clearInterval(S.timerInterval);
 
-  // Refresh scores from individual player keys
-  const freshPlayers = await getAllPlayers();
-  freshPlayers.sort((a,b)=>(b.score||0)-(a.score||0));
-  const winner = freshPlayers[0];
+  const sorted = [...players].sort((a,b)=>(b.score||0)-(a.score||0));
+  const winner = sorted[0];
 
   document.getElementById('winner-name').textContent = winner.name;
-  document.getElementById('winner-pts').textContent = `${winner.score||0} pontos`;
+  document.getElementById('winner-pts').textContent  = `${winner.score||0} pontos`;
 
   const medals = ['🥇','🥈','🥉'];
-  document.getElementById('final-scores').innerHTML = freshPlayers.map((p,i)=>`
+  document.getElementById('final-scores').innerHTML = sorted.map((p,i)=>`
     <div class="score-row">
       <div class="score-pos">${medals[i]||(i+1)+'°'}</div>
       <div class="player-dot" style="background:${p.color?colorHex(p.color):'#888'}"></div>
@@ -1427,10 +1381,11 @@ async function showFinalScreen(room, players) {
   const tablesWrap = document.getElementById('final-tables-wrap');
   tablesWrap.innerHTML = '<div style="font-family:Fredoka One,cursive;font-size:1.3rem;color:var(--accent);margin:8px 0 14px;width:100%;">📋 Gostos Revelados</div>';
 
-  freshPlayers.forEach(p => {
-    const hex = p.color ? colorHex(p.color) : '#888';
-    const pRounds = room.rounds.filter(r=>r.ownerId===p.id);
-    const wrap = document.createElement('div');
+  const rounds = Array.isArray(room.rounds) ? room.rounds : Object.values(room.rounds || {});
+  sorted.forEach(p => {
+    const hex     = p.color ? colorHex(p.color) : '#888';
+    const pRounds = rounds.filter(r=>r.ownerId===p.id);
+    const wrap    = document.createElement('div');
     wrap.className = 'table-wrap';
     wrap.innerHTML = `
       <div class="table-header">
@@ -1440,10 +1395,10 @@ async function showFinalScreen(room, players) {
       <table class="final-table">
         <thead><tr><th>Gosto</th><th>Acertaram</th><th>Erraram</th></tr></thead>
         <tbody>${pRounds.map(round => {
-          const votes = round.votes || {};
-          const hits  = Object.entries(votes).filter(([vid,v])=>v===p.id && vid!==p.id);
-          const misses= Object.entries(votes).filter(([vid,v])=>v!==p.id && vid!==p.id);
-          const nm = id => freshPlayers.find(x=>x.id===id)?.name||'?';
+          const votes  = round.votes || {};
+          const hits   = Object.entries(votes).filter(([vid,v])=>v===p.id && vid!==p.id);
+          const misses = Object.entries(votes).filter(([vid,v])=>v!==p.id && vid!==p.id);
+          const nm     = id => sorted.find(x=>x.id===id)?.name||'?';
           return `<tr>
             <td>${round.gosto}</td>
             <td>${hits.length?`<span class="chip chip-green">✅ ${hits.map(([v])=>nm(v)).join(', ')}</span>`:'<span class="chip" style="background:rgba(255,255,255,0.05);color:var(--text-muted)">Ninguém</span>'}</td>
@@ -1458,8 +1413,8 @@ async function showFinalScreen(room, players) {
 }
 
 async function resetGame() {
-  clearInterval(S.pollInterval);
   clearInterval(S.timerInterval);
+  if (S.unsubRoom) { S.unsubRoom(); S.unsubRoom = null; }
   Object.assign(S, {
     myId:null, myName:null, myColor:null, myGostos:[],
     roomCode:null, isHost:false, maxPlayers:6, selectedColor:null,
@@ -1467,6 +1422,7 @@ async function resetGame() {
   });
   showScreen('home');
 }
+window.resetGame = resetGame;
 
 // Input auto-uppercase
 document.getElementById('join-code')?.addEventListener('input', function(){ this.value = this.value.toUpperCase(); });
