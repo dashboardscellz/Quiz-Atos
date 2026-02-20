@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATOS QUIZ</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d1a;
+    --surface: #1a1a2e;
+    --surface2: #16213e;
+    --accent: #f5a623;
+    --accent2: #e8445a;
+    --accent3: #26d0ce;
+    --text: #f0f0f0;
+    --text-muted: #8888aa;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 30% 20%, rgba(245,166,35,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(38,208,206,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 10%, rgba(232,68,90,0.05) 0%, transparent 40%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #app {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .screen { display: none; width: 100%; max-width: 600px; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+
+  /* LOGO */
+  .logo {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(2.5rem, 8vw, 4rem);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, var(--accent3) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 2px;
+    text-align: center;
+    filter: drop-shadow(0 0 20px rgba(245,166,35,0.3));
+  }
+
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 28px;
+    width: 100%;
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+
+  .card-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.3rem;
+    color: var(--accent);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* INPUTS */
+  input, textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 2px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 14px 18px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  input:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(245,166,35,0.15);
+  }
+
+  input::placeholder, textarea::placeholder { color: var(--text-muted); font-weight: 400; }
+
+  /* BUTTONS */
+  .btn {
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    padding: 14px 28px;
+    transition: all 0.2s;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.1);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .btn:hover::after { opacity: 1; }
+  .btn:active { transform: scale(0.97); }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #e8900a);
+    color: #1a1a2e;
+    box-shadow: 0 4px 20px rgba(245,166,35,0.35);
+  }
+
+  .btn-secondary {
+    background: linear-gradient(135deg, var(--accent3), #1ab8b6);
+    color: #0d0d1a;
+    box-shadow: 0 4px 20px rgba(38,208,206,0.3);
+  }
+
+  .btn-danger {
+    background: linear-gradient(135deg, var(--accent2), #c73249);
+    color: white;
+    box-shadow: 0 4px 20px rgba(232,68,90,0.3);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-muted);
+    border: 2px solid rgba(255,255,255,0.1);
+  }
+
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .btn-sm {
+    padding: 10px 18px;
+    font-size: 0.95rem;
+    width: auto;
+  }
+
+  /* COLORS GRID */
+  .colors-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    width: 100%;
+  }
+
+  .color-btn {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 4px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .color-btn:hover:not(.taken) { transform: scale(1.1); }
+  .color-btn.selected { border-color: white; box-shadow: 0 0 0 3px rgba(255,255,255,0.3); transform: scale(1.1); }
+  .color-btn.taken { opacity: 0.25; cursor: not-allowed; }
+
+  .color-btn.taken::after {
+    content: '✕';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.4rem;
+    font-weight: 900;
+  }
+
+  /* PLAYERS LIST */
+  .players-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+
+  .player-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .player-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .player-name { font-weight: 700; font-size: 1rem; }
+  .player-ready { margin-left: auto; font-size: 0.8rem; }
+
+  /* GOSTOS INPUTS */
+  .gostos-list { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+
+  .gosto-row { display: flex; align-items: center; gap: 10px; }
+
+  .gosto-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    color: var(--bg);
+  }
+
+  /* GAME SCREEN */
+  .round-header {
+    text-align: center;
+    width: 100%;
+  }
+
+  .round-badge {
+    display: inline-block;
+    background: rgba(245,166,35,0.15);
+    border: 1px solid rgba(245,166,35,0.3);
+    color: var(--accent);
+    padding: 6px 18px;
+    border-radius: 50px;
+    font-weight: 800;
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .gosto-display {
+    background: linear-gradient(135deg, var(--surface), var(--surface2));
+    border-radius: var(--radius);
+    padding: 32px 24px;
+    text-align: center;
+    width: 100%;
+    border: 1px solid rgba(255,255,255,0.08);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .gosto-display::before {
+    content: '';
+    position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    border-radius: var(--radius);
+    z-index: -1;
+    opacity: 0.4;
+  }
+
+  .gosto-owner-color {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    border: 3px solid rgba(255,255,255,0.2);
+  }
+
+  .gosto-text {
+    font-size: clamp(1.2rem, 4vw, 1.6rem);
+    font-weight: 800;
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+
+  .gosto-label { color: var(--text-muted); font-size: 0.85rem; font-weight: 600; }
+
+  /* VOTING */
+  .vote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+
+  .vote-btn {
+    background: var(--surface2);
+    border: 2px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius-sm);
+    padding: 14px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .vote-btn:hover:not(.disabled-vote) {
+    border-color: var(--accent);
+    background: rgba(245,166,35,0.08);
+    transform: translateY(-2px);
+  }
+
+  .vote-btn.voted {
+    border-color: var(--accent);
+    background: rgba(245,166,35,0.15);
+  }
+
+  .vote-btn.disabled-vote { opacity: 0.4; cursor: not-allowed; }
+
+  .vote-color {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.2);
+  }
+
+  /* RESULTS BAR */
+  .result-bar-wrap { width: 100%; }
+
+  .result-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .result-bar-bg {
+    flex: 1;
+    height: 36px;
+    background: var(--surface2);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .result-bar-fill {
+    height: 100%;
+    border-radius: 8px;
+    transition: width 1s cubic-bezier(0.4,0,0.2,1);
+    display: flex;
+    align-items: center;
+    padding-left: 12px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: #0d0d1a;
+    min-width: 0;
+  }
+
+  .result-pct {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: var(--text);
+  }
+
+  /* WHEEL */
+  .wheel-container {
+    position: relative;
+    width: min(300px, 80vw);
+    height: min(300px, 80vw);
+    margin: 0 auto;
+  }
+
+  canvas#wheel { width: 100%; height: 100%; }
+
+  /* FINAL TABLES */
+  .final-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 4px;
+    font-size: 0.9rem;
+  }
+
+  .final-table th {
+    background: rgba(245,166,35,0.15);
+    color: var(--accent);
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 800;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-bottom: 2px solid rgba(245,166,35,0.2);
+  }
+
+  .final-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-weight: 600;
+  }
+
+  .final-table tr:last-child td { border-bottom: none; }
+  .final-table tr:hover td { background: rgba(255,255,255,0.03); }
+
+  .table-wrap {
+    background: var(--surface);
+    border-radius: var(--radius);
+    overflow: hidden;
+    width: 100%;
+    border: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 16px;
+  }
+
+  .table-header {
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .table-header-color {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.2);
+  }
+
+  .table-header-name { font-family: 'Fredoka One', cursive; font-size: 1.2rem; }
+
+  /* SCORE */
+  .score-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-bottom: 8px;
+  }
+
+  .score-pos {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.4rem;
+    color: var(--accent);
+    width: 30px;
+    text-align: center;
+  }
+
+  .score-pts {
+    margin-left: auto;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.2rem;
+    color: var(--accent3);
+  }
+
+  /* TOAST */
+  #toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 50px;
+    padding: 12px 24px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    z-index: 9999;
+    transition: transform 0.3s;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    white-space: nowrap;
+  }
+
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* SPINNER */
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255,255,255,0.1);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 20px auto;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ANIMATIONS */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pop { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+  .fade-in { animation: fadeIn 0.4s ease forwards; }
+  .pop-in { animation: pop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+  .pulsing { animation: pulse 1.5s ease infinite; }
+
+  /* CODE DISPLAY */
+  .room-code {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(2rem, 10vw, 3.5rem);
+    letter-spacing: 8px;
+    color: var(--accent);
+    text-align: center;
+    text-shadow: 0 0 30px rgba(245,166,35,0.4);
+  }
+
+  /* WAITING */
+  .waiting-dots::after {
+    content: '';
+    animation: dots 1.5s steps(4, end) infinite;
+  }
+
+  @keyframes dots {
+    0% { content: ''; }
+    25% { content: '.'; }
+    50% { content: '..'; }
+    75% { content: '...'; }
+  }
+
+  /* TIMER */
+  .timer-bar-bg {
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .timer-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent3), var(--accent));
+    border-radius: 4px;
+    transition: width 1s linear;
+  }
+
+  /* DIVIDER */
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: rgba(255,255,255,0.07);
+    margin: 8px 0;
+  }
+
+  .text-center { text-align: center; }
+  .text-muted { color: var(--text-muted); font-size: 0.9rem; }
+
+  .flex-row { display: flex; gap: 10px; width: 100%; }
+  .flex-row .btn { flex: 1; }
+
+  .winner-banner {
+    text-align: center;
+    padding: 20px;
+  }
+
+  .winner-crown { font-size: 3rem; margin-bottom: 8px; }
+  .winner-name { font-family: 'Fredoka One', cursive; font-size: 1.8rem; color: var(--accent); }
+  .winner-pts { color: var(--accent3); font-weight: 800; font-size: 1.1rem; }
+
+  .chip {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .chip-green { background: rgba(38,208,206,0.15); color: var(--accent3); }
+  .chip-red { background: rgba(232,68,90,0.15); color: var(--accent2); }
+  .chip-gold { background: rgba(245,166,35,0.15); color: var(--accent); }
+
+  @media (max-width: 480px) {
+    .vote-grid { grid-template-columns: 1fr; }
+    .colors-grid { grid-template-columns: repeat(4, 1fr); }
+    .card { padding: 18px; }
+  }
+
+  /* HOST badge */
+  .host-badge {
+    display: inline-block;
+    background: rgba(245,166,35,0.2);
+    color: var(--accent);
+    border-radius: 50px;
+    padding: 2px 10px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    margin-left: 6px;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SCREEN: HOME -->
+  <div id="screen-home" class="screen active">
+    <div class="logo pop-in">ATOS QUIZ</div>
+    <div class="subtitle fade-in">Quem você conhece de verdade?</div>
+    <div class="card fade-in" style="margin-top:10px;">
+      <div class="card-title">🎮 Bem-vindo!</div>
+      <p class="text-muted" style="margin-bottom:20px; line-height:1.6;">
+        O jogo onde você tenta adivinhar quem é quem pelos gostos. Crie uma sala ou entre com o código de um amigo!
+      </p>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <button class="btn btn-primary" onclick="showScreen('create-room')">✨ Criar Sala</button>
+        <button class="btn btn-secondary" onclick="showScreen('join-room')">🔑 Entrar com Código</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: CREATE ROOM -->
+  <div id="screen-create-room" class="screen">
+    <div class="logo" style="font-size:2rem;">ATOS QUIZ</div>
+    <div class="card fade-in">
+      <div class="card-title">✨ Criar Sala</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div>
+          <label style="display:block;font-weight:700;margin-bottom:6px;font-size:0.9rem;color:var(--text-muted);">SEU NOME</label>
+          <input id="create-name" type="text" placeholder="Como você quer ser chamado?" maxlength="20">
+        </div>
+        <div>
+          <label style="display:block;font-weight:700;margin-bottom:8px;font-size:0.9rem;color:var(--text-muted);">MAX. JOGADORES (2–8)</label>
+          <div style="display:flex;align-items:center;gap:14px;">
+            <button class="btn btn-ghost btn-sm" style="width:44px;height:44px;font-size:1.4rem;padding:0;border-radius:50%;" onclick="adjustMax(-1)">−</button>
+            <span id="max-players-display" style="font-family:'Fredoka One',cursive;font-size:2rem;color:var(--accent);min-width:40px;text-align:center;">6</span>
+            <button class="btn btn-ghost btn-sm" style="width:44px;height:44px;font-size:1.4rem;padding:0;border-radius:50%;" onclick="adjustMax(1)">+</button>
+          </div>
+        </div>
+        <div class="flex-row" style="margin-top:8px;">
+          <button class="btn btn-ghost" onclick="showScreen('home')">← Voltar</button>
+          <button class="btn btn-primary" onclick="createRoom()">Criar Sala</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: JOIN ROOM -->
+  <div id="screen-join-room" class="screen">
+    <div class="logo" style="font-size:2rem;">ATOS QUIZ</div>
+    <div class="card fade-in">
+      <div class="card-title">🔑 Entrar na Sala</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div>
+          <label style="display:block;font-weight:700;margin-bottom:6px;font-size:0.9rem;color:var(--text-muted);">CÓDIGO DA SALA</label>
+          <input id="join-code" type="text" placeholder="Ex: ABC123" maxlength="6" style="text-transform:uppercase;letter-spacing:4px;font-size:1.3rem;text-align:center;">
+        </div>
+        <div>
+          <label style="display:block;font-weight:700;margin-bottom:6px;font-size:0.9rem;color:var(--text-muted);">SEU NOME</label>
+          <input id="join-name" type="text" placeholder="Como você quer ser chamado?" maxlength="20">
+        </div>
+        <div class="flex-row" style="margin-top:8px;">
+          <button class="btn btn-ghost" onclick="showScreen('home')">← Voltar</button>
+          <button class="btn btn-secondary" onclick="joinRoom()">Entrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: LOBBY -->
+  <div id="screen-lobby" class="screen">
+    <div class="logo" style="font-size:2rem;">ATOS QUIZ</div>
+    <div class="card fade-in">
+      <div class="card-title">🏠 Sala de Espera</div>
+      <div class="text-center" style="margin-bottom:16px;">
+        <div class="text-muted" style="margin-bottom:8px;font-size:0.85rem;letter-spacing:2px;">CÓDIGO DA SALA</div>
+        <div class="room-code" id="lobby-code">------</div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="copyCode()">📋 Copiar Código</button>
+      </div>
+      <div class="divider"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 10px;">
+        <span style="font-weight:800;font-size:0.9rem;">JOGADORES <span id="lobby-count">0</span>/<span id="lobby-max">6</span></span>
+        <span class="text-muted pulsing" style="font-size:0.85rem;">Aguardando<span class="waiting-dots"></span></span>
+      </div>
+      <div class="players-list" id="lobby-players"></div>
+    </div>
+    <div id="lobby-start-wrap" style="width:100%;display:none;">
+      <button class="btn btn-primary" onclick="startGame()">🚀 Iniciar Jogo</button>
+    </div>
+    <div id="lobby-wait-msg" class="text-muted text-center" style="font-size:0.9rem;">Aguardando o host iniciar...</div>
+  </div>
+
+  <!-- SCREEN: COLOR PICK -->
+  <div id="screen-color" class="screen">
+    <div class="logo" style="font-size:2rem;">ATOS QUIZ</div>
+    <div class="card fade-in">
+      <div class="card-title">🎨 Escolha sua Cor</div>
+      <p class="text-muted" style="margin-bottom:18px;">Essa será sua identidade no jogo — ninguém saberá quem é você!</p>
+      <div class="colors-grid" id="colors-grid"></div>
+      <button class="btn btn-primary" style="margin-top:20px;" id="confirm-color-btn" onclick="confirmColor()" disabled>Confirmar Cor</button>
+    </div>
+  </div>
+
+  <!-- SCREEN: GOSTOS -->
+  <div id="screen-gostos" class="screen">
+    <div class="logo" style="font-size:2rem;">ATOS QUIZ</div>
+    <div class="card fade-in">
+      <div class="card-title">💬 Seus 5 Gostos</div>
+      <p class="text-muted" style="margin-bottom:18px;">Escreva 5 coisas que você gosta. Seja criativo — seus amigos vão tentar te adivinhar!</p>
+      <div class="gostos-list" id="gostos-inputs"></div>
+      <button class="btn btn-primary" style="margin-top:20px;" id="confirm-gostos-btn" onclick="confirmGostos()">✅ Confirmar Gostos</button>
+    </div>
+    <div style="width:100%;background:var(--surface);border-radius:var(--radius);padding:16px;border:1px solid rgba(255,255,255,0.06);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <span style="font-weight:800;font-size:0.9rem;">PRONTOS</span>
+        <span id="ready-count" style="color:var(--accent);font-weight:800;">0/1</span>
+      </div>
+      <div class="players-list" id="ready-players"></div>
+    </div>
+  </div>
+
+  <!-- SCREEN: GAME -->
+  <div id="screen-game" class="screen">
+    <div style="width:100%;display:flex;justify-content:space-between;align-items:center;">
+      <div class="round-badge" id="round-counter">GOSTO 1/?</div>
+      <div style="font-weight:800;font-size:0.9rem;color:var(--accent3);">⭐ <span id="my-score">0</span> pts</div>
+    </div>
+
+    <div id="timer-wrap" style="width:100%;">
+      <div class="timer-bar-bg"><div class="timer-bar-fill" id="timer-bar" style="width:100%"></div></div>
+      <div style="text-align:right;margin-top:4px;font-size:0.8rem;color:var(--text-muted);" id="timer-text">20s</div>
+    </div>
+
+    <div class="gosto-display fade-in" id="gosto-display">
+      <div class="gosto-owner-color" id="gosto-color"></div>
+      <div class="gosto-text" id="gosto-text">?</div>
+      <div class="gosto-label">GOSTO ANÔNIMO — Quem escreveu isso?</div>
+    </div>
+
+    <div class="card" style="padding:16px;">
+      <div class="card-title" style="font-size:1rem;margin-bottom:14px;">🗳️ Quem escreveu este gosto?</div>
+      <div class="vote-grid" id="vote-grid"></div>
+      <div id="voted-msg" style="display:none;text-align:center;margin-top:12px;color:var(--accent3);font-weight:700;">
+        ✅ Voto registrado! Aguardando todos votarem...
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: VOTE RESULTS -->
+  <div id="screen-vote-results" class="screen">
+    <div class="logo" style="font-size:2rem;">ATOS QUIZ</div>
+    <div class="card fade-in">
+      <div class="card-title">📊 Resultado da Votação</div>
+      <div class="gosto-display" id="result-gosto-display" style="margin-bottom:16px;">
+        <div class="gosto-owner-color" id="result-gosto-color"></div>
+        <div class="gosto-text" id="result-gosto-text"></div>
+      </div>
+      <div id="result-bars"></div>
+    </div>
+    <div id="next-btn-wrap" style="width:100%;display:none;">
+      <button class="btn btn-primary" onclick="nextRound()">Próximo ➜</button>
+    </div>
+    <div id="next-wait-msg" class="text-muted text-center" style="font-size:0.9rem;">Aguardando o host continuar...</div>
+  </div>
+
+  <!-- SCREEN: FINAL -->
+  <div id="screen-final" class="screen">
+    <div class="logo" style="font-size:2rem;">ATOS QUIZ</div>
+
+    <div class="card fade-in">
+      <div class="winner-banner">
+        <div class="winner-crown">👑</div>
+        <div class="text-muted" style="font-size:0.85rem;letter-spacing:2px;margin-bottom:4px;">VENCEDOR</div>
+        <div class="winner-name" id="winner-name"></div>
+        <div class="winner-pts" id="winner-pts"></div>
+      </div>
+    </div>
+
+    <div class="card fade-in" style="width:100%;">
+      <div class="card-title">🏆 Pontuação Final</div>
+      <div id="final-scores"></div>
+    </div>
+
+    <div id="final-tables-wrap" style="width:100%;">
+      <!-- Tables inserted here -->
+    </div>
+
+    <button class="btn btn-primary" onclick="resetGame()" style="width:100%;">🔄 Jogar Novamente</button>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+// =============================================
+//  ATOS QUIZ — ENGINE v2 (race-condition-free)
+//  Architecture: each player owns their own keys.
+//  The room "meta" key (status, rounds) is only
+//  written by the HOST. Players write to their
+//  own sub-keys. Host reads all sub-keys to aggregate.
+// =============================================
+
+const COLORS = [
+  { id: 'red',    hex: '#e8445a', name: 'Vermelho' },
+  { id: 'orange', hex: '#f5a623', name: 'Laranja' },
+  { id: 'yellow', hex: '#f7d154', name: 'Amarelo' },
+  { id: 'green',  hex: '#4cd964', name: 'Verde' },
+  { id: 'teal',   hex: '#26d0ce', name: 'Turquesa' },
+  { id: 'blue',   hex: '#4a90e2', name: 'Azul' },
+  { id: 'purple', hex: '#9b59b6', name: 'Roxo' },
+  { id: 'pink',   hex: '#ff6ba8', name: 'Rosa' },
+];
+
+const VOTE_TIME = 20;
+const PFX = 'aq_'; // key prefix
+
+let S = {  // game state
+  myId: null, myName: null, myColor: null, myGostos: [],
+  roomCode: null, isHost: false, maxPlayers: 6,
+  selectedColor: null, pollInterval: null, timerInterval: null,
+  hasVoted: false, currentRoundIdx: -1,
+};
+
+// ── Key helpers ──────────────────────────────────────────────
+// Room meta (host writes, all read)
+const kRoom   = c => PFX + c + '_room';
+// Each player's registration (player writes, host reads)
+const kPlayer = (c, id) => PFX + c + '_p_' + id;
+// Each player's color choice (player writes, host reads)
+const kColor  = (c, id) => PFX + c + '_col_' + id;
+// Each player's gostos + ready flag (player writes, host reads)
+const kGostos = (c, id) => PFX + c + '_g_' + id;
+// Each player's vote for a given round (player writes, host reads)
+const kVote   = (c, round, id) => PFX + c + '_v' + round + '_' + id;
+// Player list snapshot (host writes, all read) — list of ids
+const kPlayers = c => PFX + c + '_players';
+
+// ── Storage wrappers ─────────────────────────────────────────
+async function sGet(key) {
+  try { const r = await window.storage.get(key, true); return r ? JSON.parse(r.value) : null; }
+  catch(e) { return null; }
+}
+async function sSet(key, val) {
+  try { await window.storage.set(key, JSON.stringify(val), true); } catch(e) {}
+}
+
+// ── Utils ─────────────────────────────────────────────────────
+const genCode = () => Math.random().toString(36).substring(2,8).toUpperCase();
+const genId   = () => Date.now().toString(36) + Math.random().toString(36).substr(2,4);
+const colorHex = id => COLORS.find(c=>c.id===id)?.hex || '#888';
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + id);
+  if (el) el.classList.add('active');
+}
+
+function toast(msg, dur=2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), dur);
+}
+
+function adjustMax(d) {
+  S.maxPlayers = Math.min(8, Math.max(2, S.maxPlayers + d));
+  document.getElementById('max-players-display').textContent = S.maxPlayers;
+}
+
+function copyCode() {
+  navigator.clipboard.writeText(S.roomCode).then(()=>toast('✅ Código copiado!'));
+}
+
+// ── Create Room ───────────────────────────────────────────────
+async function createRoom() {
+  const name = document.getElementById('create-name').value.trim();
+  if (!name) { toast('⚠️ Digite seu nome!'); return; }
+
+  S.myId = genId();
+  S.myName = name;
+  S.isHost = true;
+  S.roomCode = genCode();
+
+  // Write room meta
+  await sSet(kRoom(S.roomCode), {
+    code: S.roomCode,
+    host: S.myId,
+    maxPlayers: S.maxPlayers,
+    status: 'lobby',
+    currentRound: -1,
+    rounds: [],
+    roundStartTime: 0,
+  });
+
+  // Write own player entry
+  await sSet(kPlayer(S.roomCode, S.myId), { id: S.myId, name, score: 0 });
+
+  // Write player list (just ids)
+  await sSet(kPlayers(S.roomCode), [S.myId]);
+
+  startPolling();
+  showScreen('lobby');
+}
+
+// ── Join Room ─────────────────────────────────────────────────
+async function joinRoom() {
+  const code = document.getElementById('join-code').value.trim().toUpperCase();
+  const name = document.getElementById('join-name').value.trim();
+  if (!code) { toast('⚠️ Digite o codigo!'); return; }
+  if (!name) { toast('⚠️ Digite seu nome!'); return; }
+
+  const room = await sGet(kRoom(code));
+  if (!room) { toast('❌ Sala nao encontrada!'); return; }
+  if (room.status !== 'lobby') { toast('❌ O jogo ja comecou!'); return; }
+
+  S.myId = genId();
+  S.myName = name;
+  S.isHost = false;
+  S.roomCode = code;
+
+  // 1. Write own player data first
+  await sSet(kPlayer(code, S.myId), { id: S.myId, name, score: 0 });
+
+  // 2. Append self to the shared player-list with retry
+  let joined = false;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const ids = await sGet(kPlayers(code)) || [];
+    if (ids.length >= room.maxPlayers) { toast('❌ Sala cheia!'); return; }
+    if (!ids.includes(S.myId)) {
+      ids.push(S.myId);
+      await sSet(kPlayers(code), ids);
+    }
+    await new Promise(r => setTimeout(r, 200 + attempt * 100));
+    const verify = await sGet(kPlayers(code)) || [];
+    if (verify.includes(S.myId)) { joined = true; break; }
+  }
+
+  if (!joined) { toast('❌ Erro ao entrar. Tente novamente.'); return; }
+
+  startPolling();
+  showScreen('lobby');
+}
+
+// ── Polling ───────────────────────────────────────────────────
+function startPolling() {
+  clearInterval(S.pollInterval);
+  S.pollInterval = setInterval(poll, 1500);
+}
+
+async function poll() {
+  const room = await sGet(kRoom(S.roomCode));
+  if (!room) return;
+
+  // Build merged player list for display
+  const ids = await sGet(kPlayers(S.roomCode)) || [];
+  const players = (await Promise.all(ids.map(id => sGet(kPlayer(S.roomCode, id))))).filter(Boolean);
+  // Attach color info
+  for (const p of players) {
+    const col = await sGet(kColor(S.roomCode, p.id));
+    p.color = col || null;
+    const g = await sGet(kGostos(S.roomCode, p.id));
+    p.gostos = g ? g.gostos : [];
+    p.ready  = g ? g.ready  : false;
+  }
+
+  const cur = document.querySelector('.screen.active')?.id?.replace('screen-','');
+
+  if (room.status === 'lobby') {
+    renderLobby(room, players);
+    // HOST: check all ready to move to color phase (triggered by startGame button)
+  }
+
+  if (room.status === 'color') {
+    if (cur === 'lobby') { showScreen('color'); buildColorGrid(players); }
+    if (cur === 'color')  buildColorGrid(players);
+    // HOST: if all picked color, advance to gostos
+    if (S.isHost) {
+      const allColored = players.every(p => p.color);
+      if (allColored && players.length > 0) {
+        await hostAdvanceTo(room, 'gostos');
+      }
+    }
+  }
+
+  if (room.status === 'gostos') {
+    if (cur === 'color' || cur === 'lobby') { showScreen('gostos'); buildGostosInputs(players); }
+    if (cur === 'gostos') renderReadyList(players);
+    // HOST: if all ready, build game and advance
+    if (S.isHost) {
+      const allReady = players.length > 0 && players.every(p => p.ready);
+      if (allReady) await hostBuildGame(room, players);
+    }
+  }
+
+  if (room.status === 'game') {
+    if (cur === 'gostos' || cur === 'lobby') { showGameScreen(room, players); }
+    if (cur === 'game') {
+      if (room.currentRound !== S.currentRoundIdx) showGameScreen(room, players);
+      // HOST: check all voted
+      if (S.isHost) await hostCheckVotes(room, players);
+    }
+  }
+
+  if (room.status === 'vote_result') {
+    if (cur === 'game') showVoteResult(room, players);
+    if (cur === 'vote-results') {
+      renderVoteResult(room, players);
+    }
+  }
+
+  if (room.status === 'final') {
+    if (cur !== 'final') showFinalScreen(room, players);
+  }
+}
+
+// ── Host helpers ──────────────────────────────────────────────
+async function hostAdvanceTo(room, status) {
+  if (room.status === status) return;
+  room.status = status;
+  await sSet(kRoom(S.roomCode), room);
+}
+
+async function hostBuildGame(room, players) {
+  if (room.status !== 'gostos') return;
+  // Build shuffled gosto list
+  let allGostos = [];
+  for (const p of players) {
+    (p.gostos || []).forEach((g, i) => allGostos.push({ ownerId: p.id, text: g }));
+  }
+  // Shuffle
+  for (let i = allGostos.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [allGostos[i], allGostos[j]] = [allGostos[j], allGostos[i]];
+  }
+
+  room.rounds = allGostos.map(g => ({ ownerId: g.ownerId, gosto: g.text }));
+  room.currentRound = 0;
+  room.roundStartTime = Date.now();
+  room.status = 'game';
+  await sSet(kRoom(S.roomCode), room);
+}
+
+async function hostCheckVotes(room, players) {
+  const roundIdx = room.currentRound;
+  const totalPlayers = players.length;
+  const votes = {};
+
+  // Collect all votes for this round
+  for (const p of players) {
+    const v = await sGet(kVote(S.roomCode, roundIdx, p.id));
+    if (v !== null) votes[p.id] = v;
+  }
+
+  if (Object.keys(votes).length >= totalPlayers) {
+    // All voted — calculate scores
+    const round = room.rounds[roundIdx];
+    const correct = round.ownerId;
+    for (const [voterId, voted] of Object.entries(votes)) {
+      if (voted === correct && voterId !== correct) {
+        const pd = await sGet(kPlayer(S.roomCode, voterId));
+        if (pd) { pd.score = (pd.score||0) + 100; await sSet(kPlayer(S.roomCode, voterId), pd); }
+      }
+    }
+    round.votes = votes;
+    room.rounds[roundIdx] = round;
+    room.status = 'vote_result';
+    await sSet(kRoom(S.roomCode), room);
+  }
+}
+
+// ── Lobby ─────────────────────────────────────────────────────
+function renderLobby(room, players) {
+  document.getElementById('lobby-code').textContent = room.code;
+  document.getElementById('lobby-count').textContent = players.length;
+  document.getElementById('lobby-max').textContent = room.maxPlayers;
+
+  const list = document.getElementById('lobby-players');
+  list.innerHTML = players.map(p => {
+    const isHost = p.id === room.host;
+    return `<div class="player-item">
+      <div class="player-dot" style="background:${p.color ? colorHex(p.color) : '#444'}"></div>
+      <div class="player-name">${p.name}${isHost ? '<span class="host-badge">HOST</span>':''}</div>
+    </div>`;
+  }).join('');
+
+  const meHost = S.myId === room.host;
+  document.getElementById('lobby-start-wrap').style.display = meHost && players.length >= 2 ? 'block' : 'none';
+  document.getElementById('lobby-wait-msg').style.display = meHost ? 'none' : 'block';
+}
+
+async function startGame() {
+  const room = await sGet(kRoom(S.roomCode));
+  if (!room) return;
+  await hostAdvanceTo(room, 'color');
+  showScreen('color');
+}
+
+// ── Color Screen ──────────────────────────────────────────────
+function buildColorGrid(players) {
+  const takenColors = players.filter(p => p.color && p.id !== S.myId).map(p => p.color);
+  const myPick = S.selectedColor;
+  const grid = document.getElementById('colors-grid');
+  grid.innerHTML = COLORS.map(c => {
+    const taken = takenColors.includes(c.id);
+    const sel   = myPick === c.id;
+    return `<button class="color-btn ${taken?'taken':''} ${sel?'selected':''}"
+      style="background:${c.hex};" title="${c.name}"
+      onclick="selectColor('${c.id}',${taken})" data-color="${c.id}"></button>`;
+  }).join('');
+  document.getElementById('confirm-color-btn').disabled = !myPick;
+}
+
+function selectColor(colorId, taken) {
+  if (taken) return;
+  S.selectedColor = colorId;
+  document.querySelectorAll('.color-btn').forEach(b =>
+    b.classList.toggle('selected', b.dataset.color === colorId));
+  document.getElementById('confirm-color-btn').disabled = false;
+}
+
+async function confirmColor() {
+  if (!S.selectedColor) return;
+  // Check not taken by re-reading players
+  const ids = await sGet(kPlayers(S.roomCode)) || [];
+  for (const id of ids) {
+    if (id === S.myId) continue;
+    const col = await sGet(kColor(S.roomCode, id));
+    if (col === S.selectedColor) { toast('⚠️ Cor já escolhida! Selecione outra.'); S.selectedColor = null; return; }
+  }
+  S.myColor = S.selectedColor;
+  // Write only own color key
+  await sSet(kColor(S.roomCode, S.myId), S.selectedColor);
+  toast('🎨 Cor confirmada!');
+  document.getElementById('confirm-color-btn').disabled = true;
+  // If host and all chose, advance (poll will also catch it)
+  if (S.isHost) {
+    const room = await sGet(kRoom(S.roomCode));
+    const players = await getAllPlayers();
+    const allColored = players.every(p => p.color);
+    if (allColored) await hostAdvanceTo(room, 'gostos');
+  }
+}
+
+// ── Gostos Screen ─────────────────────────────────────────────
+async function getAllPlayers() {
+  const ids = await sGet(kPlayers(S.roomCode)) || [];
+  const players = (await Promise.all(ids.map(id => sGet(kPlayer(S.roomCode, id))))).filter(Boolean);
+  for (const p of players) {
+    p.color  = await sGet(kColor(S.roomCode, p.id)) || null;
+    const g  = await sGet(kGostos(S.roomCode, p.id));
+    p.gostos = g ? g.gostos : [];
+    p.ready  = g ? g.ready  : false;
+  }
+  return players;
+}
+
+function buildGostosInputs(players) {
+  if (document.querySelector('.screen.active')?.id === 'screen-gostos') return;
+  const myColorHex = S.myColor ? colorHex(S.myColor) : '#888';
+  const wrap = document.getElementById('gostos-inputs');
+  wrap.innerHTML = Array.from({length:5},(_,i)=>`
+    <div class="gosto-row">
+      <div class="gosto-num" style="background:${myColorHex}">${i+1}</div>
+      <input type="text" placeholder="Gosto ${i+1}..." maxlength="80" id="gosto-${i}">
+    </div>`).join('');
+  showScreen('gostos');
+  renderReadyList(players);
+}
+
+function renderReadyList(players) {
+  const ready = players.filter(p=>p.ready);
+  document.getElementById('ready-count').textContent = `${ready.length}/${players.length}`;
+  const list = document.getElementById('ready-players');
+  list.innerHTML = players.map(p=>`
+    <div class="player-item">
+      <div class="player-dot" style="background:${p.color ? colorHex(p.color) : '#444'}"></div>
+      <div class="player-name">${p.color ? '' : p.name}</div>
+      <div class="player-ready">${p.ready
+        ? '<span class="chip chip-green">✅ Pronto</span>'
+        : '<span class="chip" style="background:rgba(255,255,255,0.07);color:var(--text-muted)">Escrevendo...</span>'}</div>
+    </div>`).join('');
+}
+
+async function confirmGostos() {
+  const gostos = Array.from({length:5},(_,i)=>{
+    const el = document.getElementById('gosto-'+i);
+    return el ? el.value.trim() : '';
+  });
+  if (gostos.some(g=>!g)) { toast('⚠️ Preencha todos os 5 gostos!'); return; }
+  S.myGostos = gostos;
+  // Write only own gostos key
+  await sSet(kGostos(S.roomCode, S.myId), { gostos, ready: true });
+  toast('✅ Gostos salvos!');
+  document.getElementById('confirm-gostos-btn').disabled = true;
+}
+
+// ── Game Screen ───────────────────────────────────────────────
+function showGameScreen(room, players) {
+  S.currentRoundIdx = room.currentRound;
+  S.hasVoted = false;
+
+  const round = room.rounds[room.currentRound];
+  const owner = players.find(p=>p.id===round.ownerId);
+  const ownerColor = owner?.color ? colorHex(owner.color) : '#888';
+
+  document.getElementById('round-counter').textContent = `GOSTO ${room.currentRound+1}/${room.rounds.length}`;
+  document.getElementById('gosto-color').style.background = ownerColor;
+  document.getElementById('gosto-text').textContent = round.gosto;
+  document.getElementById('voted-msg').style.display = 'none';
+
+  // Update my score display
+  sGet(kPlayer(S.roomCode, S.myId)).then(me => {
+    document.getElementById('my-score').textContent = me?.score || 0;
+  });
+
+  buildVoteGrid(players, round);
+  startTimer(room);
+  showScreen('game');
+}
+
+function buildVoteGrid(players, round) {
+  const grid = document.getElementById('vote-grid');
+  grid.innerHTML = players.map(p => {
+    const hex = p.color ? colorHex(p.color) : '#888';
+    return `<button class="vote-btn" id="vote-btn-${p.id}" onclick="castVote('${p.id}')">
+      <div class="vote-color" style="background:${hex}"></div>
+      <span>${p.name}</span>
+    </button>`;
+  }).join('');
+}
+
+function startTimer(room) {
+  clearInterval(S.timerInterval);
+  const total = VOTE_TIME * 1000;
+  const startTs = room.roundStartTime || Date.now();
+  function tick() {
+    const rem = Math.max(0, total - (Date.now() - startTs));
+    document.getElementById('timer-bar').style.width = (rem/total*100)+'%';
+    document.getElementById('timer-text').textContent = Math.ceil(rem/1000)+'s';
+    if (rem <= 0) {
+      clearInterval(S.timerInterval);
+      if (!S.hasVoted) autoVote();
+    }
+  }
+  tick();
+  S.timerInterval = setInterval(tick, 200);
+}
+
+async function autoVote() {
+  if (S.hasVoted) return;
+  const players = await getAllPlayers();
+  const rand = players[Math.floor(Math.random()*players.length)];
+  if (rand) castVote(rand.id, true);
+}
+
+async function castVote(targetId, auto=false) {
+  if (S.hasVoted) return;
+  S.hasVoted = true;
+  clearInterval(S.timerInterval);
+
+  if (!auto) {
+    document.querySelectorAll('.vote-btn').forEach(b=>b.classList.add('disabled-vote'));
+    document.getElementById('vote-btn-'+targetId)?.classList.add('voted');
+    document.getElementById('voted-msg').style.display = 'block';
+  }
+
+  // Write only own vote key — no shared room write, no race condition
+  await sSet(kVote(S.roomCode, S.currentRoundIdx, S.myId), targetId);
+}
+
+// ── Vote Results ──────────────────────────────────────────────
+function showVoteResult(room, players) {
+  clearInterval(S.timerInterval);
+  renderVoteResult(room, players);
+  showScreen('vote-results');
+}
+
+function renderVoteResult(room, players) {
+  const round = room.rounds[room.currentRound];
+  const owner = players.find(p=>p.id===round.ownerId);
+  const ownerHex = owner?.color ? colorHex(owner.color) : '#888';
+
+  document.getElementById('result-gosto-color').style.background = ownerHex;
+  document.getElementById('result-gosto-text').textContent = round.gosto;
+
+  const votes = round.votes || {};
+  const totalVotes = Object.values(votes).length;
+  const voteCounts = {};
+  players.forEach(p => voteCounts[p.id] = 0);
+  Object.values(votes).forEach(v => { if(voteCounts[v]!==undefined) voteCounts[v]++; });
+
+  const bars = document.getElementById('result-bars');
+  bars.innerHTML = `
+    <div style="margin-bottom:14px;padding:12px;background:rgba(255,255,255,0.04);border-radius:10px;text-align:center;">
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">O GOSTO ERA DE</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;">
+        <div style="width:28px;height:28px;border-radius:50%;background:${ownerHex};border:2px solid rgba(255,255,255,0.2)"></div>
+        <span style="font-family:'Fredoka One',cursive;font-size:1.3rem;color:var(--accent)">${owner?.name||'?'}</span>
+      </div>
+    </div>
+    ${players.map(p => {
+      const cnt = voteCounts[p.id]||0;
+      const pct = totalVotes>0 ? Math.round(cnt/totalVotes*100) : 0;
+      const isOwner = p.id===round.ownerId;
+      const hex = p.color ? colorHex(p.color) : '#888';
+      return `<div class="result-row">
+        <div style="width:28px;height:28px;border-radius:50%;background:${hex};flex-shrink:0;border:2px solid ${isOwner?'white':'rgba(255,255,255,0.1)'}"></div>
+        <div class="result-bar-bg" style="flex:1;">
+          <div class="result-bar-fill" style="width:${pct}%;background:${hex};">${pct>15?p.name:''}</div>
+          <span class="result-pct">${pct}%</span>
+        </div>
+        ${isOwner?'<span style="font-size:1.2rem;">✓</span>':''}
+      </div>`;
+    }).join('')}`;
+
+  const meHost = S.myId === room.host;
+  document.getElementById('next-btn-wrap').style.display = meHost ? 'block' : 'none';
+  document.getElementById('next-wait-msg').style.display = meHost ? 'none' : 'block';
+}
+
+async function nextRound() {
+  const room = await sGet(kRoom(S.roomCode));
+  if (!room) return;
+  const next = room.currentRound + 1;
+  if (next >= room.rounds.length) {
+    room.status = 'final';
+  } else {
+    room.currentRound = next;
+    room.roundStartTime = Date.now();
+    room.status = 'game';
+  }
+  await sSet(kRoom(S.roomCode), room);
+}
+
+// ── Final Screen ──────────────────────────────────────────────
+async function showFinalScreen(room, players) {
+  clearInterval(S.timerInterval);
+
+  // Refresh scores from individual player keys
+  const freshPlayers = await getAllPlayers();
+  freshPlayers.sort((a,b)=>(b.score||0)-(a.score||0));
+  const winner = freshPlayers[0];
+
+  document.getElementById('winner-name').textContent = winner.name;
+  document.getElementById('winner-pts').textContent = `${winner.score||0} pontos`;
+
+  const medals = ['🥇','🥈','🥉'];
+  document.getElementById('final-scores').innerHTML = freshPlayers.map((p,i)=>`
+    <div class="score-row">
+      <div class="score-pos">${medals[i]||(i+1)+'°'}</div>
+      <div class="player-dot" style="background:${p.color?colorHex(p.color):'#888'}"></div>
+      <div class="player-name">${p.name}</div>
+      <div class="score-pts">${p.score||0} pts</div>
+    </div>`).join('');
+
+  const tablesWrap = document.getElementById('final-tables-wrap');
+  tablesWrap.innerHTML = '<div style="font-family:Fredoka One,cursive;font-size:1.3rem;color:var(--accent);margin:8px 0 14px;width:100%;">📋 Gostos Revelados</div>';
+
+  freshPlayers.forEach(p => {
+    const hex = p.color ? colorHex(p.color) : '#888';
+    const pRounds = room.rounds.filter(r=>r.ownerId===p.id);
+    const wrap = document.createElement('div');
+    wrap.className = 'table-wrap';
+    wrap.innerHTML = `
+      <div class="table-header">
+        <div class="table-header-color" style="background:${hex}"></div>
+        <div class="table-header-name">${p.name}</div>
+      </div>
+      <table class="final-table">
+        <thead><tr><th>Gosto</th><th>Acertaram</th><th>Erraram</th></tr></thead>
+        <tbody>${pRounds.map(round => {
+          const votes = round.votes || {};
+          const hits  = Object.entries(votes).filter(([vid,v])=>v===p.id && vid!==p.id);
+          const misses= Object.entries(votes).filter(([vid,v])=>v!==p.id && vid!==p.id);
+          const nm = id => freshPlayers.find(x=>x.id===id)?.name||'?';
+          return `<tr>
+            <td>${round.gosto}</td>
+            <td>${hits.length?`<span class="chip chip-green">✅ ${hits.map(([v])=>nm(v)).join(', ')}</span>`:'<span class="chip" style="background:rgba(255,255,255,0.05);color:var(--text-muted)">Ninguém</span>'}</td>
+            <td>${misses.length?`<span class="chip chip-red">❌ ${misses.map(([v])=>nm(v)).join(', ')}</span>`:'<span class="chip" style="background:rgba(255,255,255,0.05);color:var(--text-muted)">Ninguém</span>'}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>`;
+    tablesWrap.appendChild(wrap);
+  });
+
+  showScreen('final');
+}
+
+async function resetGame() {
+  clearInterval(S.pollInterval);
+  clearInterval(S.timerInterval);
+  Object.assign(S, {
+    myId:null, myName:null, myColor:null, myGostos:[],
+    roomCode:null, isHost:false, maxPlayers:6, selectedColor:null,
+    hasVoted:false, currentRoundIdx:-1,
+  });
+  showScreen('home');
+}
+
+// Input auto-uppercase
+document.getElementById('join-code')?.addEventListener('input', function(){ this.value = this.value.toUpperCase(); });
+</script>
+</body>
+</html>
