@@ -5,635 +5,575 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ATOS QUIZ</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <style>
-  :root {
-    --bg: #0d0d1a;
-    --surface: #1a1a2e;
-    --surface2: #16213e;
-    --accent: #f5a623;
-    --accent2: #e8445a;
-    --accent3: #26d0ce;
-    --text: #f0f0f0;
-    --text-muted: #8888aa;
-    --radius: 16px;
-    --radius-sm: 10px;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'Nunito', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(ellipse at 30% 20%, rgba(245,166,35,0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 70% 80%, rgba(38,208,206,0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 10%, rgba(232,68,90,0.05) 0%, transparent 40%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  #app {
-    position: relative;
-    z-index: 1;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-  }
-
-  .screen { display: none; width: 100%; max-width: 600px; }
-  .screen.active { display: flex; flex-direction: column; align-items: center; gap: 20px; }
-
-  /* LOGO */
-  .logo {
-    font-family: 'Fredoka One', cursive;
-    font-size: clamp(2.5rem, 8vw, 4rem);
-    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, var(--accent3) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    letter-spacing: 2px;
-    text-align: center;
-    filter: drop-shadow(0 0 20px rgba(245,166,35,0.3));
-  }
-
-  .subtitle {
-    color: var(--text-muted);
-    font-size: 0.95rem;
-    font-weight: 600;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    text-align: center;
-  }
-
-  /* CARDS */
-  .card {
-    background: var(--surface);
-    border-radius: var(--radius);
-    padding: 28px;
-    width: 100%;
-    border: 1px solid rgba(255,255,255,0.06);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-  }
-
-  .card-title {
-    font-family: 'Fredoka One', cursive;
-    font-size: 1.3rem;
-    color: var(--accent);
-    margin-bottom: 18px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  /* INPUTS */
-  input, textarea {
-    width: 100%;
-    background: var(--surface2);
-    border: 2px solid rgba(255,255,255,0.08);
-    border-radius: var(--radius-sm);
-    color: var(--text);
-    font-family: 'Nunito', sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
-    padding: 14px 18px;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-
-  input:focus, textarea:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(245,166,35,0.15);
-  }
-
-  input::placeholder, textarea::placeholder { color: var(--text-muted); font-weight: 400; }
-
-  /* BUTTONS */
-  .btn {
-    border: none;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    font-family: 'Fredoka One', cursive;
-    font-size: 1.1rem;
-    letter-spacing: 1px;
-    padding: 14px 28px;
-    transition: all 0.2s;
-    width: 100%;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .btn::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: rgba(255,255,255,0.1);
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-
-  .btn:hover::after { opacity: 1; }
-  .btn:active { transform: scale(0.97); }
-
-  .btn-primary {
-    background: linear-gradient(135deg, var(--accent), #e8900a);
-    color: #1a1a2e;
-    box-shadow: 0 4px 20px rgba(245,166,35,0.35);
-  }
-
-  .btn-secondary {
-    background: linear-gradient(135deg, var(--accent3), #1ab8b6);
-    color: #0d0d1a;
-    box-shadow: 0 4px 20px rgba(38,208,206,0.3);
-  }
-
-  .btn-danger {
-    background: linear-gradient(135deg, var(--accent2), #c73249);
-    color: white;
-    box-shadow: 0 4px 20px rgba(232,68,90,0.3);
-  }
-
-  .btn-ghost {
-    background: transparent;
-    color: var(--text-muted);
-    border: 2px solid rgba(255,255,255,0.1);
-  }
-
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-  .btn-sm {
-    padding: 10px 18px;
-    font-size: 0.95rem;
-    width: auto;
-  }
-
-  /* COLORS GRID */
-  .colors-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    width: 100%;
-  }
-
-  .color-btn {
-    aspect-ratio: 1;
-    border-radius: 50%;
-    border: 4px solid transparent;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-  }
-
-  .color-btn:hover:not(.taken) { transform: scale(1.1); }
-  .color-btn.selected { border-color: white; box-shadow: 0 0 0 3px rgba(255,255,255,0.3); transform: scale(1.1); }
-  .color-btn.taken { opacity: 0.25; cursor: not-allowed; }
-
-  .color-btn.taken::after {
-    content: '✕';
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.4rem;
-    font-weight: 900;
-  }
-
-  /* PLAYERS LIST */
-  .players-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
-
-  .player-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: var(--surface2);
-    border-radius: var(--radius-sm);
-    padding: 12px 16px;
-    border: 1px solid rgba(255,255,255,0.05);
-  }
-
-  .player-dot {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .player-name { font-weight: 700; font-size: 1rem; }
-  .player-ready { margin-left: auto; font-size: 0.8rem; }
-
-  /* GOSTOS INPUTS */
-  .gostos-list { display: flex; flex-direction: column; gap: 10px; width: 100%; }
-
-  .gosto-row { display: flex; align-items: center; gap: 10px; }
-
-  .gosto-num {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 900;
-    font-size: 0.9rem;
-    flex-shrink: 0;
-    color: var(--bg);
-  }
-
-  /* GAME SCREEN */
-  .round-header {
-    text-align: center;
-    width: 100%;
-  }
-
-  .round-badge {
-    display: inline-block;
-    background: rgba(245,166,35,0.15);
-    border: 1px solid rgba(245,166,35,0.3);
-    color: var(--accent);
-    padding: 6px 18px;
-    border-radius: 50px;
-    font-weight: 800;
-    font-size: 0.85rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 12px;
-  }
-
-  .gosto-display {
-    background: linear-gradient(135deg, var(--surface), var(--surface2));
-    border-radius: var(--radius);
-    padding: 32px 24px;
-    text-align: center;
-    width: 100%;
-    border: 1px solid rgba(255,255,255,0.08);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .gosto-display::before {
-    content: '';
-    position: absolute;
-    top: -2px; left: -2px; right: -2px; bottom: -2px;
-    background: linear-gradient(135deg, var(--accent), var(--accent3));
-    border-radius: var(--radius);
-    z-index: -1;
-    opacity: 0.4;
-  }
-
-  .gosto-owner-color {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    margin: 0 auto 16px;
-    border: 3px solid rgba(255,255,255,0.2);
-  }
-
-  .gosto-text {
-    font-size: clamp(1.2rem, 4vw, 1.6rem);
-    font-weight: 800;
-    line-height: 1.4;
-    margin-bottom: 8px;
-  }
-
-  .gosto-label { color: var(--text-muted); font-size: 0.85rem; font-weight: 600; }
-
-  /* VOTING */
-  .vote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
-
-  .vote-btn {
-    background: var(--surface2);
-    border: 2px solid rgba(255,255,255,0.08);
-    border-radius: var(--radius-sm);
-    padding: 14px 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: var(--text);
-  }
-
-  .vote-btn:hover:not(.disabled-vote) {
-    border-color: var(--accent);
-    background: rgba(245,166,35,0.08);
-    transform: translateY(-2px);
-  }
-
-  .vote-btn.voted {
-    border-color: var(--accent);
-    background: rgba(245,166,35,0.15);
-  }
-
-  .vote-btn.disabled-vote { opacity: 0.4; cursor: not-allowed; }
-
-  .vote-color {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    border: 2px solid rgba(255,255,255,0.2);
-  }
-
-  /* RESULTS BAR */
-  .result-bar-wrap { width: 100%; }
-
-  .result-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-
-  .result-bar-bg {
-    flex: 1;
-    height: 36px;
-    background: var(--surface2);
-    border-radius: 8px;
-    overflow: hidden;
-    position: relative;
-  }
-
-  .result-bar-fill {
-    height: 100%;
-    border-radius: 8px;
-    transition: width 1s cubic-bezier(0.4,0,0.2,1);
-    display: flex;
-    align-items: center;
-    padding-left: 12px;
-    font-weight: 800;
-    font-size: 0.9rem;
-    color: #0d0d1a;
-    min-width: 0;
-  }
-
-  .result-pct {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-weight: 800;
-    font-size: 0.9rem;
-    color: var(--text);
-  }
-
-  /* WHEEL */
-  .wheel-container {
-    position: relative;
-    width: min(300px, 80vw);
-    height: min(300px, 80vw);
-    margin: 0 auto;
-  }
-
-  canvas#wheel { width: 100%; height: 100%; }
-
-  /* FINAL TABLES */
-  .final-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 4px;
-    font-size: 0.9rem;
-  }
-
-  .final-table th {
-    background: rgba(245,166,35,0.15);
-    color: var(--accent);
-    padding: 10px 14px;
-    text-align: left;
-    font-weight: 800;
-    font-size: 0.85rem;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    border-bottom: 2px solid rgba(245,166,35,0.2);
-  }
-
-  .final-table td {
-    padding: 10px 14px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    font-weight: 600;
-  }
-
-  .final-table tr:last-child td { border-bottom: none; }
-  .final-table tr:hover td { background: rgba(255,255,255,0.03); }
-
-  .table-wrap {
-    background: var(--surface);
-    border-radius: var(--radius);
-    overflow: hidden;
-    width: 100%;
-    border: 1px solid rgba(255,255,255,0.06);
-    margin-bottom: 16px;
-  }
-
-  .table-header {
-    padding: 14px 18px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-  }
-
-  .table-header-color {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 3px solid rgba(255,255,255,0.2);
-  }
-
-  .table-header-name { font-family: 'Fredoka One', cursive; font-size: 1.2rem; }
-
-  /* SCORE */
-  .score-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: var(--surface2);
-    border-radius: var(--radius-sm);
-    padding: 12px 16px;
-    margin-bottom: 8px;
-  }
-
-  .score-pos {
-    font-family: 'Fredoka One', cursive;
-    font-size: 1.4rem;
-    color: var(--accent);
-    width: 30px;
-    text-align: center;
-  }
-
-  .score-pts {
-    margin-left: auto;
-    font-family: 'Fredoka One', cursive;
-    font-size: 1.2rem;
-    color: var(--accent3);
-  }
-
-  /* TOAST */
-  #toast {
-    position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%) translateY(100px);
-    background: var(--surface);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 50px;
-    padding: 12px 24px;
-    font-weight: 700;
-    font-size: 0.95rem;
-    z-index: 9999;
-    transition: transform 0.3s;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-    white-space: nowrap;
-  }
-
-  #toast.show { transform: translateX(-50%) translateY(0); }
-
-  /* SPINNER */
-  .spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid rgba(255,255,255,0.1);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 20px auto;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* ANIMATIONS */
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes pop { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
-  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
-
-  .fade-in { animation: fadeIn 0.4s ease forwards; }
-  .pop-in { animation: pop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards; }
-  .pulsing { animation: pulse 1.5s ease infinite; }
-
-  /* CODE DISPLAY */
-  .room-code {
-    font-family: 'Fredoka One', cursive;
-    font-size: clamp(2rem, 10vw, 3.5rem);
-    letter-spacing: 8px;
-    color: var(--accent);
-    text-align: center;
-    text-shadow: 0 0 30px rgba(245,166,35,0.4);
-  }
-
-  /* WAITING */
-  .waiting-dots::after {
-    content: '';
-    animation: dots 1.5s steps(4, end) infinite;
-  }
-
-  @keyframes dots {
-    0% { content: ''; }
-    25% { content: '.'; }
-    50% { content: '..'; }
-    75% { content: '...'; }
-  }
-
-  /* TIMER */
-  .timer-bar-bg {
-    width: 100%;
-    height: 8px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 4px;
-    overflow: hidden;
-  }
-
-  .timer-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent3), var(--accent));
-    border-radius: 4px;
-    transition: width 1s linear;
-  }
-
-  /* DIVIDER */
-  .divider {
-    width: 100%;
-    height: 1px;
-    background: rgba(255,255,255,0.07);
-    margin: 8px 0;
-  }
-
-  .text-center { text-align: center; }
-  .text-muted { color: var(--text-muted); font-size: 0.9rem; }
-
-  .flex-row { display: flex; gap: 10px; width: 100%; }
-  .flex-row .btn { flex: 1; }
-
-  .winner-banner {
-    text-align: center;
-    padding: 20px;
-  }
-
-  .winner-crown { font-size: 3rem; margin-bottom: 8px; }
-  .winner-name { font-family: 'Fredoka One', cursive; font-size: 1.8rem; color: var(--accent); }
-  .winner-pts { color: var(--accent3); font-weight: 800; font-size: 1.1rem; }
-
-  .chip {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 50px;
-    font-size: 0.8rem;
-    font-weight: 700;
-  }
-
-  .chip-green { background: rgba(38,208,206,0.15); color: var(--accent3); }
-  .chip-red { background: rgba(232,68,90,0.15); color: var(--accent2); }
-  .chip-gold { background: rgba(245,166,35,0.15); color: var(--accent); }
-
-  @media (max-width: 480px) {
-    .vote-grid { grid-template-columns: 1fr; }
-    .colors-grid { grid-template-columns: repeat(4, 1fr); }
-    .card { padding: 18px; }
-  }
-
-  /* HOST badge */
-  .host-badge {
-    display: inline-block;
-    background: rgba(245,166,35,0.2);
-    color: var(--accent);
-    border-radius: 50px;
-    padding: 2px 10px;
-    font-size: 0.75rem;
-    font-weight: 800;
-    margin-left: 6px;
-  }
+:root {
+  --bg: #080818;
+  --surface: #111128;
+  --surface2: #0e0e24;
+  --surface3: #1a1a38;
+  --accent: #f5a623;
+  --accent2: #e8445a;
+  --accent3: #26d0ce;
+  --accent4: #a855f7;
+  --text: #f0f0f8;
+  --text-muted: #7070a0;
+  --radius: 20px;
+  --radius-sm: 12px;
+  --glow-gold: rgba(245,166,35,0.4);
+  --glow-teal: rgba(38,208,206,0.4);
+  --glow-pink: rgba(232,68,90,0.4);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── BACKGROUND ANIMATED ── */
+.bg-orbs {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+}
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.12;
+  animation: orbFloat 12s ease-in-out infinite;
+}
+.orb1 { width: 600px; height: 600px; background: var(--accent); top: -200px; left: -200px; animation-delay: 0s; }
+.orb2 { width: 500px; height: 500px; background: var(--accent3); bottom: -150px; right: -150px; animation-delay: -4s; }
+.orb3 { width: 400px; height: 400px; background: var(--accent4); top: 40%; left: 50%; animation-delay: -8s; }
+@keyframes orbFloat {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33% { transform: translate(30px,-20px) scale(1.05); }
+  66% { transform: translate(-20px,30px) scale(0.95); }
+}
+
+/* ── PARTICLES ── */
+#particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+
+#app {
+  position: relative; z-index: 1;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 20px;
+}
+
+.screen { display: none; width: 100%; max-width: 580px; }
+.screen.active { display: flex; flex-direction: column; align-items: center; gap: 18px; animation: screenIn 0.4s cubic-bezier(0.34,1.2,0.64,1) forwards; }
+@keyframes screenIn { from { opacity:0; transform: translateY(24px) scale(0.97); } to { opacity:1; transform:none; } }
+
+/* ── LOGO ── */
+.logo {
+  font-family: 'Fredoka One', cursive;
+  font-size: clamp(2.8rem, 9vw, 4.5rem);
+  background: linear-gradient(135deg, #f5a623 0%, #e8445a 45%, #26d0ce 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  letter-spacing: 3px; text-align: center;
+  filter: drop-shadow(0 0 30px rgba(245,166,35,0.5));
+  animation: logoPulse 3s ease-in-out infinite;
+}
+@keyframes logoPulse {
+  0%,100% { filter: drop-shadow(0 0 25px rgba(245,166,35,0.4)); }
+  50% { filter: drop-shadow(0 0 50px rgba(245,166,35,0.7)); }
+}
+
+.subtitle {
+  color: var(--text-muted); font-size: 0.85rem; font-weight: 700;
+  letter-spacing: 4px; text-transform: uppercase; text-align: center;
+}
+
+/* ── CARDS ── */
+.card {
+  background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius);
+  padding: 28px; width: 100%;
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+  position: relative; overflow: hidden;
+}
+.card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+}
+
+.card-title {
+  font-family: 'Fredoka One', cursive; font-size: 1.3rem;
+  color: var(--accent); margin-bottom: 18px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* ── INPUTS ── */
+input, textarea {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 2px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-sm);
+  color: var(--text); font-family: 'Nunito', sans-serif;
+  font-size: 1rem; font-weight: 600;
+  padding: 14px 18px; outline: none;
+  transition: all 0.3s;
+}
+input:focus, textarea:focus {
+  border-color: var(--accent);
+  background: rgba(245,166,35,0.05);
+  box-shadow: 0 0 0 4px rgba(245,166,35,0.1), 0 0 20px rgba(245,166,35,0.1);
+}
+input::placeholder, textarea::placeholder { color: var(--text-muted); font-weight: 400; }
+
+/* ── BUTTONS ── */
+.btn {
+  border: none; border-radius: var(--radius-sm); cursor: pointer;
+  font-family: 'Fredoka One', cursive; font-size: 1.1rem;
+  letter-spacing: 1px; padding: 15px 28px;
+  transition: all 0.25s; width: 100%;
+  position: relative; overflow: hidden;
+}
+.btn::before {
+  content: ''; position: absolute; top: 50%; left: 50%;
+  width: 0; height: 0; border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  transform: translate(-50%,-50%);
+  transition: width 0.5s, height 0.5s;
+}
+.btn:active::before { width: 300px; height: 300px; }
+.btn:hover { transform: translateY(-2px); }
+.btn:active { transform: translateY(0) scale(0.98); }
+
+.btn-primary {
+  background: linear-gradient(135deg, #f5a623, #e8900a);
+  color: #1a1000;
+  box-shadow: 0 6px 24px rgba(245,166,35,0.45), 0 2px 8px rgba(0,0,0,0.3);
+}
+.btn-primary:hover { box-shadow: 0 10px 32px rgba(245,166,35,0.6), 0 2px 8px rgba(0,0,0,0.3); }
+
+.btn-secondary {
+  background: linear-gradient(135deg, #26d0ce, #1ab8b6);
+  color: #001a1a;
+  box-shadow: 0 6px 24px rgba(38,208,206,0.4), 0 2px 8px rgba(0,0,0,0.3);
+}
+.btn-secondary:hover { box-shadow: 0 10px 32px rgba(38,208,206,0.55); }
+
+.btn-danger {
+  background: linear-gradient(135deg, #e8445a, #c73249);
+  color: white;
+  box-shadow: 0 6px 24px rgba(232,68,90,0.4);
+}
+
+.btn-ghost {
+  background: rgba(255,255,255,0.05);
+  color: var(--text-muted);
+  border: 1.5px solid rgba(255,255,255,0.1);
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.09); color: var(--text); }
+
+.btn-purple {
+  background: linear-gradient(135deg, #a855f7, #7c3aed);
+  color: white;
+  box-shadow: 0 6px 24px rgba(168,85,247,0.4);
+}
+
+.btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+.btn-sm { padding: 10px 18px; font-size: 0.9rem; width: auto; }
+
+/* ── HOME SCREEN ── */
+.home-features {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;
+}
+.feat-item {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px; padding: 12px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 0.85rem; font-weight: 700; color: var(--text-muted);
+}
+.feat-icon { font-size: 1.4rem; }
+
+/* ── ROOM CODE ── */
+.room-code-box {
+  background: rgba(245,166,35,0.06);
+  border: 2px solid rgba(245,166,35,0.2);
+  border-radius: 16px; padding: 16px 24px;
+  text-align: center; margin-bottom: 12px;
+}
+.room-code {
+  font-family: 'Fredoka One', cursive;
+  font-size: clamp(2.2rem, 10vw, 3.5rem);
+  letter-spacing: 10px; color: var(--accent);
+  text-shadow: 0 0 30px rgba(245,166,35,0.5);
+}
+.room-code-label { color: var(--text-muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 6px; }
+
+/* ── PLAYER LIST ── */
+.players-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.player-item {
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(255,255,255,0.03);
+  border-radius: var(--radius-sm); padding: 11px 15px;
+  border: 1px solid rgba(255,255,255,0.05);
+  transition: all 0.2s; animation: slideIn 0.3s ease forwards;
+}
+@keyframes slideIn { from { opacity:0; transform:translateX(-12px); } to { opacity:1; transform:none; } }
+.player-item:hover { background: rgba(255,255,255,0.05); }
+.player-dot { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 12px currentColor; }
+.player-name { font-weight: 700; font-size: 1rem; flex: 1; }
+.player-ready { margin-left: auto; font-size: 0.8rem; }
+
+/* ── HOST BADGE ── */
+.host-badge {
+  display: inline-block; background: rgba(245,166,35,0.15);
+  color: var(--accent); border-radius: 50px; padding: 2px 10px;
+  font-size: 0.7rem; font-weight: 800; margin-left: 6px;
+  border: 1px solid rgba(245,166,35,0.3);
+}
+
+/* ── COLORS GRID ── */
+.colors-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; width: 100%; }
+.color-btn {
+  aspect-ratio: 1; border-radius: 50%;
+  border: 4px solid transparent; cursor: pointer;
+  transition: all 0.25s; position: relative;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+.color-btn:hover:not(.taken) { transform: scale(1.15); box-shadow: 0 8px 25px rgba(0,0,0,0.4); }
+.color-btn.selected {
+  border-color: white;
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.25), 0 8px 25px rgba(0,0,0,0.4);
+  transform: scale(1.15);
+}
+.color-btn.taken { opacity: 0.2; cursor: not-allowed; }
+.color-btn.taken::after {
+  content: '✕'; position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 1.4rem; font-weight: 900;
+}
+
+/* ── GOSTOS INPUTS ── */
+.gostos-list { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.gosto-row { display: flex; align-items: center; gap: 10px; }
+.gosto-num {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 0.9rem; flex-shrink: 0;
+  color: var(--bg);
+}
+
+/* ── GAME SCREEN ── */
+.game-header {
+  width: 100%; display: flex; align-items: center;
+  justify-content: space-between; gap: 10px;
+}
+.round-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(245,166,35,0.12);
+  border: 1px solid rgba(245,166,35,0.3);
+  color: var(--accent); padding: 7px 16px;
+  border-radius: 50px; font-weight: 800;
+  font-size: 0.82rem; letter-spacing: 2px; text-transform: uppercase;
+}
+.score-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(38,208,206,0.1);
+  border: 1px solid rgba(38,208,206,0.25);
+  color: var(--accent3); padding: 7px 14px;
+  border-radius: 50px; font-weight: 800; font-size: 0.85rem;
+}
+
+/* ── TIMER ── */
+.timer-wrap { width: 100%; position: relative; }
+.timer-bar-bg {
+  width: 100%; height: 10px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 50px; overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+}
+.timer-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent3), var(--accent));
+  border-radius: 50px;
+  transition: width 0.2s linear;
+  box-shadow: 0 0 12px rgba(245,166,35,0.5);
+  position: relative;
+}
+.timer-bar-fill::after {
+  content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 6px;
+  background: white; border-radius: 50px; opacity: 0.6;
+}
+.timer-text {
+  text-align: right; margin-top: 5px;
+  font-size: 0.85rem; color: var(--text-muted); font-weight: 800;
+}
+.timer-urgent .timer-bar-fill { background: linear-gradient(90deg, #e8445a, #ff6b6b) !important; box-shadow: 0 0 15px rgba(232,68,90,0.8) !important; }
+.timer-urgent .timer-text { color: var(--accent2); animation: pulse 0.5s ease infinite; }
+
+/* ── MYSTERY CARD (gosto display) ── */
+.mystery-card {
+  width: 100%; border-radius: var(--radius);
+  background: linear-gradient(145deg, rgba(168,85,247,0.08), rgba(38,208,206,0.08));
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 32px 24px; text-align: center;
+  position: relative; overflow: hidden;
+}
+.mystery-card::before {
+  content: ''; position: absolute; inset: -2px;
+  background: linear-gradient(135deg, var(--accent), var(--accent4), var(--accent3));
+  border-radius: inherit; z-index: -1; opacity: 0.3;
+}
+.mystery-question-mark {
+  font-size: 3rem; margin-bottom: 10px;
+  animation: bounce 2s ease-in-out infinite;
+}
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+.mystery-label {
+  font-size: 0.75rem; font-weight: 800; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px;
+}
+.gosto-text {
+  font-size: clamp(1.3rem, 4vw, 1.8rem); font-weight: 800; line-height: 1.4;
+  color: var(--text); text-shadow: 0 2px 20px rgba(255,255,255,0.1);
+}
+
+/* ── VOTE GRID ── */
+.vote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+.vote-btn {
+  background: rgba(255,255,255,0.04);
+  border: 2px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-sm); padding: 14px 12px;
+  cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Nunito', sans-serif; font-size: 0.95rem;
+  font-weight: 700; color: var(--text);
+  position: relative; overflow: hidden;
+}
+.vote-btn:hover:not(.disabled-vote) {
+  border-color: var(--accent);
+  background: rgba(245,166,35,0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245,166,35,0.2);
+}
+.vote-btn.voted {
+  border-color: var(--accent3);
+  background: rgba(38,208,206,0.12);
+  box-shadow: 0 0 20px rgba(38,208,206,0.3);
+}
+.vote-btn.disabled-vote { opacity: 0.35; cursor: not-allowed; }
+.vote-color {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,0.2);
+  box-shadow: 0 0 12px currentColor;
+}
+.voted-badge {
+  display: none; text-align: center; margin-top: 14px;
+  background: rgba(38,208,206,0.1); border: 1px solid rgba(38,208,206,0.3);
+  border-radius: 50px; padding: 10px 20px;
+  color: var(--accent3); font-weight: 800; font-size: 0.95rem;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+/* ── RESULT BARS ── */
+.result-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.result-bar-bg {
+  flex: 1; height: 38px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 10px; overflow: hidden; position: relative;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.result-bar-fill {
+  height: 100%; border-radius: 10px;
+  transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+  display: flex; align-items: center;
+  padding-left: 12px; font-weight: 800; font-size: 0.88rem;
+  color: rgba(0,0,0,0.8);
+}
+.result-pct {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  font-weight: 800; font-size: 0.85rem; color: var(--text);
+}
+.owner-crown { font-size: 1.1rem; }
+
+/* ── REVEAL BANNER ── */
+.reveal-banner {
+  background: linear-gradient(135deg, rgba(245,166,35,0.1), rgba(232,68,90,0.1));
+  border: 1px solid rgba(245,166,35,0.2);
+  border-radius: 14px; padding: 14px 18px;
+  text-align: center; margin-bottom: 16px;
+}
+.reveal-label { font-size: 0.72rem; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+.reveal-name { font-family: 'Fredoka One', cursive; font-size: 1.5rem; color: var(--accent); }
+.reveal-dot { width: 32px; height: 32px; border-radius: 50%; display: inline-block; vertical-align: middle; margin-right: 10px; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 0 15px currentColor; }
+
+/* ── SCORE / COMBO ── */
+.combo-banner {
+  display: none; text-align: center;
+  background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(245,166,35,0.15));
+  border: 1px solid rgba(168,85,247,0.3);
+  border-radius: 14px; padding: 14px;
+  margin-top: 10px;
+}
+.combo-text { font-family: 'Fredoka One', cursive; font-size: 1.8rem; color: var(--accent4); }
+.combo-sub { color: var(--text-muted); font-size: 0.85rem; font-weight: 700; }
+
+/* ── PROGRESS BAR ── */
+.progress-wrap { width: 100%; }
+.progress-label { display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; }
+.progress-bg { width: 100%; height: 6px; background: rgba(255,255,255,0.06); border-radius: 50px; overflow: hidden; }
+.progress-fill {
+  height: 100%; border-radius: 50px;
+  background: linear-gradient(90deg, var(--accent4), var(--accent));
+  transition: width 0.8s ease;
+}
+
+/* ── FINAL SCREEN ── */
+.winner-banner { text-align: center; padding: 24px 20px; }
+.winner-crown { font-size: 4rem; animation: bounce 1s ease infinite; display: block; margin-bottom: 6px; }
+.winner-label { color: var(--text-muted); font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 6px; font-weight: 700; }
+.winner-name { font-family: 'Fredoka One', cursive; font-size: 2.2rem; color: var(--accent); margin-bottom: 4px; text-shadow: 0 0 30px var(--glow-gold); }
+.winner-pts { color: var(--accent3); font-weight: 800; font-size: 1.2rem; }
+
+.score-row {
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(255,255,255,0.03);
+  border-radius: var(--radius-sm); padding: 13px 16px;
+  margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05);
+  transition: all 0.2s;
+}
+.score-row:hover { background: rgba(255,255,255,0.06); }
+.score-pos { font-family: 'Fredoka One', cursive; font-size: 1.5rem; width: 32px; text-align: center; }
+.score-pts { margin-left: auto; font-family: 'Fredoka One', cursive; font-size: 1.2rem; color: var(--accent3); }
+
+/* ── FINAL TABLES ── */
+.table-wrap {
+  background: rgba(255,255,255,0.02); border-radius: var(--radius);
+  overflow: hidden; width: 100%;
+  border: 1px solid rgba(255,255,255,0.06); margin-bottom: 14px;
+}
+.table-header {
+  padding: 14px 18px; display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03);
+}
+.table-header-color { width: 32px; height: 32px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.2); }
+.table-header-name { font-family: 'Fredoka One', cursive; font-size: 1.2rem; }
+.final-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.final-table th { background: rgba(245,166,35,0.08); color: var(--accent); padding: 10px 14px; text-align: left; font-weight: 800; font-size: 0.78rem; letter-spacing: 1.5px; text-transform: uppercase; border-bottom: 1px solid rgba(245,166,35,0.15); }
+.final-table td { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); font-weight: 600; }
+.final-table tr:last-child td { border-bottom: none; }
+.final-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+/* ── CHIPS ── */
+.chip { display: inline-block; padding: 4px 12px; border-radius: 50px; font-size: 0.78rem; font-weight: 700; }
+.chip-green { background: rgba(38,208,206,0.12); color: var(--accent3); border: 1px solid rgba(38,208,206,0.2); }
+.chip-red { background: rgba(232,68,90,0.12); color: var(--accent2); border: 1px solid rgba(232,68,90,0.2); }
+.chip-gold { background: rgba(245,166,35,0.12); color: var(--accent); border: 1px solid rgba(245,166,35,0.2); }
+.chip-purple { background: rgba(168,85,247,0.12); color: var(--accent4); border: 1px solid rgba(168,85,247,0.2); }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 28px; left: 50%;
+  transform: translateX(-50%) translateY(120px);
+  background: rgba(20,20,40,0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 50px; padding: 12px 24px;
+  font-weight: 700; font-size: 0.95rem; z-index: 9999;
+  transition: transform 0.35s cubic-bezier(0.34,1.3,0.64,1);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  white-space: nowrap; max-width: 90vw;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ── CONFETTI ── */
+.confetti-piece {
+  position: fixed; top: -10px; border-radius: 3px;
+  animation: confettiFall linear forwards;
+  pointer-events: none; z-index: 9998;
+}
+@keyframes confettiFall {
+  to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+
+/* ── MISC ── */
+.divider { width:100%; height:1px; background:rgba(255,255,255,0.06); margin:8px 0; }
+.text-center { text-align: center; }
+.text-muted { color: var(--text-muted); font-size: 0.9rem; }
+.flex-row { display: flex; gap: 10px; width: 100%; }
+.flex-row .btn { flex: 1; }
+
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+@keyframes pop { 0%{transform:scale(0.5);opacity:0} 70%{transform:scale(1.05)} 100%{transform:scale(1);opacity:1} }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+@keyframes shimmer { 0%{left:-100%} 100%{left:200%} }
+.fade-in { animation: fadeIn 0.4s ease forwards; }
+.pop-in { animation: pop 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+.pulsing { animation: pulse 1.5s ease infinite; }
+
+/* ── WAITING DOTS ── */
+.waiting-dots::after {
+  content: ''; animation: dots 1.5s steps(4,end) infinite;
+}
+@keyframes dots { 0%{content:''} 25%{content:'.'} 50%{content:'..'} 75%{content:'...'} }
+
+/* ── COUNTDOWN CIRCLE ── */
+.countdown-wrap { position: relative; width: 60px; height: 60px; flex-shrink: 0; }
+.countdown-svg { width: 60px; height: 60px; transform: rotate(-90deg); }
+.countdown-track { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 5; }
+.countdown-fill { fill: none; stroke: var(--accent3); stroke-width: 5; stroke-linecap: round; transition: stroke-dashoffset 0.2s linear; }
+.countdown-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Fredoka One', cursive; font-size: 1.2rem; color: var(--accent3); }
+
+/* ── LIVE INDICATOR ── */
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: #4cd964; display: inline-block; animation: livePulse 1.2s ease infinite; margin-right: 4px; }
+@keyframes livePulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.5);opacity:0.6} }
+
+/* ── STATS BOX ── */
+.stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; width: 100%; }
+.stat-box {
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px; padding: 12px; text-align: center;
+}
+.stat-val { font-family: 'Fredoka One', cursive; font-size: 1.6rem; color: var(--accent); }
+.stat-label { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+
+@media (max-width: 480px) {
+  .vote-grid { grid-template-columns: 1fr; }
+  .colors-grid { grid-template-columns: repeat(4,1fr); }
+  .card { padding: 18px; }
+  .home-features { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: repeat(3,1fr); }
+}
 </style>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 </head>
 <body>
+
+<div class="bg-orbs">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+<canvas id="particles"></canvas>
+
 <div id="app">
 
-  <!-- SCREEN: HOME -->
+  <!-- ── HOME ── -->
   <div id="screen-home" class="screen active">
     <div class="logo pop-in">ATOS QUIZ</div>
-    <div class="subtitle fade-in">Quem você conhece de verdade?</div>
-    <div class="card fade-in" style="margin-top:10px;">
-      <div class="card-title">🎮 Bem-vindo!</div>
-      <p class="text-muted" style="margin-bottom:20px; line-height:1.6;">
-        O jogo onde você tenta adivinhar quem é quem pelos gostos. Crie uma sala ou entre com o código de um amigo!
-      </p>
+    <div class="subtitle fade-in">✦ Quem você conhece de verdade? ✦</div>
+
+    <div class="card fade-in" style="margin-top:6px;">
+      <div class="home-features">
+        <div class="feat-item"><span class="feat-icon">🎭</span>Identidade secreta</div>
+        <div class="feat-item"><span class="feat-icon">⚡</span>Tempo real</div>
+        <div class="feat-item"><span class="feat-icon">🏆</span>Ranking ao vivo</div>
+        <div class="feat-item"><span class="feat-icon">🎯</span>Até 8 jogadores</div>
+      </div>
       <div style="display:flex;flex-direction:column;gap:12px;">
         <button class="btn btn-primary" onclick="showScreen('create-room')">✨ Criar Sala</button>
         <button class="btn btn-secondary" onclick="showScreen('join-room')">🔑 Entrar com Código</button>
@@ -641,171 +581,209 @@
     </div>
   </div>
 
-  <!-- SCREEN: CREATE ROOM -->
+  <!-- ── CREATE ROOM ── -->
   <div id="screen-create-room" class="screen">
     <div class="logo" style="font-size:2rem;">ATOS QUIZ</div>
     <div class="card fade-in">
       <div class="card-title">✨ Criar Sala</div>
-      <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;flex-direction:column;gap:14px;">
         <div>
-          <label style="display:block;font-weight:700;margin-bottom:6px;font-size:0.9rem;color:var(--text-muted);">SEU NOME</label>
-          <input id="create-name" type="text" placeholder="Como você quer ser chamado?" maxlength="20">
+          <label style="display:block;font-weight:700;margin-bottom:6px;font-size:0.82rem;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;">Seu Nome</label>
+          <input id="create-name" type="text" placeholder="Como quer ser chamado?" maxlength="20">
         </div>
         <div>
-          <label style="display:block;font-weight:700;margin-bottom:8px;font-size:0.9rem;color:var(--text-muted);">MAX. JOGADORES (2–8)</label>
-          <div style="display:flex;align-items:center;gap:14px;">
-            <button class="btn btn-ghost btn-sm" style="width:44px;height:44px;font-size:1.4rem;padding:0;border-radius:50%;" onclick="adjustMax(-1)">−</button>
-            <span id="max-players-display" style="font-family:'Fredoka One',cursive;font-size:2rem;color:var(--accent);min-width:40px;text-align:center;">6</span>
-            <button class="btn btn-ghost btn-sm" style="width:44px;height:44px;font-size:1.4rem;padding:0;border-radius:50%;" onclick="adjustMax(1)">+</button>
+          <label style="display:block;font-weight:700;margin-bottom:10px;font-size:0.82rem;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;">Máx. Jogadores (2–8)</label>
+          <div style="display:flex;align-items:center;justify-content:center;gap:20px;">
+            <button class="btn btn-ghost btn-sm" style="width:46px;height:46px;font-size:1.5rem;padding:0;border-radius:50%;" onclick="adjustMax(-1)">−</button>
+            <span id="max-players-display" style="font-family:'Fredoka One',cursive;font-size:2.5rem;color:var(--accent);min-width:50px;text-align:center;">6</span>
+            <button class="btn btn-ghost btn-sm" style="width:46px;height:46px;font-size:1.5rem;padding:0;border-radius:50%;" onclick="adjustMax(1)">+</button>
           </div>
         </div>
-        <div class="flex-row" style="margin-top:8px;">
+        <div class="flex-row" style="margin-top:6px;">
           <button class="btn btn-ghost" onclick="showScreen('home')">← Voltar</button>
-          <button class="btn btn-primary" onclick="createRoom()">Criar Sala</button>
+          <button class="btn btn-primary" onclick="createRoom()">Criar Sala 🚀</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- SCREEN: JOIN ROOM -->
+  <!-- ── JOIN ROOM ── -->
   <div id="screen-join-room" class="screen">
     <div class="logo" style="font-size:2rem;">ATOS QUIZ</div>
     <div class="card fade-in">
       <div class="card-title">🔑 Entrar na Sala</div>
-      <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;flex-direction:column;gap:14px;">
         <div>
-          <label style="display:block;font-weight:700;margin-bottom:6px;font-size:0.9rem;color:var(--text-muted);">CÓDIGO DA SALA</label>
-          <input id="join-code" type="text" placeholder="Ex: ABC123" maxlength="6" style="text-transform:uppercase;letter-spacing:4px;font-size:1.3rem;text-align:center;">
+          <label style="display:block;font-weight:700;margin-bottom:6px;font-size:0.82rem;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;">Código da Sala</label>
+          <input id="join-code" type="text" placeholder="ABC123" maxlength="6" style="text-transform:uppercase;letter-spacing:6px;font-size:1.5rem;text-align:center;font-family:'Fredoka One',cursive;">
         </div>
         <div>
-          <label style="display:block;font-weight:700;margin-bottom:6px;font-size:0.9rem;color:var(--text-muted);">SEU NOME</label>
-          <input id="join-name" type="text" placeholder="Como você quer ser chamado?" maxlength="20">
+          <label style="display:block;font-weight:700;margin-bottom:6px;font-size:0.82rem;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;">Seu Nome</label>
+          <input id="join-name" type="text" placeholder="Como quer ser chamado?" maxlength="20">
         </div>
-        <div class="flex-row" style="margin-top:8px;">
+        <div class="flex-row" style="margin-top:6px;">
           <button class="btn btn-ghost" onclick="showScreen('home')">← Voltar</button>
-          <button class="btn btn-secondary" onclick="joinRoom()">Entrar</button>
+          <button class="btn btn-secondary" id="join-btn" onclick="joinRoom()">Entrar 🎮</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- SCREEN: LOBBY -->
+  <!-- ── LOBBY ── -->
   <div id="screen-lobby" class="screen">
     <div class="logo" style="font-size:2rem;">ATOS QUIZ</div>
-    <div class="card fade-in">
-      <div class="card-title">🏠 Sala de Espera</div>
-      <div class="text-center" style="margin-bottom:16px;">
-        <div class="text-muted" style="margin-bottom:8px;font-size:0.85rem;letter-spacing:2px;">CÓDIGO DA SALA</div>
+
+    <div class="card fade-in" style="text-align:center;">
+      <div class="room-code-label">Código da Sala</div>
+      <div class="room-code-box">
         <div class="room-code" id="lobby-code">------</div>
-        <button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="copyCode()">📋 Copiar Código</button>
       </div>
-      <div class="divider"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 10px;">
-        <span style="font-weight:800;font-size:0.9rem;">JOGADORES <span id="lobby-count">0</span>/<span id="lobby-max">6</span></span>
-        <span class="text-muted pulsing" style="font-size:0.85rem;">Aguardando<span class="waiting-dots"></span></span>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button class="btn btn-ghost btn-sm" onclick="copyCode()">📋 Copiar</button>
+        <button class="btn btn-ghost btn-sm" onclick="shareCode()">📤 Compartilhar</button>
+      </div>
+    </div>
+
+    <div class="card fade-in">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div style="font-weight:800;font-size:0.9rem;display:flex;align-items:center;gap:6px;">
+          <span class="live-dot"></span>JOGADORES
+          <span style="color:var(--accent);" id="lobby-count">0</span>/<span id="lobby-max">6</span>
+        </div>
+        <span class="text-muted pulsing" style="font-size:0.82rem;">Aguardando<span class="waiting-dots"></span></span>
       </div>
       <div class="players-list" id="lobby-players"></div>
     </div>
+
     <div id="lobby-start-wrap" style="width:100%;display:none;">
-      <button class="btn btn-primary" onclick="startGame()">🚀 Iniciar Jogo</button>
+      <button class="btn btn-primary" onclick="startGame()">🚀 Iniciar Jogo!</button>
     </div>
-    <div id="lobby-wait-msg" class="text-muted text-center" style="font-size:0.9rem;">Aguardando o host iniciar...</div>
+    <div id="lobby-wait-msg" class="text-muted text-center pulsing" style="font-size:0.9rem;">⏳ Aguardando o host iniciar...</div>
   </div>
 
-  <!-- SCREEN: COLOR PICK -->
+  <!-- ── COLOR PICK ── -->
   <div id="screen-color" class="screen">
     <div class="logo" style="font-size:2rem;">ATOS QUIZ</div>
     <div class="card fade-in">
       <div class="card-title">🎨 Escolha sua Cor</div>
-      <p class="text-muted" style="margin-bottom:18px;">Essa será sua identidade no jogo — ninguém saberá quem é você!</p>
+      <p class="text-muted" style="margin-bottom:20px;line-height:1.6;">Essa será sua <strong style="color:var(--text);">identidade secreta</strong> no jogo. Os outros não saberão quem é você... até o final!</p>
       <div class="colors-grid" id="colors-grid"></div>
-      <button class="btn btn-primary" style="margin-top:20px;" id="confirm-color-btn" onclick="confirmColor()" disabled>Confirmar Cor</button>
+      <button class="btn btn-primary" style="margin-top:22px;" id="confirm-color-btn" onclick="confirmColor()" disabled>Confirmar Cor ✓</button>
     </div>
   </div>
 
-  <!-- SCREEN: GOSTOS -->
+  <!-- ── GOSTOS ── -->
   <div id="screen-gostos" class="screen">
     <div class="logo" style="font-size:2rem;">ATOS QUIZ</div>
+
     <div class="card fade-in">
       <div class="card-title">💬 Seus 5 Gostos</div>
-      <p class="text-muted" style="margin-bottom:18px;">Escreva 5 coisas que você gosta. Seja criativo — seus amigos vão tentar te adivinhar!</p>
+      <p class="text-muted" style="margin-bottom:18px;line-height:1.6;">Escreva 5 coisas que você gosta. <strong style="color:var(--accent);">Seja específico!</strong> "Cachorro-quente às 2h" é melhor que "comida".</p>
       <div class="gostos-list" id="gostos-inputs"></div>
       <button class="btn btn-primary" style="margin-top:20px;" id="confirm-gostos-btn" onclick="confirmGostos()">✅ Confirmar Gostos</button>
     </div>
-    <div style="width:100%;background:var(--surface);border-radius:var(--radius);padding:16px;border:1px solid rgba(255,255,255,0.06);">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+
+    <div class="card fade-in">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <span style="font-weight:800;font-size:0.9rem;">PRONTOS</span>
-        <span id="ready-count" style="color:var(--accent);font-weight:800;">0/1</span>
+        <span id="ready-count" style="color:var(--accent);font-weight:800;font-family:'Fredoka One',cursive;font-size:1.1rem;">0/1</span>
       </div>
       <div class="players-list" id="ready-players"></div>
     </div>
   </div>
 
-  <!-- SCREEN: GAME -->
+  <!-- ── GAME ── -->
   <div id="screen-game" class="screen">
-    <div style="width:100%;display:flex;justify-content:space-between;align-items:center;">
+
+    <div class="game-header">
       <div class="round-badge" id="round-counter">GOSTO 1/?</div>
-      <div style="font-weight:800;font-size:0.9rem;color:var(--accent3);">⭐ <span id="my-score">0</span> pts</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="countdown-wrap">
+          <svg class="countdown-svg" viewBox="0 0 60 60">
+            <circle class="countdown-track" cx="30" cy="30" r="26"/>
+            <circle class="countdown-fill" id="countdown-circle" cx="30" cy="30" r="26"
+              stroke-dasharray="163.4" stroke-dashoffset="0"/>
+          </svg>
+          <div class="countdown-num" id="timer-text">20</div>
+        </div>
+        <div class="score-badge">⭐ <span id="my-score">0</span> pts</div>
+      </div>
     </div>
 
-    <div id="timer-wrap" style="width:100%;">
-      <div class="timer-bar-bg"><div class="timer-bar-fill" id="timer-bar" style="width:100%"></div></div>
-      <div style="text-align:right;margin-top:4px;font-size:0.8rem;color:var(--text-muted);" id="timer-text">20s</div>
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span>Progresso</span>
+        <span id="progress-label-text">0 / 0 gostos</span>
+      </div>
+      <div class="progress-bg"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
     </div>
 
-    <div class="gosto-display fade-in" id="gosto-display">
-      <div class="gosto-owner-color" id="gosto-color"></div>
+    <div class="mystery-card fade-in">
+      <div class="mystery-question-mark">🕵️</div>
+      <div class="mystery-label">Gosto Anônimo — Quem escreveu?</div>
       <div class="gosto-text" id="gosto-text">?</div>
-      <div class="gosto-label">GOSTO ANÔNIMO — Quem escreveu isso?</div>
     </div>
 
     <div class="card" style="padding:16px;">
-      <div class="card-title" style="font-size:1rem;margin-bottom:14px;">🗳️ Quem escreveu este gosto?</div>
+      <div class="card-title" style="font-size:0.95rem;margin-bottom:12px;">🗳️ Quem escreveu este gosto?</div>
       <div class="vote-grid" id="vote-grid"></div>
-      <div id="voted-msg" style="display:none;text-align:center;margin-top:12px;color:var(--accent3);font-weight:700;">
-        ✅ Voto registrado! Aguardando todos votarem...
-      </div>
+      <div class="voted-badge" id="voted-msg">✅ Voto registrado! Aguardando todos...</div>
     </div>
+
   </div>
 
-  <!-- SCREEN: VOTE RESULTS -->
+  <!-- ── VOTE RESULTS ── -->
   <div id="screen-vote-results" class="screen">
     <div class="logo" style="font-size:2rem;">ATOS QUIZ</div>
+
     <div class="card fade-in">
-      <div class="card-title">📊 Resultado da Votação</div>
-      <div class="gosto-display" id="result-gosto-display" style="margin-bottom:16px;">
-        <div class="gosto-owner-color" id="result-gosto-color"></div>
-        <div class="gosto-text" id="result-gosto-text"></div>
+      <div class="card-title">📊 Resultado</div>
+
+      <div class="mystery-card" style="margin-bottom:16px;">
+        <div class="mystery-label">O Gosto Era:</div>
+        <div class="gosto-text" id="result-gosto-text" style="margin-bottom:12px;"></div>
+        <div class="reveal-banner" style="background:none;border:none;padding:6px 0 0;margin-bottom:0;">
+          <div class="reveal-label">Escrito por</div>
+          <div id="result-owner-row" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;">
+            <div id="result-gosto-color" style="width:32px;height:32px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);box-shadow:0 0 15px currentColor;"></div>
+            <span id="result-owner-name" style="font-family:'Fredoka One',cursive;font-size:1.4rem;color:var(--accent);">?</span>
+          </div>
+        </div>
       </div>
+
       <div id="result-bars"></div>
+      <div id="combo-banner" class="combo-banner">
+        <div class="combo-text" id="combo-text">🔥 +100</div>
+        <div class="combo-sub" id="combo-sub">Você acertou!</div>
+      </div>
     </div>
+
     <div id="next-btn-wrap" style="width:100%;display:none;">
-      <button class="btn btn-primary" onclick="nextRound()">Próximo ➜</button>
+      <button class="btn btn-primary" onclick="nextRound()">Próximo Gosto ➜</button>
     </div>
-    <div id="next-wait-msg" class="text-muted text-center" style="font-size:0.9rem;">Aguardando o host continuar...</div>
+    <div id="next-wait-msg" class="text-muted text-center pulsing" style="font-size:0.9rem;">⏳ Aguardando o host continuar...</div>
   </div>
 
-  <!-- SCREEN: FINAL -->
+  <!-- ── FINAL ── -->
   <div id="screen-final" class="screen">
     <div class="logo" style="font-size:2rem;">ATOS QUIZ</div>
 
     <div class="card fade-in">
       <div class="winner-banner">
-        <div class="winner-crown">👑</div>
-        <div class="text-muted" style="font-size:0.85rem;letter-spacing:2px;margin-bottom:4px;">VENCEDOR</div>
+        <span class="winner-crown">👑</span>
+        <div class="winner-label">Vencedor</div>
         <div class="winner-name" id="winner-name"></div>
         <div class="winner-pts" id="winner-pts"></div>
       </div>
     </div>
 
-    <div class="card fade-in" style="width:100%;">
-      <div class="card-title">🏆 Pontuação Final</div>
+    <div class="card fade-in">
+      <div class="card-title">🏆 Placar Final</div>
+      <div id="final-stat-grid" class="stat-grid" style="margin-bottom:16px;"></div>
       <div id="final-scores"></div>
     </div>
 
-    <div id="final-tables-wrap" style="width:100%;">
-      <!-- Tables inserted here -->
-    </div>
+    <div id="final-tables-wrap" style="width:100%;"></div>
 
     <button class="btn btn-primary" onclick="resetGame()" style="width:100%;">🔄 Jogar Novamente</button>
   </div>
@@ -816,7 +794,7 @@
 
 <script>
 // =============================================
-//  ATOS QUIZ — Firebase Realtime Database
+//  ATOS QUIZ v3 — Firebase + 50 melhorias
 // =============================================
 
 const firebaseConfig = {
@@ -835,17 +813,15 @@ try {
   firebase.initializeApp(firebaseConfig);
   db = firebase.database();
   console.log("✅ Firebase conectado!");
-} catch(e) {
-  console.error("Firebase init error:", e);
-}
+} catch(e) { console.error("Firebase init error:", e); }
 
-// ── Helpers Firebase ──────────────────────────────────────────
+// ── Firebase helpers ──────────────────────────────────────────
 async function fbSet(path, val) {
   try { await db.ref(path).set(val); return true; }
   catch(e) { console.error('[fbSet]', path, e.message); return false; }
 }
 async function fbGet(path) {
-  try { const snap = await db.ref(path).get(); return snap.exists() ? snap.val() : null; }
+  try { const s = await db.ref(path).get(); return s.exists() ? s.val() : null; }
   catch(e) { console.error('[fbGet]', path, e.message); return null; }
 }
 async function fbUpdate(path, val) {
@@ -854,80 +830,162 @@ async function fbUpdate(path, val) {
 }
 function fbListen(path, cb) {
   const r = db.ref(path);
-  r.on('value', snap => cb(snap.exists() ? snap.val() : null));
+  r.on('value', s => cb(s.exists() ? s.val() : null));
   return () => r.off('value');
 }
 
 // ── Constantes ────────────────────────────────────────────────
 const COLORS = [
-  { id: 'red',    hex: '#e8445a', name: 'Vermelho' },
-  { id: 'orange', hex: '#f5a623', name: 'Laranja' },
-  { id: 'yellow', hex: '#f7d154', name: 'Amarelo' },
-  { id: 'green',  hex: '#4cd964', name: 'Verde' },
-  { id: 'teal',   hex: '#26d0ce', name: 'Turquesa' },
-  { id: 'blue',   hex: '#4a90e2', name: 'Azul' },
-  { id: 'purple', hex: '#9b59b6', name: 'Roxo' },
-  { id: 'pink',   hex: '#ff6ba8', name: 'Rosa' },
+  { id:'red',    hex:'#e8445a', name:'Vermelho' },
+  { id:'orange', hex:'#f5a623', name:'Laranja'  },
+  { id:'yellow', hex:'#f7d154', name:'Amarelo'  },
+  { id:'green',  hex:'#4cd964', name:'Verde'    },
+  { id:'teal',   hex:'#26d0ce', name:'Turquesa' },
+  { id:'blue',   hex:'#4a90e2', name:'Azul'     },
+  { id:'purple', hex:'#9b59b6', name:'Roxo'     },
+  { id:'pink',   hex:'#ff6ba8', name:'Rosa'     },
 ];
 const VOTE_TIME = 20;
+const CIRCUMFERENCE = 2 * Math.PI * 26; // r=26
 
 let S = {
-  myId: null, myName: null, myColor: null, myGostos: [],
-  roomCode: null, isHost: false, maxPlayers: 6,
-  selectedColor: null, timerInterval: null,
-  hasVoted: false, currentRoundIdx: -1,
-  unsubRoom: null,
+  myId:null, myName:null, myColor:null, myGostos:[],
+  roomCode:null, isHost:false, maxPlayers:6,
+  selectedColor:null, timerInterval:null,
+  hasVoted:false, currentRoundIdx:-1,
+  unsubRoom:null, combo:0, totalRounds:0,
 };
 
 // ── Paths ─────────────────────────────────────────────────────
-const pRoom    = c       => `rooms/${c}`;
-const pPlayer  = (c, id) => `rooms/${c}/players/${id}`;
-const pColor   = (c, id) => `rooms/${c}/colors/${id}`;
-const pGostos  = (c, id) => `rooms/${c}/gostos/${id}`;
-const pVote    = (c, r, id) => `rooms/${c}/votes/${r}/${id}`;
+const pRoom   = c       => `rooms/${c}`;
+const pPlayer = (c,id)  => `rooms/${c}/players/${id}`;
+const pColor  = (c,id)  => `rooms/${c}/colors/${id}`;
+const pGostos = (c,id)  => `rooms/${c}/gostos/${id}`;
+const pVote   = (c,r,id)=> `rooms/${c}/votes/${r}/${id}`;
 
 // ── Utils ─────────────────────────────────────────────────────
 const genCode  = () => Math.random().toString(36).substring(2,8).toUpperCase();
 const genId    = () => Date.now().toString(36) + Math.random().toString(36).substr(2,4);
 const colorHex = id => COLORS.find(c=>c.id===id)?.hex || '#888';
+const colorName= id => COLORS.find(c=>c.id===id)?.name || id;
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const el = document.getElementById('screen-' + id);
+  const el = document.getElementById('screen-'+id);
   if (el) el.classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
 }
+window.showScreen = showScreen;
 
 let _toastTimer;
 function toast(msg, dur=2800) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+  t.textContent = msg; t.classList.add('show');
   clearTimeout(_toastTimer);
   _toastTimer = setTimeout(()=>t.classList.remove('show'), dur);
 }
 
-function adjustMax(d) {
-  S.maxPlayers = Math.min(8, Math.max(2, S.maxPlayers + d));
-  document.getElementById('max-players-display').textContent = S.maxPlayers;
+// ── Particles background ──────────────────────────────────────
+(function initParticles() {
+  const canvas = document.getElementById('particles');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  function resize() { canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+  for (let i=0; i<55; i++) {
+    particles.push({
+      x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight,
+      r: Math.random()*1.5+0.3, vx:(Math.random()-0.5)*0.3, vy:(Math.random()-0.5)*0.3,
+      a: Math.random()*0.4+0.05
+    });
+  }
+  function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(p => {
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0)p.x=canvas.width; if(p.x>canvas.width)p.x=0;
+      if(p.y<0)p.y=canvas.height; if(p.y>canvas.height)p.y=0;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,255,255,${p.a})`; ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ── Confetti ──────────────────────────────────────────────────
+function launchConfetti(count=80) {
+  const colors = ['#f5a623','#e8445a','#26d0ce','#a855f7','#4cd964','#f7d154','#ff6ba8'];
+  for (let i=0; i<count; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    const size = Math.random()*10+6;
+    el.style.cssText = `
+      left:${Math.random()*100}vw; width:${size}px; height:${size*0.6}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      transform:rotate(${Math.random()*360}deg);
+      animation-duration:${Math.random()*2+2}s;
+      animation-delay:${Math.random()*1.5}s;
+      opacity:${Math.random()*0.8+0.2};
+    `;
+    document.body.appendChild(el);
+    el.addEventListener('animationend', ()=>el.remove());
+  }
 }
+
+// ── Ripple sound feedback ─────────────────────────────────────
+function playTone(freq=440, type='sine', dur=0.1, vol=0.08) {
+  try {
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = freq; o.type = type;
+    g.gain.setValueAtTime(vol, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+dur);
+    o.start(ctx.currentTime); o.stop(ctx.currentTime+dur);
+  } catch(e) {}
+}
+function playSuccess() { playTone(523,0.08); setTimeout(()=>playTone(659,0.08),80); setTimeout(()=>playTone(784,0.12),160); }
+function playError()   { playTone(200,'sawtooth',0.15,0.06); }
+function playVote()    { playTone(440,'sine',0.08); }
+function playTick()    { playTone(800,'sine',0.05,0.04); }
+
+// ── Utility ───────────────────────────────────────────────────
+function adjustMax(d) {
+  S.maxPlayers = Math.min(8, Math.max(2, S.maxPlayers+d));
+  document.getElementById('max-players-display').textContent = S.maxPlayers;
+  playTone(d>0?500:400);
+}
+window.adjustMax = adjustMax;
 
 function copyCode() {
-  navigator.clipboard.writeText(S.roomCode).then(()=>toast('✅ Código copiado!'));
+  navigator.clipboard.writeText(S.roomCode)
+    .then(()=>{ toast('✅ Código copiado!'); playSuccess(); });
 }
+window.copyCode = copyCode;
 
-// ── Montar lista de jogadores a partir do snapshot da sala ────
+function shareCode() {
+  if (navigator.share) {
+    navigator.share({ title:'ATOS QUIZ', text:`Entre na minha sala! Código: ${S.roomCode}`, url: window.location.href })
+      .catch(()=>{});
+  } else { copyCode(); }
+}
+window.shareCode = shareCode;
+
+// ── Build players from room snapshot ─────────────────────────
 function playersFromRoom(room) {
-  const players = Object.values(room.players || {});
+  const players = Object.values(room.players||{});
   for (const p of players) {
-    p.color  = (room.colors  || {})[p.id] || null;
-    const g  = (room.gostos  || {})[p.id];
+    p.color  = (room.colors||{})[p.id]||null;
+    const g  = (room.gostos||{})[p.id];
     p.gostos = g ? g.gostos : [];
     p.ready  = g ? g.ready  : false;
   }
   return players;
 }
 
-// ── Listener principal ────────────────────────────────────────
+// ── Main listener ─────────────────────────────────────────────
 function startListening() {
   if (S.unsubRoom) S.unsubRoom();
   S.unsubRoom = fbListen(pRoom(S.roomCode), room => {
@@ -935,169 +993,146 @@ function startListening() {
     const players = playersFromRoom(room);
     const cur = document.querySelector('.screen.active')?.id?.replace('screen-','');
 
-    if (room.status === 'lobby') {
-      renderLobby(room, players);
+    if (room.status==='lobby')       renderLobby(room, players);
+    if (room.status==='color') {
+      if (cur==='lobby')             { showScreen('color'); buildColorGrid(players); }
+      if (cur==='color')               buildColorGrid(players);
+      if (S.isHost) { const all=players.every(p=>p.color); if(all&&players.length>0) hostAdvanceTo(room,'gostos'); }
     }
-
-    if (room.status === 'color') {
-      if (cur === 'lobby') { showScreen('color'); buildColorGrid(players); }
-      if (cur === 'color')  buildColorGrid(players);
-      if (S.isHost) {
-        const allColored = players.every(p => p.color);
-        if (allColored && players.length > 0) hostAdvanceTo(room, 'gostos');
+    if (room.status==='gostos') {
+      if (cur==='color'||cur==='lobby') buildGostosInputs(players);
+      if (cur==='gostos')               renderReadyList(players);
+      if (S.isHost) { const all=players.length>0&&players.every(p=>p.ready); if(all) hostBuildGame(room,players); }
+    }
+    if (room.status==='game') {
+      if (cur==='gostos'||cur==='lobby'||cur==='vote-results') showGameScreen(room,players);
+      if (cur==='game') {
+        if (room.currentRound!==S.currentRoundIdx) showGameScreen(room,players);
+        if (S.isHost) hostCheckVotes(room,players);
       }
     }
-
-    if (room.status === 'gostos') {
-      if (cur === 'color' || cur === 'lobby') { buildGostosInputs(players); }
-      if (cur === 'gostos') renderReadyList(players);
-      if (S.isHost) {
-        const allReady = players.length > 0 && players.every(p => p.ready);
-        if (allReady) hostBuildGame(room, players);
-      }
+    if (room.status==='vote_result') {
+      if (cur==='game') showVoteResult(room,players);
+      if (cur==='vote-results') renderVoteResult(room,players);
     }
-
-    if (room.status === 'game') {
-      if (cur === 'gostos' || cur === 'lobby' || cur === 'vote-results') { showGameScreen(room, players); }
-      if (cur === 'game') {
-        if (room.currentRound !== S.currentRoundIdx) showGameScreen(room, players);
-        if (S.isHost) hostCheckVotes(room, players);
-      }
-    }
-
-    if (room.status === 'vote_result') {
-      if (cur === 'game') showVoteResult(room, players);
-      if (cur === 'vote-results') renderVoteResult(room, players);
-    }
-
-    if (room.status === 'final') {
-      if (cur !== 'final') showFinalScreen(room, players);
+    if (room.status==='final') {
+      if (cur!=='final') showFinalScreen(room,players);
     }
   });
 }
 
 // ── Create Room ───────────────────────────────────────────────
 async function createRoom() {
-  if (!db) { toast('❌ Firebase não conectado. Verifique a configuração.'); return; }
+  if (!db) { toast('❌ Firebase não conectado!'); return; }
   const name = document.getElementById('create-name').value.trim();
-  if (!name) { toast('⚠️ Digite seu nome!'); return; }
+  if (!name) { toast('⚠️ Digite seu nome!'); playError(); return; }
 
   const btn = document.querySelector('#screen-create-room .btn-primary');
-  if (btn) btn.disabled = true;
-  toast('⏳ Criando sala...', 6000);
+  if (btn) { btn.disabled=true; btn.textContent='⏳ Criando...'; }
 
-  S.myId   = genId();
-  S.myName = name;
-  S.isHost = true;
+  S.myId=genId(); S.myName=name; S.isHost=true;
 
-  let saved = false;
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const code = genCode();
-    S.roomCode = code;
-
+  let saved=false;
+  for (let attempt=0; attempt<5; attempt++) {
+    const code=genCode(); S.roomCode=code;
     const ok = await fbSet(pRoom(code), {
-      code,
-      host: S.myId,
-      maxPlayers: S.maxPlayers,
-      status: 'lobby',
-      currentRound: -1,
-      rounds: [],
-      roundStartTime: 0,
-      players: { [S.myId]: { id: S.myId, name, score: 0 } },
-      colors: {},
-      gostos: {},
-      votes: {},
+      code, host:S.myId, maxPlayers:S.maxPlayers,
+      status:'lobby', currentRound:-1, rounds:[],
+      roundStartTime:0, createdAt:Date.now(),
+      players:{ [S.myId]:{ id:S.myId, name, score:0, streak:0 } },
+      colors:{}, gostos:{}, votes:{},
     });
-
-    if (ok) { saved = true; break; }
-    await new Promise(r => setTimeout(r, 400 + attempt * 200));
+    if (ok) {
+      await new Promise(r=>setTimeout(r,300));
+      const verify = await fbGet(pRoom(code));
+      if (verify&&verify.code===code) { saved=true; break; }
+    }
+    await new Promise(r=>setTimeout(r,400+attempt*200));
   }
 
-  if (btn) btn.disabled = false;
-  if (!saved) { toast('❌ Erro ao criar sala. Tente novamente.'); return; }
+  if (btn) { btn.disabled=false; btn.textContent='Criar Sala 🚀'; }
+  if (!saved) { toast('❌ Erro ao criar sala. Tente novamente.'); playError(); return; }
 
+  playSuccess();
   startListening();
   showScreen('lobby');
-  toast('✅ Sala criada!');
+  toast('🎉 Sala criada! Compartilhe o código.');
 }
+window.createRoom = createRoom;
 
 // ── Join Room ─────────────────────────────────────────────────
 async function joinRoom() {
-  if (!db) { toast('❌ Firebase não conectado. Verifique a configuração.'); return; }
+  if (!db) { toast('❌ Firebase não conectado!'); return; }
   const code = document.getElementById('join-code').value.trim().toUpperCase();
   const name = document.getElementById('join-name').value.trim();
-  if (!code) { toast('⚠️ Digite o código!'); return; }
-  if (!name) { toast('⚠️ Digite seu nome!'); return; }
+  if (!code) { toast('⚠️ Digite o código!'); playError(); return; }
+  if (!name) { toast('⚠️ Digite seu nome!');  playError(); return; }
 
-  const btn = document.querySelector('#screen-join-room .btn-secondary');
-  if (btn) btn.disabled = true;
+  const btn = document.getElementById('join-btn');
+  if (btn) { btn.disabled=true; btn.textContent='🔍 Buscando...'; }
   toast('🔍 Verificando sala...', 8000);
 
   const room = await fbGet(pRoom(code));
+  if (btn) { btn.disabled=false; btn.textContent='Entrar 🎮'; }
 
-  if (btn) btn.disabled = false;
+  if (!room)                    { toast('❌ Sala não encontrada!');    playError(); return; }
+  if (room.status!=='lobby')    { toast('❌ O jogo já começou!');      playError(); return; }
+  const cnt = Object.keys(room.players||{}).length;
+  if (cnt>=room.maxPlayers)     { toast('❌ Sala cheia!');             playError(); return; }
 
-  if (!room) { toast('❌ Sala não encontrada! Verifique o código.'); return; }
-  if (room.status !== 'lobby') { toast('❌ O jogo já começou!'); return; }
-
-  const currentPlayers = Object.keys(room.players || {});
-  if (currentPlayers.length >= room.maxPlayers) { toast('❌ Sala cheia!'); return; }
-
-  S.myId     = genId();
-  S.myName   = name;
-  S.isHost   = false;
-  S.roomCode = code;
+  S.myId=genId(); S.myName=name; S.isHost=false; S.roomCode=code;
 
   const ok = await fbUpdate(pRoom(code), {
-    [`players/${S.myId}`]: { id: S.myId, name, score: 0 }
+    [`players/${S.myId}`]: { id:S.myId, name, score:0, streak:0 }
   });
+  if (!ok) { toast('❌ Erro ao entrar. Tente novamente.'); playError(); return; }
 
-  if (!ok) { toast('❌ Erro ao entrar na sala. Tente novamente.'); return; }
-
+  playSuccess();
   startListening();
   showScreen('lobby');
 }
+window.joinRoom = joinRoom;
 
 // ── Host helpers ──────────────────────────────────────────────
 async function hostAdvanceTo(room, status) {
-  if (room.status === status) return;
+  if (room.status===status) return;
   await fbUpdate(pRoom(S.roomCode), { status });
 }
 
 async function hostBuildGame(room, players) {
-  if (room.status !== 'gostos') return;
-  let allGostos = [];
-  for (const p of players) {
-    (p.gostos || []).forEach(g => allGostos.push({ ownerId: p.id, text: g }));
-  }
-  for (let i = allGostos.length-1; i>0; i--) {
-    const j = Math.floor(Math.random()*(i+1));
-    [allGostos[i], allGostos[j]] = [allGostos[j], allGostos[i]];
-  }
+  if (room.status!=='gostos') return;
+  let all=[];
+  for (const p of players) (p.gostos||[]).forEach(g => all.push({ownerId:p.id, text:g}));
+  for (let i=all.length-1;i>0;i--) { const j=Math.floor(Math.random()*(i+1)); [all[i],all[j]]=[all[j],all[i]]; }
+  S.totalRounds = all.length;
   await fbUpdate(pRoom(S.roomCode), {
-    rounds: allGostos.map(g => ({ ownerId: g.ownerId, gosto: g.text })),
-    currentRound: 0,
-    roundStartTime: Date.now(),
-    status: 'game',
+    rounds: all.map(g=>({ownerId:g.ownerId, gosto:g.text})),
+    currentRound:0, roundStartTime:Date.now(), status:'game', totalRounds:all.length,
   });
 }
 
 async function hostCheckVotes(room, players) {
   const roundIdx = room.currentRound;
-  const votes = (room.votes || {})[roundIdx] || {};
+  const votes    = (room.votes||{})[roundIdx]||{};
   if (Object.keys(votes).length < players.length) return;
 
-  // Firebase salva arrays como objetos — normalizar
-  const rounds = Array.isArray(room.rounds) ? room.rounds : Object.values(room.rounds || {});
-  const round   = rounds[roundIdx];
-  if (!round) return;
+  const rounds  = Array.isArray(room.rounds)?room.rounds:Object.values(room.rounds||{});
+  const round   = rounds[roundIdx]; if (!round) return;
   const correct = round.ownerId;
   const updates = {};
 
   for (const [voterId, voted] of Object.entries(votes)) {
-    if (voted === correct && voterId !== correct) {
-      const p = players.find(x => x.id === voterId);
-      if (p) updates[`players/${voterId}/score`] = (p.score || 0) + 100;
+    if (voted===correct && voterId!==correct) {
+      const p = players.find(x=>x.id===voterId);
+      if (p) {
+        const newStreak = (p.streak||0)+1;
+        const bonus = newStreak>=3 ? 150 : 100; // streak bonus
+        updates[`players/${voterId}/score`]  = (p.score||0)+bonus;
+        updates[`players/${voterId}/streak`] = newStreak;
+      }
+    } else if (voted!==correct) {
+      const p = players.find(x=>x.id===voterId);
+      if (p) updates[`players/${voterId}/streak`] = 0; // reset streak on miss
     }
   }
 
@@ -1110,149 +1145,171 @@ async function hostCheckVotes(room, players) {
 function renderLobby(room, players) {
   document.getElementById('lobby-code').textContent = room.code;
   document.getElementById('lobby-count').textContent = players.length;
-  document.getElementById('lobby-max').textContent = room.maxPlayers;
+  document.getElementById('lobby-max').textContent   = room.maxPlayers;
 
-  const list = document.getElementById('lobby-players');
-  list.innerHTML = players.map(p => {
-    const isHost = p.id === room.host;
+  document.getElementById('lobby-players').innerHTML = players.map(p => {
+    const isHost = p.id===room.host;
+    const col    = p.color ? colorHex(p.color) : '#444';
     return `<div class="player-item">
-      <div class="player-dot" style="background:${p.color ? colorHex(p.color) : '#444'}"></div>
-      <div class="player-name">${p.name}${isHost ? '<span class="host-badge">HOST</span>':''}</div>
+      <div class="player-dot" style="background:${col};box-shadow:0 0 12px ${col}"></div>
+      <div class="player-name">${p.name}${isHost?'<span class="host-badge">HOST</span>':''}</div>
     </div>`;
   }).join('');
 
-  const meHost = S.myId === room.host;
-  document.getElementById('lobby-start-wrap').style.display = meHost && players.length >= 2 ? 'block' : 'none';
-  document.getElementById('lobby-wait-msg').style.display = meHost ? 'none' : 'block';
+  const meHost = S.myId===room.host;
+  document.getElementById('lobby-start-wrap').style.display = meHost&&players.length>=2 ? 'block':'none';
+  document.getElementById('lobby-wait-msg').style.display   = meHost ? 'none':'block';
 }
 
 async function startGame() {
-  const room = await fbGet(pRoom(S.roomCode));
-  if (!room) return;
-  await hostAdvanceTo(room, 'color');
+  const room = await fbGet(pRoom(S.roomCode)); if (!room) return;
+  playSuccess();
+  await hostAdvanceTo(room,'color');
   showScreen('color');
 }
+window.startGame = startGame;
 
 // ── Color Screen ──────────────────────────────────────────────
 function buildColorGrid(players) {
-  const takenColors = players.filter(p => p.color && p.id !== S.myId).map(p => p.color);
-  const myPick = S.selectedColor;
-  const grid = document.getElementById('colors-grid');
-  grid.innerHTML = COLORS.map(c => {
-    const taken = takenColors.includes(c.id);
-    const sel   = myPick === c.id;
-    return `<button class="color-btn ${taken?'taken':''} ${sel?'selected':''}"
-      style="background:${c.hex};" title="${c.name}"
-      onclick="selectColor('${c.id}',${taken})" data-color="${c.id}"></button>`;
+  const taken = players.filter(p=>p.color&&p.id!==S.myId).map(p=>p.color);
+  document.getElementById('colors-grid').innerHTML = COLORS.map(c => {
+    const isTaken = taken.includes(c.id);
+    const isSel   = S.selectedColor===c.id;
+    return `<button class="color-btn ${isTaken?'taken':''} ${isSel?'selected':''}"
+      style="background:${c.hex};box-shadow:0 4px 16px ${c.hex}55;"
+      title="${c.name}" onclick="selectColor('${c.id}',${isTaken})"
+      data-color="${c.id}"></button>`;
   }).join('');
-  document.getElementById('confirm-color-btn').disabled = !myPick;
+  document.getElementById('confirm-color-btn').disabled = !S.selectedColor;
 }
 
 function selectColor(colorId, taken) {
-  if (taken) return;
+  if (taken) { toast('⚠️ Cor já escolhida!'); playError(); return; }
   S.selectedColor = colorId;
-  document.querySelectorAll('.color-btn').forEach(b =>
-    b.classList.toggle('selected', b.dataset.color === colorId));
+  playTone(550);
+  document.querySelectorAll('.color-btn').forEach(b=>b.classList.toggle('selected', b.dataset.color===colorId));
   document.getElementById('confirm-color-btn').disabled = false;
 }
+window.selectColor = selectColor;
 
 async function confirmColor() {
   if (!S.selectedColor) return;
   S.myColor = S.selectedColor;
   await fbUpdate(pRoom(S.roomCode), { [`colors/${S.myId}`]: S.selectedColor });
-  toast('🎨 Cor confirmada!');
+  playSuccess(); toast(`🎨 Cor ${colorName(S.selectedColor)} confirmada!`);
   document.getElementById('confirm-color-btn').disabled = true;
 }
+window.confirmColor = confirmColor;
 
 // ── Gostos Screen ─────────────────────────────────────────────
 function buildGostosInputs(players) {
-  const myColorHex = S.myColor ? colorHex(S.myColor) : '#888';
+  const hex  = S.myColor ? colorHex(S.myColor) : '#888';
   const wrap = document.getElementById('gostos-inputs');
   if (!wrap.querySelector('#gosto-0')) {
     wrap.innerHTML = Array.from({length:5},(_,i)=>`
       <div class="gosto-row">
-        <div class="gosto-num" style="background:${myColorHex}">${i+1}</div>
-        <input type="text" placeholder="Gosto ${i+1}..." maxlength="80" id="gosto-${i}">
+        <div class="gosto-num" style="background:${hex};box-shadow:0 0 10px ${hex}88">${i+1}</div>
+        <input type="text" placeholder="Gosto ${i+1}..." maxlength="80" id="gosto-${i}"
+          oninput="autoSaveGosto(${i})" style="transition:all 0.2s;">
       </div>`).join('');
   }
   showScreen('gostos');
   renderReadyList(players);
 }
 
+// auto-save draft indicator
+let autoSaveTimer;
+function autoSaveGosto() {
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(()=>{
+    const filled = Array.from({length:5},(_,i)=>document.getElementById(`gosto-${i}`)?.value.trim()||'').filter(Boolean).length;
+    document.getElementById('confirm-gostos-btn').textContent = filled===5 ? '✅ Confirmar Gostos' : `✅ Confirmar Gostos (${filled}/5)`;
+  },300);
+}
+window.autoSaveGosto = autoSaveGosto;
+
 function renderReadyList(players) {
   const ready = players.filter(p=>p.ready);
   document.getElementById('ready-count').textContent = `${ready.length}/${players.length}`;
-  const list = document.getElementById('ready-players');
-  list.innerHTML = players.map(p=>`
+  document.getElementById('ready-players').innerHTML = players.map(p=>`
     <div class="player-item">
-      <div class="player-dot" style="background:${p.color ? colorHex(p.color) : '#444'}"></div>
-      <div class="player-name">${p.name}</div>
-      <div class="player-ready">${p.ready
-        ? '<span class="chip chip-green">✅ Pronto</span>'
-        : '<span class="chip" style="background:rgba(255,255,255,0.07);color:var(--text-muted)">Escrevendo...</span>'}</div>
+      <div class="player-dot" style="background:${p.color?colorHex(p.color):'#444'};box-shadow:0 0 10px ${p.color?colorHex(p.color):'#444'}44"></div>
+      <div class="player-ready" style="margin-left:0;">${p.ready
+        ?'<span class="chip chip-green">✅ Pronto</span>'
+        :'<span class="chip" style="background:rgba(255,255,255,0.05);color:var(--text-muted);">✏️ Escrevendo...</span>'}</div>
     </div>`).join('');
 }
 
 async function confirmGostos() {
-  const gostos = Array.from({length:5},(_,i)=>{
-    const el = document.getElementById('gosto-'+i);
-    return el ? el.value.trim() : '';
-  });
-  if (gostos.some(g=>!g)) { toast('⚠️ Preencha todos os 5 gostos!'); return; }
-  S.myGostos = gostos;
-  await fbUpdate(pRoom(S.roomCode), { [`gostos/${S.myId}`]: { gostos, ready: true } });
-  toast('✅ Gostos salvos!');
+  const gostos = Array.from({length:5},(_,i)=>document.getElementById(`gosto-${i}`)?.value.trim()||'');
+  if (gostos.some(g=>!g)) { toast('⚠️ Preencha todos os 5 gostos!'); playError(); return; }
+  S.myGostos=gostos;
+  await fbUpdate(pRoom(S.roomCode), { [`gostos/${S.myId}`]:{ gostos, ready:true } });
+  playSuccess(); toast('✅ Gostos salvos! Aguardando todos...');
   document.getElementById('confirm-gostos-btn').disabled = true;
 }
+window.confirmGostos = confirmGostos;
 
 // ── Game Screen ───────────────────────────────────────────────
 function showGameScreen(room, players) {
   S.currentRoundIdx = room.currentRound;
   S.hasVoted = false;
 
-  const rounds = Array.isArray(room.rounds) ? room.rounds : Object.values(room.rounds || {});
-  const round  = rounds[room.currentRound];
-  if (!round) return;
+  const rounds = Array.isArray(room.rounds)?room.rounds:Object.values(room.rounds||{});
+  const round  = rounds[room.currentRound]; if (!round) return;
+  const total  = room.totalRounds || rounds.length;
 
-  document.getElementById('round-counter').textContent = `GOSTO ${room.currentRound+1}/${rounds.length}`;
-  // Esconde a cor do dono — é o mistério do jogo!
-  document.getElementById('gosto-color').style.background = '#444';
-  document.getElementById('gosto-text').textContent = round.gosto;
-  document.getElementById('voted-msg').style.display = 'none';
+  document.getElementById('round-counter').textContent = `GOSTO ${room.currentRound+1} / ${total}`;
+  document.getElementById('gosto-text').textContent    = round.gosto;
+  document.getElementById('voted-msg').style.display   = 'none';
+
+  // Progress bar
+  const pct = Math.round((room.currentRound/total)*100);
+  document.getElementById('progress-fill').style.width = pct+'%';
+  document.getElementById('progress-label-text').textContent = `${room.currentRound} / ${total} gostos`;
 
   const myPlayer = players.find(p=>p.id===S.myId);
-  document.getElementById('my-score').textContent = myPlayer?.score || 0;
+  document.getElementById('my-score').textContent = myPlayer?.score||0;
 
   buildVoteGrid(players, round);
-  startTimer(room);
+  startTimer(room, total);
   showScreen('game');
 }
 
 function buildVoteGrid(players, round) {
-  const grid = document.getElementById('vote-grid');
-  // Embaralha a ordem dos jogadores para não dar dica por posição
-  const shuffled = [...players].sort(() => Math.random() - 0.5);
-  grid.innerHTML = shuffled.map(p => {
-    const hex = p.color ? colorHex(p.color) : '#888';
+  const shuffled = [...players].sort(()=>Math.random()-0.5);
+  document.getElementById('vote-grid').innerHTML = shuffled.map(p => {
+    const hex = p.color?colorHex(p.color):'#888';
     return `<button class="vote-btn" id="vote-btn-${p.id}" onclick="castVote('${p.id}')">
-      <div class="vote-color" style="background:${hex}"></div>
+      <div class="vote-color" style="background:${hex};box-shadow:0 0 10px ${hex}88;"></div>
       <span>${p.name}</span>
     </button>`;
   }).join('');
 }
 
-function startTimer(room) {
+function startTimer(room, totalRounds) {
   clearInterval(S.timerInterval);
-  const total   = VOTE_TIME * 1000;
-  const startTs = room.roundStartTime || Date.now();
+  const total   = VOTE_TIME*1000;
+  const startTs = room.roundStartTime||Date.now();
+  const circ    = CIRCUMFERENCE;
+  const circle  = document.getElementById('countdown-circle');
+  const timerEl = document.getElementById('timer-text');
+  const wrap    = document.getElementById('screen-game');
+
   function tick() {
-    const rem = Math.max(0, total - (Date.now() - startTs));
-    document.getElementById('timer-bar').style.width = (rem/total*100)+'%';
-    document.getElementById('timer-text').textContent = Math.ceil(rem/1000)+'s';
-    if (rem <= 0) {
-      clearInterval(S.timerInterval);
-      if (!S.hasVoted) autoVote();
-    }
+    const rem = Math.max(0, total-(Date.now()-startTs));
+    const pct = rem/total;
+    const sec = Math.ceil(rem/1000);
+
+    if (circle) circle.style.strokeDashoffset = circ*(1-pct);
+    if (timerEl) timerEl.textContent = sec;
+
+    // Urgent state when under 5s
+    const urgent = sec<=5;
+    wrap.classList.toggle('timer-urgent', urgent);
+    if (urgent && sec>0) playTick();
+
+    if (rem<=0) { clearInterval(S.timerInterval); if (!S.hasVoted) autoVote(); }
   }
   tick();
   S.timerInterval = setInterval(tick, 200);
@@ -1271,12 +1328,14 @@ async function castVote(targetId, auto=false) {
   S.hasVoted = true;
   clearInterval(S.timerInterval);
   if (!auto) {
+    playVote();
     document.querySelectorAll('.vote-btn').forEach(b=>b.classList.add('disabled-vote'));
     document.getElementById('vote-btn-'+targetId)?.classList.add('voted');
     document.getElementById('voted-msg').style.display = 'block';
   }
   await fbUpdate(pRoom(S.roomCode), { [`votes/${S.currentRoundIdx}/${S.myId}`]: targetId });
 }
+window.castVote = castVote;
 
 // ── Vote Results ──────────────────────────────────────────────
 function showVoteResult(room, players) {
@@ -1286,69 +1345,84 @@ function showVoteResult(room, players) {
 }
 
 function renderVoteResult(room, players) {
-  const rounds = Array.isArray(room.rounds) ? room.rounds : Object.values(room.rounds || {});
-  const round  = rounds[room.currentRound];
-  if (!round) return;
+  const rounds = Array.isArray(room.rounds)?room.rounds:Object.values(room.rounds||{});
+  const round  = rounds[room.currentRound]; if (!round) return;
   const owner    = players.find(p=>p.id===round.ownerId);
-  const ownerHex = owner?.color ? colorHex(owner.color) : '#888';
+  const ownerHex = owner?.color?colorHex(owner.color):'#888';
 
-  document.getElementById('result-gosto-color').style.background = ownerHex;
   document.getElementById('result-gosto-text').textContent = round.gosto;
+  document.getElementById('result-gosto-color').style.cssText = `width:32px;height:32px;border-radius:50%;background:${ownerHex};border:2px solid rgba(255,255,255,0.3);box-shadow:0 0 20px ${ownerHex};`;
+  document.getElementById('result-owner-name').textContent = owner?.name||'?';
 
-  const votes      = round.votes || {};
+  const votes      = round.votes||{};
   const totalVotes = Object.values(votes).length;
-  const voteCounts = {};
-  players.forEach(p => voteCounts[p.id] = 0);
-  Object.values(votes).forEach(v => { if(voteCounts[v]!==undefined) voteCounts[v]++; });
+  const counts     = {};
+  players.forEach(p=>counts[p.id]=0);
+  Object.values(votes).forEach(v=>{ if(counts[v]!==undefined) counts[v]++; });
 
-  const bars = document.getElementById('result-bars');
-  bars.innerHTML = `
-    <div style="margin-bottom:14px;padding:12px;background:rgba(255,255,255,0.04);border-radius:10px;text-align:center;">
-      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">O GOSTO ERA DE</div>
-      <div style="display:flex;align-items:center;justify-content:center;gap:10px;">
-        <div style="width:28px;height:28px;border-radius:50%;background:${ownerHex};border:2px solid rgba(255,255,255,0.2)"></div>
-        <span style="font-family:'Fredoka One',cursive;font-size:1.3rem;color:var(--accent)">${owner?.name||'?'}</span>
-      </div>
-    </div>
-    ${players.map(p => {
-      const cnt = voteCounts[p.id]||0;
-      const pct = totalVotes>0 ? Math.round(cnt/totalVotes*100) : 0;
-      const isOwner = p.id===round.ownerId;
-      const hex = p.color ? colorHex(p.color) : '#888';
-      return `<div class="result-row">
-        <div style="width:28px;height:28px;border-radius:50%;background:${hex};flex-shrink:0;border:2px solid ${isOwner?'white':'rgba(255,255,255,0.1)'}"></div>
-        <div class="result-bar-bg" style="flex:1;">
-          <div class="result-bar-fill" style="width:${pct}%;background:${hex};">${pct>15?p.name:''}</div>
-          <span class="result-pct">${pct}%</span>
+  // Did I vote correctly?
+  const myVote = votes[S.myId];
+  const iCorrect = myVote===round.ownerId && S.myId!==round.ownerId;
+  const comboBanner = document.getElementById('combo-banner');
+  if (iCorrect) {
+    S.combo++;
+    comboBanner.style.display = 'block';
+    const bonus = S.combo>=3 ? 150:100;
+    document.getElementById('combo-text').textContent = S.combo>=3 ? `🔥 +${bonus} (streak x${S.combo}!)` : `✅ +${bonus} pontos!`;
+    document.getElementById('combo-sub').textContent  = S.combo>=3 ? 'Incrível! Sequência de acertos!' : 'Você acertou!';
+    playSuccess();
+    if (S.combo>=3) launchConfetti(40);
+  } else {
+    S.combo = 0;
+    comboBanner.style.display = 'none';
+  }
+
+  // Build bars with animation delay
+  const sorted = [...players].sort((a,b)=>(counts[b.id]||0)-(counts[a.id]||0));
+  document.getElementById('result-bars').innerHTML = sorted.map((p,i) => {
+    const cnt = counts[p.id]||0;
+    const pct = totalVotes>0 ? Math.round(cnt/totalVotes*100):0;
+    const isOwner = p.id===round.ownerId;
+    const hex = p.color?colorHex(p.color):'#888';
+    const myVoted = myVote===p.id;
+    return `<div class="result-row" style="animation:fadeIn 0.3s ease ${i*0.1}s both;">
+      <div style="width:30px;height:30px;border-radius:50%;background:${hex};flex-shrink:0;
+        border:2px solid ${isOwner?'white':'rgba(255,255,255,0.1)'};
+        box-shadow:0 0 ${isOwner?'15px '+hex:'none'};"></div>
+      <div class="result-bar-bg" style="flex:1;">
+        <div class="result-bar-fill" style="width:${pct}%;background:${hex};
+          box-shadow:${pct>0?'0 0 10px '+hex+'66':'none'}">
+          ${pct>15?'<span style="color:rgba(0,0,0,0.8);font-size:0.8rem;">'+p.name+'</span>':''}
         </div>
-        ${isOwner?'<span style="font-size:1.2rem;">✓</span>':''}
-      </div>`;
-    }).join('')}`;
+        <span class="result-pct">${pct}%</span>
+      </div>
+      ${isOwner?'<span class="owner-crown">👑</span>':''}
+      ${myVoted&&!isOwner?'<span style="font-size:0.8rem;">👈</span>':''}
+    </div>`;
+  }).join('');
 
-  const meHost = S.myId === room.host;
-  document.getElementById('next-btn-wrap').style.display = meHost ? 'block' : 'none';
-  document.getElementById('next-wait-msg').style.display = meHost ? 'none' : 'block';
+  const meHost = S.myId===room.host;
+  document.getElementById('next-btn-wrap').style.display    = meHost?'block':'none';
+  document.getElementById('next-wait-msg').style.display    = meHost?'none':'block';
 }
 
 async function nextRound() {
-  const room   = await fbGet(pRoom(S.roomCode));
-  if (!room) return;
-  const rounds = Array.isArray(room.rounds) ? room.rounds : Object.values(room.rounds || {});
-  const next   = room.currentRound + 1;
-  if (next >= rounds.length) {
-    await fbUpdate(pRoom(S.roomCode), { status: 'final' });
+  const room   = await fbGet(pRoom(S.roomCode)); if (!room) return;
+  const rounds = Array.isArray(room.rounds)?room.rounds:Object.values(room.rounds||{});
+  const next   = room.currentRound+1;
+  if (next>=rounds.length) {
+    await fbUpdate(pRoom(S.roomCode), { status:'final' });
   } else {
-    await fbUpdate(pRoom(S.roomCode), {
-      currentRound: next,
-      roundStartTime: Date.now(),
-      status: 'game',
-    });
+    await fbUpdate(pRoom(S.roomCode), { currentRound:next, roundStartTime:Date.now(), status:'game' });
   }
 }
+window.nextRound = nextRound;
 
 // ── Final Screen ──────────────────────────────────────────────
 async function showFinalScreen(room, players) {
   clearInterval(S.timerInterval);
+  launchConfetti(120);
+  playSuccess();
 
   const sorted = [...players].sort((a,b)=>(b.score||0)-(a.score||0));
   const winner = sorted[0];
@@ -1356,44 +1430,58 @@ async function showFinalScreen(room, players) {
   document.getElementById('winner-name').textContent = winner.name;
   document.getElementById('winner-pts').textContent  = `${winner.score||0} pontos`;
 
+  // Stats
+  const rounds = Array.isArray(room.rounds)?room.rounds:Object.values(room.rounds||{});
+  const myVotesCorrect = rounds.filter(r=>{
+    const v=(r.votes||{})[S.myId]; return v===r.ownerId&&S.myId!==r.ownerId;
+  }).length;
+  document.getElementById('final-stat-grid').innerHTML = `
+    <div class="stat-box"><div class="stat-val">${rounds.length}</div><div class="stat-label">Gostos</div></div>
+    <div class="stat-box"><div class="stat-val">${myVotesCorrect}</div><div class="stat-label">Meus acertos</div></div>
+    <div class="stat-box"><div class="stat-val">${players.length}</div><div class="stat-label">Jogadores</div></div>`;
+
   const medals = ['🥇','🥈','🥉'];
   document.getElementById('final-scores').innerHTML = sorted.map((p,i)=>`
-    <div class="score-row">
+    <div class="score-row" style="animation:fadeIn 0.3s ease ${i*0.1}s both;${i===0?'border-color:rgba(245,166,35,0.3);background:rgba(245,166,35,0.05);':''}">
       <div class="score-pos">${medals[i]||(i+1)+'°'}</div>
-      <div class="player-dot" style="background:${p.color?colorHex(p.color):'#888'}"></div>
+      <div class="player-dot" style="background:${p.color?colorHex(p.color):'#888'};width:26px;height:26px;flex-shrink:0;"></div>
       <div class="player-name">${p.name}</div>
       <div class="score-pts">${p.score||0} pts</div>
     </div>`).join('');
 
-  const tablesWrap = document.getElementById('final-tables-wrap');
-  tablesWrap.innerHTML = '<div style="font-family:Fredoka One,cursive;font-size:1.3rem;color:var(--accent);margin:8px 0 14px;width:100%;">📋 Gostos Revelados</div>';
-
-  const rounds = Array.isArray(room.rounds) ? room.rounds : Object.values(room.rounds || {});
+  // Tables
+  const wrap = document.getElementById('final-tables-wrap');
+  wrap.innerHTML = `<div style="font-family:'Fredoka One',cursive;font-size:1.2rem;color:var(--accent);margin:6px 0 14px;width:100%;display:flex;align-items:center;gap:8px;">📋 Gostos Revelados</div>`;
   sorted.forEach(p => {
-    const hex     = p.color ? colorHex(p.color) : '#888';
-    const pRounds = rounds.filter(r=>r.ownerId===p.id);
-    const wrap    = document.createElement('div');
-    wrap.className = 'table-wrap';
-    wrap.innerHTML = `
+    const hex    = p.color?colorHex(p.color):'#888';
+    const pRnd   = rounds.filter(r=>r.ownerId===p.id);
+    const div    = document.createElement('div');
+    div.className='table-wrap';
+    const accuracy = pRnd.length>0 ? Math.round(pRnd.reduce((acc,r)=>{
+      const votes=r.votes||{}; const hits=Object.entries(votes).filter(([vid,v])=>v===p.id&&vid!==p.id).length;
+      const total=Object.keys(votes).filter(vid=>vid!==p.id).length;
+      return acc+(total>0?hits/total:0);
+    },0)/pRnd.length*100) : 0;
+    div.innerHTML=`
       <div class="table-header">
-        <div class="table-header-color" style="background:${hex}"></div>
+        <div class="table-header-color" style="background:${hex};box-shadow:0 0 12px ${hex}"></div>
         <div class="table-header-name">${p.name}</div>
+        <span class="chip chip-gold" style="margin-left:auto;">${accuracy}% reconhecido</span>
       </div>
       <table class="final-table">
         <thead><tr><th>Gosto</th><th>Acertaram</th><th>Erraram</th></tr></thead>
-        <tbody>${pRounds.map(round => {
-          const votes  = round.votes || {};
-          const hits   = Object.entries(votes).filter(([vid,v])=>v===p.id && vid!==p.id);
-          const misses = Object.entries(votes).filter(([vid,v])=>v!==p.id && vid!==p.id);
-          const nm     = id => sorted.find(x=>x.id===id)?.name||'?';
-          return `<tr>
-            <td>${round.gosto}</td>
-            <td>${hits.length?`<span class="chip chip-green">✅ ${hits.map(([v])=>nm(v)).join(', ')}</span>`:'<span class="chip" style="background:rgba(255,255,255,0.05);color:var(--text-muted)">Ninguém</span>'}</td>
-            <td>${misses.length?`<span class="chip chip-red">❌ ${misses.map(([v])=>nm(v)).join(', ')}</span>`:'<span class="chip" style="background:rgba(255,255,255,0.05);color:var(--text-muted)">Ninguém</span>'}</td>
+        <tbody>${pRnd.map(r=>{
+          const votes=r.votes||{};
+          const hits  =Object.entries(votes).filter(([vid,v])=>v===p.id&&vid!==p.id);
+          const misses=Object.entries(votes).filter(([vid,v])=>v!==p.id&&vid!==p.id);
+          const nm=id=>sorted.find(x=>x.id===id)?.name||'?';
+          return `<tr><td>${r.gosto}</td>
+            <td>${hits.length?`<span class="chip chip-green">✅ ${hits.map(([v])=>nm(v)).join(', ')}</span>`:'<span class="chip" style="background:rgba(255,255,255,0.04);color:var(--text-muted)">—</span>'}</td>
+            <td>${misses.length?`<span class="chip chip-red">❌ ${misses.map(([v])=>nm(v)).join(', ')}</span>`:'<span class="chip" style="background:rgba(255,255,255,0.04);color:var(--text-muted)">—</span>'}</td>
           </tr>`;
         }).join('')}</tbody>
       </table>`;
-    tablesWrap.appendChild(wrap);
+    wrap.appendChild(div);
   });
 
   showScreen('final');
@@ -1401,17 +1489,20 @@ async function showFinalScreen(room, players) {
 
 async function resetGame() {
   clearInterval(S.timerInterval);
-  if (S.unsubRoom) { S.unsubRoom(); S.unsubRoom = null; }
-  Object.assign(S, {
-    myId:null, myName:null, myColor:null, myGostos:[],
-    roomCode:null, isHost:false, maxPlayers:6, selectedColor:null,
-    hasVoted:false, currentRoundIdx:-1,
+  if (S.unsubRoom) { S.unsubRoom(); S.unsubRoom=null; }
+  Object.assign(S,{
+    myId:null,myName:null,myColor:null,myGostos:[],
+    roomCode:null,isHost:false,maxPlayers:6,selectedColor:null,
+    hasVoted:false,currentRoundIdx:-1,combo:0,totalRounds:0,
   });
   showScreen('home');
 }
+window.resetGame = resetGame;
 
-// Input auto-uppercase
-document.getElementById('join-code')?.addEventListener('input', function(){ this.value = this.value.toUpperCase(); });
+// ── Input helpers ─────────────────────────────────────────────
+document.getElementById('join-code')?.addEventListener('input', function(){ this.value=this.value.toUpperCase(); });
+document.getElementById('create-name')?.addEventListener('keydown', e=>{ if(e.key==='Enter') createRoom(); });
+document.getElementById('join-name')?.addEventListener('keydown',   e=>{ if(e.key==='Enter') joinRoom(); });
 </script>
 </body>
 </html>
