@@ -930,7 +930,14 @@ async function joinRoom() {
   if (!code) { toast('⚠️ Digite o codigo!'); return; }
   if (!name) { toast('⚠️ Digite seu nome!'); return; }
 
-  const room = await sGet(kRoom(code));
+  // Retry busca da sala — storage compartilhado pode ter delay de propagação
+  toast('🔍 Procurando sala...');
+  let room = null;
+  for (let i = 0; i < 6; i++) {
+    room = await sGet(kRoom(code));
+    if (room) break;
+    await new Promise(r => setTimeout(r, 400 + i * 200));
+  }
   if (!room) { toast('❌ Sala nao encontrada!'); return; }
   if (room.status !== 'lobby') { toast('❌ O jogo ja comecou!'); return; }
 
