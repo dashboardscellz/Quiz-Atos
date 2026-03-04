@@ -498,9 +498,6 @@ input, textarea, select { font-family:'DM Sans', sans-serif; }
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════
-     LOGIN
-═══════════════════════════════════════════ -->
 <div id="screen-login">
   <div class="login-card">
     <div class="login-mark">
@@ -539,9 +536,6 @@ input, textarea, select { font-family:'DM Sans', sans-serif; }
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════
-     APP
-═══════════════════════════════════════════ -->
 <div id="screen-app">
 
   <nav class="topbar">
@@ -567,7 +561,6 @@ input, textarea, select { font-family:'DM Sans', sans-serif; }
 
   <div class="page">
 
-    <!-- HOME -->
     <div class="tab on" id="t-home">
       <p class="page-title" id="h-greeting">Olá!</p>
       <p class="page-sub" id="h-sub"></p>
@@ -666,7 +659,6 @@ input, textarea, select { font-family:'DM Sans', sans-serif; }
       </div>
     </div>
 
-    <!-- MATÉRIAS -->
     <div class="tab" id="t-mat">
       <div id="v-mat-list">
         <p class="page-title">Matérias</p>
@@ -688,7 +680,6 @@ input, textarea, select { font-family:'DM Sans', sans-serif; }
       </div>
     </div>
 
-    <!-- ADICIONAR -->
     <div class="tab" id="t-add">
       <p class="page-title">Nova Sessão</p>
       <p class="page-sub">Registre o que você estudou</p>
@@ -748,7 +739,6 @@ input, textarea, select { font-family:'DM Sans', sans-serif; }
       </div>
     </div>
 
-    <!-- QUESTÕES -->
     <div class="tab" id="t-quiz">
       <div id="v-quiz-list">
         <p class="page-title">Questões</p>
@@ -777,7 +767,6 @@ input, textarea, select { font-family:'DM Sans', sans-serif; }
       </div>
     </div>
 
-    <!-- METAS -->
     <div class="tab" id="t-metas">
       <p class="page-title">Metas</p>
       <p class="page-sub">Ranking, objetivos e revisão</p>
@@ -820,9 +809,7 @@ input, textarea, select { font-family:'DM Sans', sans-serif; }
       </div>
     </div>
 
-  </div><!-- end page -->
-
-  <nav class="botnav">
+  </div><nav class="botnav">
     <button class="bn on" data-t="home" onclick="goTab('home',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       Início
@@ -1290,7 +1277,7 @@ async function addSession(){
 }
 
 /* ──────────────────────────────────────────
-   AI GENERATION
+   AI GENERATION (Integrado com Google Gemini)
 ────────────────────────────────────────── */
 async function genQ(subject,body,nq,diff){
   const u=USERS[CU];
@@ -1313,17 +1300,36 @@ Crie exatamente ${nq} questões de múltipla escolha com 4 alternativas (A, B, C
 - Cada explicação: 2-4 frases ensinando o conceito
 - Questões progressivas em complexidade
 
-RESPONDA APENAS com JSON puro e válido, sem markdown, sem texto fora do JSON:
+RESPONDA APENAS com JSON puro e válido:
 {"questions":[{"question":"enunciado","options":["A) texto","B) texto","C) texto","D) texto"],"answer":0,"explanation":"explicação didática"}]}`;
 
-  const r=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,messages:[{role:'user',content:prompt}]})
+  // Sua chave de API do Google AI Studio
+  const GEMINI_API_KEY = 'AIzaSyDa7d0wTium4xJeck1XUi9U2k7JfmsiTqI'; 
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{
+        parts: [{ text: prompt }]
+      }],
+      generationConfig: {
+        // Força a IA a devolver estritamente um JSON válido, evitando erros no código
+        response_mime_type: "application/json" 
+      }
+    })
   });
-  if(!r.ok) throw new Error('API '+r.status);
-  const data=await r.json();
-  const txt=data.content.map(c=>c.text||'').join('');
-  const clean=txt.replace(/```json|```/g,'').trim();
+
+  if (!response.ok) {
+    throw new Error('Erro na API do Gemini: ' + response.status);
+  }
+
+  const data = await response.json();
+  const txt = data.candidates[0].content.parts[0].text;
+  
+  // Limpeza de segurança caso a resposta venha com formatação markdown
+  const clean = txt.replace(/```json|```/g,'').trim();
   return JSON.parse(clean).questions;
 }
 
