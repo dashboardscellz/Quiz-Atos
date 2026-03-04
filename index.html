@@ -626,31 +626,33 @@ input,textarea,select{font-family:'DM Sans',sans-serif;}
 
     <!-- DIÁRIO + CONQUISTAS SEMANAIS -->
     <div class="tab" id="t-diary">
-      <p class="page-title">Diário</p>
-      <p class="page-sub" id="diary-sub">Registre seus pensamentos e conquistas</p>
+      <p class="page-title" id="live-title">Ao Vivo</p>
+      <p class="page-sub" id="live-sub">Veja o que seu parceiro está estudando agora</p>
 
-      <!-- LIVE COMPOSE -->
-      <div class="card" style="border-left:3px solid var(--accent)">
-        <div class="card-label" style="margin-bottom:12px">✍️ Escreva agora — seu parceiro pode ver ao vivo</div>
-        <div style="margin-bottom:12px">
-          <div class="card-label" style="margin-bottom:8px">Humor de hoje</div>
-          <div class="mood-row">
-            <button class="mood-btn" data-mood="😄" onclick="pickMood('😄')"><span>😄</span><span class="mood-label">Ótimo</span></button>
-            <button class="mood-btn" data-mood="😊" onclick="pickMood('😊')"><span>😊</span><span class="mood-label">Bem</span></button>
-            <button class="mood-btn" data-mood="😐" onclick="pickMood('😐')"><span>😐</span><span class="mood-label">Ok</span></button>
-            <button class="mood-btn" data-mood="😔" onclick="pickMood('😔')"><span>😔</span><span class="mood-label">Difícil</span></button>
-            <button class="mood-btn" data-mood="😤" onclick="pickMood('😤')"><span>😤</span><span class="mood-label">Focado</span></button>
+      <!-- PARTNER LIVE STATUS -->
+      <div class="partner-card" id="diary-partner-card">
+        <div class="partner-header">
+          <div class="partner-name-row">
+            <div class="partner-avatar" id="diary-partner-avatar" style="background:#EEF1FB;color:#2C3E8C">👩‍🎓</div>
+            <div>
+              <div class="partner-info-name" id="diary-partner-name">Gleici</div>
+              <div class="partner-info-sub" id="partner-live-status">verificando...</div>
+            </div>
           </div>
+          <div class="live-badge"><div class="live-dot"></div> AO VIVO</div>
         </div>
-        <div class="fg" style="margin-bottom:12px">
-          <label>Entrada do diário</label>
-          <textarea class="my-live-input" id="diary-input" placeholder="Como foi seu dia de estudos? O que aprendeu? O que sentiu?..." oninput="onDiaryType()" rows="4"></textarea>
+        <div id="partner-mood-row" style="display:none;align-items:center;gap:8px;margin-bottom:12px;padding:10px 12px;background:var(--cream);border-radius:var(--r-sm);">
+          <span style="font-size:22px" id="partner-mood-emoji">😊</span>
+          <span style="font-size:12px;color:var(--ink3)" id="partner-mood-label">Humor de hoje</span>
         </div>
-        <div style="display:flex;gap:8px">
-          <button type="button" class="btn btn-accent btn-sm" onclick="saveDiaryEntry()">Salvar entrada</button>
-          <button type="button" class="btn btn-outline btn-sm" onclick="clearDiaryDraft()">Limpar</button>
+        <div class="card-label" style="margin-bottom:8px">Estudando agora</div>
+        <div class="live-typing-area empty-state" id="diary-partner-text">Nada sendo digitado no momento...</div>
+        <div class="typing-indicator" id="diary-typing-ind">
+          <div class="typing-dots"><span></span><span></span><span></span></div>
+          digitando...
         </div>
-        <div class="live-reactions" style="margin-top:12px">
+        <div class="partner-reactions-display" id="diary-reactions"></div>
+        <div class="live-reactions" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--rule)">
           <span style="font-size:11px;color:var(--ink3);align-self:center;margin-right:4px">Enviar reação:</span>
           <button class="react-btn" onclick="sendReaction('❤️')">❤️</button>
           <button class="react-btn" onclick="sendReaction('🔥')">🔥</button>
@@ -660,29 +662,37 @@ input,textarea,select{font-family:'DM Sans',sans-serif;}
         </div>
       </div>
 
-      <!-- VER PARCEIRO AO VIVO NO DIÁRIO -->
-      <div class="partner-card" id="diary-partner-card">
-        <div class="partner-header">
-          <div class="partner-name-row">
-            <div class="partner-avatar" id="diary-partner-avatar" style="background:#EEF1FB;color:#2C3E8C">👩‍🎓</div>
-            <div>
-              <div class="partner-info-name" id="diary-partner-name">Gleici</div>
-              <div class="partner-info-sub">digitando no diário...</div>
-            </div>
+      <!-- MEU STATUS -->
+      <div class="card" style="border-left:3px solid var(--accent)">
+        <div class="card-label" style="margin-bottom:12px">📡 O que você está estudando — visível ao parceiro</div>
+        <div style="margin-bottom:14px">
+          <div style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px">Seu humor</div>
+          <div class="mood-row">
+            <button class="mood-btn" data-mood="😄" onclick="pickMood('😄')"><span>😄</span><span class="mood-label">Ótimo</span></button>
+            <button class="mood-btn" data-mood="😊" onclick="pickMood('😊')"><span>😊</span><span class="mood-label">Bem</span></button>
+            <button class="mood-btn" data-mood="😐" onclick="pickMood('😐')"><span>😐</span><span class="mood-label">Ok</span></button>
+            <button class="mood-btn" data-mood="😔" onclick="pickMood('😔')"><span>😔</span><span class="mood-label">Difícil</span></button>
+            <button class="mood-btn" data-mood="😤" onclick="pickMood('😤')"><span>😤</span><span class="mood-label">Focado</span></button>
           </div>
-          <div class="live-badge"><div class="live-dot"></div> AO VIVO</div>
         </div>
-        <div class="live-typing-area empty-state" id="diary-partner-text">Nada ainda...</div>
-        <div class="typing-indicator" id="diary-typing-ind">
-          <div class="typing-dots"><span></span><span></span><span></span></div>
-          digitando...
+        <div class="fg" style="margin-bottom:10px">
+          <label>O que você está estudando agora?</label>
+          <textarea class="my-live-input" id="diary-input" placeholder="Ex: Revisando direito constitucional, artigo 5º..." oninput="onDiaryType()" rows="3"></textarea>
         </div>
-        <div class="partner-reactions-display" id="diary-reactions"></div>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="btn btn-accent btn-sm" onclick="broadcastStatus()">📡 Transmitir</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="clearLiveStatus()">Limpar</button>
+        </div>
       </div>
 
+      <!-- ÚLTIMAS SESSÕES DO PARCEIRO -->
+      <div class="section-label" id="partner-sessions-label">Sessões recentes do parceiro</div>
+      <div id="partner-sessions-list"></div>
+
       <!-- CONQUISTAS SEMANAIS -->
-      <div class="card">
-        <div class="week-header">
+      <div class="section-label" style="margin-top:20px">Conquistas desta semana</div>
+      <div class="card" style="padding-top:16px">
+        <div class="week-header" style="margin-bottom:16px">
           <button class="week-nav-btn" onclick="weekNav(-1)">‹</button>
           <div class="week-label" id="week-label">Esta semana</div>
           <button class="week-nav-btn" onclick="weekNav(1)">›</button>
@@ -690,10 +700,6 @@ input,textarea,select{font-family:'DM Sans',sans-serif;}
         <div class="week-ach-grid" id="week-ach-grid"></div>
         <div style="text-align:center;font-size:12px;color:var(--ink3);margin-top:4px" id="week-ach-summary"></div>
       </div>
-
-      <!-- DIÁRIO HISTÓRICO -->
-      <div class="section-label">Entradas anteriores</div>
-      <div id="diary-history"></div>
     </div>
 
     <!-- CALENDÁRIO -->
@@ -806,7 +812,7 @@ input,textarea,select{font-family:'DM Sans',sans-serif;}
     </button>
     <button class="bn" data-t="diary" onclick="goTab('diary',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-      Diário
+      Ao Vivo
       <div class="bn-pip" id="diary-pip"></div>
     </button>
     <button class="bn" data-t="cal" onclick="goTab('cal',this)">
@@ -858,7 +864,7 @@ const WEEK_ACH = [
   { id:'w-study3', icon:'📆', name:'3 dias estudados', cond:'Estudar 3+ dias na semana', check:(ws,wd)=>new Set(ws.map(s=>s.date)).size>=3 },
   { id:'w-2h',     icon:'⏳', name:'2h por dia',       cond:'Média de 2h/dia na semana', check:(ws)=>ws.length>0&&ws.reduce((a,b)=>a+(b.h||0)*60+(b.m||0),0)/Math.max(new Set(ws.map(s=>s.date)).size,1)>=120 },
   { id:'w-50q',    icon:'📝', name:'50 questões',      cond:'50+ questões na semana',    check:(ws)=>ws.reduce((a,b)=>a+(b.qT||0),0)>=50 },
-  { id:'w-diary3', icon:'📖', name:'3 dias de diário', cond:'3 entradas no diário',      check:(ws,wd)=>wd.length>=3 },
+  { id:'w-quest', icon:'📖', name:'20 questões',      cond:'20+ questões na semana',     check:(ws)=>ws.reduce((a,b)=>a+(b.qT||0),0)>=20 },
   { id:'w-ach',    icon:'💯', name:'70%+ acertos',     cond:'Taxa de acertos ≥ 70%',     check:(ws)=>{const t=ws.reduce((a,b)=>a+(b.qT||0),0);const c=ws.reduce((a,b)=>a+(b.qC||0),0);return t>0&&c/t>=0.7;} },
   { id:'w-allday', icon:'🗓️', name:'5 dias estudados', cond:'Estudar 5+ dias na semana', check:(ws)=>new Set(ws.map(s=>s.date)).size>=5 },
 ];
@@ -1079,7 +1085,7 @@ function goTab(t,el){
   el.style.color='var(--accent)';
   el.querySelector('svg').style.stroke='var(--accent)';
   if(t==='home')  renderHome();
-  if(t==='diary') renderDiary();
+  if(t==='diary') renderLive();
   if(t==='cal')   renderCal();
   if(t==='rel')   renderReport();
   if(t==='metas') renderMetas();
@@ -1260,41 +1266,60 @@ function startLivePolling(){
 function pollPartner(){
   if(!CU) return;
   const partner=USERS[CU].partner;
+  const pUser=USERS[partner];
   const text=getLiveText(partner);
   const ts=getLiveTs(partner);
   const age=Date.now()-ts;
+  const isActive=text&&age<300000; // 5 min window
+  const isTyping=text&&age<4000;
+
   // Home live area
   const homeEl=document.getElementById('partner-live-text');
   const homeTyping=document.getElementById('typing-ind');
-  if(text&&age<60000){
+  if(isActive){
     homeEl.textContent=text;
     homeEl.classList.remove('empty-state');
-    homeTyping.classList.toggle('show',age<3000);
+    homeTyping.classList.toggle('show',isTyping);
   } else {
     homeEl.textContent='Nada ainda hoje...';
     homeEl.classList.add('empty-state');
     homeTyping.classList.remove('show');
   }
-  document.getElementById('partner-sub').textContent=age<5000?'digitando agora...':age<60000?'ativo recentemente':'ao vivo';
-  // Diary live area
+  document.getElementById('partner-sub').textContent=isTyping?'digitando agora...':isActive?'ativo recentemente':'ao vivo';
+
+  // Live tab area
   const diaryEl=document.getElementById('diary-partner-text');
   const diaryTyping=document.getElementById('diary-typing-ind');
-  if(text&&age<60000){
+  if(isActive){
     diaryEl.textContent=text;
     diaryEl.classList.remove('empty-state');
-    diaryTyping.classList.toggle('show',age<3000);
+    diaryTyping.classList.toggle('show',isTyping);
   } else {
-    diaryEl.textContent='Nada ainda...';
+    diaryEl.textContent='Nada sendo digitado no momento...';
     diaryEl.classList.add('empty-state');
     diaryTyping.classList.remove('show');
   }
+  const statusEl=document.getElementById('partner-live-status');
+  if(statusEl) statusEl.textContent=isTyping?'digitando agora...':isActive?'ativo recentemente':'ao vivo';
+
+  // Partner mood
+  const mood=getLiveMood(partner);
+  const moodRow=document.getElementById('partner-mood-row');
+  const moodEmoji=document.getElementById('partner-mood-emoji');
+  const moodLabel=document.getElementById('partner-mood-label');
+  const moodNames={'😄':'Ótimo','😊':'Bem','😐':'Ok','😔':'Difícil','😤':'Focado'};
+  if(mood&&moodRow){
+    moodRow.style.display='flex';
+    if(moodEmoji) moodEmoji.textContent=mood;
+    if(moodLabel) moodLabel.textContent='Humor de '+pUser.name+': '+( moodNames[mood]||mood);
+  }
+
   // Reactions
   const react=getLiveReaction(partner);
   if(react&&Date.now()-react.t<4000){
     showReactionPop(react.r,'partner-reactions');
     showReactionPop(react.r,'diary-reactions');
   }
-  // Notif badge
   renderNotifBadge();
   renderCalPip();
 }
@@ -1333,43 +1358,49 @@ function pickMood(m){
   saveLiveMood(CU,m);
 }
 
-function saveDiaryEntry(){
+function broadcastStatus(){
   const text=document.getElementById('diary-input').value.trim();
-  if(!text){toast('Escreva algo antes de salvar');return;}
-  const now=new Date();
-  const entry={id:Date.now().toString(),date:now.toISOString().slice(0,10),dayLabel:now.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),time:now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),text,mood:selMood};
-  pushDiary(CU,entry);
-  saveLiveText(CU,'');
-  document.getElementById('diary-input').value='';
-  pushNotif(CU,'Entrada do diário salva.');
-  pushNotif(USERS[CU].partner,`${USERS[CU].name} adicionou uma entrada no diário ${selMood}`);
-  renderNotifBadge();
-  renderDiary();
-  toast('Entrada salva no diário! '+selMood);
+  if(!text){toast('Escreva o que está estudando');return;}
+  saveLiveText(CU,text);
+  toast('Transmitindo para '+USERS[USERS[CU].partner].name+' 📡');
 }
 
-function clearDiaryDraft(){
+function clearLiveStatus(){
   document.getElementById('diary-input').value='';
   saveLiveText(CU,'');
+  toast('Status limpo');
 }
 
-function renderDiary(){
-  const u=USERS[CU];
-  document.getElementById('diary-sub').textContent=u.name+' · '+getDiary(CU).length+' entrada'+(getDiary(CU).length!==1?'s':'');
+function renderLive(){
+  const p=USERS[USERS[CU].partner];
+  document.getElementById('live-title').textContent='Ao Vivo';
+  document.getElementById('live-sub').textContent='O que '+p.name+' está estudando agora';
+  document.getElementById('partner-sessions-label').textContent='Sessões recentes de '+p.name;
+  renderPartnerSessions();
   renderWeekAch();
-  renderDiaryHistory();
 }
 
-function renderDiaryHistory(){
-  const entries=[...getDiary(CU)].reverse();
-  const c=document.getElementById('diary-history');
-  if(!entries.length){c.innerHTML='<div class="empty" style="padding:32px"><h3>Sem entradas ainda</h3><p>Escreva sua primeira entrada acima</p></div>';return;}
-  c.innerHTML=entries.map(e=>`
-    <div class="diary-entry">
-      <div class="diary-entry-date">${e.dayLabel} · ${e.time}</div>
-      <div style="margin-bottom:8px"><span class="diary-entry-mood">${e.mood||'😊'}</span></div>
-      <div class="diary-entry-text">${escHtml(e.text)}</div>
-    </div>`).join('');
+function renderPartnerSessions(){
+  const partner=USERS[CU].partner;
+  const sessions=[...getSess(partner)].reverse().slice(0,5);
+  const c=document.getElementById('partner-sessions-list');
+  if(!sessions.length){
+    c.innerHTML='<div class="empty" style="padding:24px"><p>Nenhuma sessão ainda</p></div>';
+    return;
+  }
+  c.innerHTML=sessions.map(s=>{
+    const hasQ=s.qT>0,pct=hasQ?Math.round(s.qC/s.qT*100):null;
+    const pColor=pct===null?'var(--ink3)':pct>=70?'var(--ok)':pct>=40?'var(--warn)':'var(--err)';
+    return `<div class="sess">
+      <div class="sess-top"><div class="sess-subj">${s.subject}</div><div class="sess-date">${s.dayLabel}</div></div>
+      <div class="sess-preview">${s.body||'Sem anotações'}</div>
+      <div class="chips">
+        <span class="chip">${(s.h||0)}h${(s.m||0)?s.m+'m':''}</span>
+        <span class="chip">${s.diff==='facil'?'Fácil':s.diff==='medio'?'Médio':'Difícil'}</span>
+        ${hasQ?`<span class="chip" style="color:${pColor};border-color:${pColor}20;background:${pColor}10">${s.qC}/${s.qT} acertos (${pct}%)</span>`:'<span class="chip">Sem questões</span>'}
+      </div>
+    </div>`;
+  }).join('');
 }
 
 /* ══════════════════════════════════════════
@@ -1387,7 +1418,7 @@ function getWeekRange(offset=0){
 function renderWeekAch(){
   const range=getWeekRange(weekOffset);
   const sessions=getSess(CU).filter(s=>s.date>=range.start&&s.date<=range.end);
-  const diary=getDiary(CU).filter(e=>e.date>=range.start&&e.date<=range.end);
+  const diary=[];
 
   // Label
   const isThisWeek=weekOffset===0;
