@@ -700,8 +700,8 @@ input, textarea, select { font-family:'DM Sans', sans-serif; }
           <datalist id="f-subj-dl"></datalist>
         </div>
         <div class="fg">
-          <label>Conteúdo estudado <span style="text-transform:none;font-weight:400;color:var(--ink4)">(mais detalhes = questões melhores)</span></label>
-          <textarea id="f-body" placeholder="Descreva detalhadamente o que você estudou. Inclua conceitos, regras, artigos, exemplos..." oninput="updateCC()"></textarea>
+          <label>Conteúdo estudado <span style="text-transform:none;font-weight:400;color:var(--ink4)">(opcional)</span></label>
+          <textarea id="f-body" placeholder="Descreva o que você estudou, tópicos, resumos, anotações..." oninput="updateCC()"></textarea>
           <div class="char-info"><span id="cc">0</span> caracteres</div>
         </div>
         <div class="fg-row">
@@ -715,57 +715,41 @@ input, textarea, select { font-family:'DM Sans', sans-serif; }
           </div>
         </div>
         <div class="fg">
-          <label>Dificuldade das questões</label>
+          <label>Dificuldade</label>
           <div class="diff-row">
             <button type="button" class="diff-opt d-ok" data-d="facil" onclick="pickDiff('facil')">Fácil</button>
             <button type="button" class="diff-opt" data-d="medio" onclick="pickDiff('medio')">Médio</button>
             <button type="button" class="diff-opt" data-d="dificil" onclick="pickDiff('dificil')">Difícil</button>
           </div>
         </div>
-        <div class="fg">
-          <label>Quantidade de questões</label>
-          <select id="f-nq">
-            <option value="3">3 questões — revisão rápida</option>
-            <option value="5" selected>5 questões — padrão</option>
-            <option value="7">7 questões — aprofundado</option>
-            <option value="10">10 questões — treino intenso</option>
-          </select>
+
+        <div style="background:var(--cream2);border-radius:var(--r);padding:16px 18px;margin-bottom:18px;border:1px solid var(--rule)">
+          <div style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:14px">📝 Questões resolvidas</div>
+          <div class="fg-row" style="margin-bottom:0">
+            <div class="fg" style="margin-bottom:0">
+              <label>Total de questões</label>
+              <input type="number" id="f-qt" min="0" max="999" value="0" placeholder="0" oninput="updateQRate()">
+            </div>
+            <div class="fg" style="margin-bottom:0">
+              <label>Acertos</label>
+              <input type="number" id="f-qc" min="0" max="999" value="0" placeholder="0" oninput="updateQRate()">
+            </div>
+          </div>
+          <div id="q-rate-preview" style="margin-top:10px;display:none">
+            <div class="prog-track"><div class="prog-fill" id="q-rate-bar" style="width:0%"></div></div>
+            <div style="text-align:right;font-size:11px;color:var(--ink3);margin-top:4px" id="q-rate-label"></div>
+          </div>
         </div>
+
         <div class="fg">
           <label>Observações / dúvidas <span style="text-transform:none;font-weight:400;color:var(--ink4)">(opcional)</span></label>
           <input type="text" id="f-obs" placeholder="Ex: Fiquei em dúvida sobre habeas corpus...">
         </div>
-        <button type="button" class="btn btn-accent" id="add-btn" onclick="addSession()">Salvar e gerar questões</button>
+        <button type="button" class="btn btn-accent" id="add-btn" onclick="addSession()">Salvar sessão</button>
       </div>
     </div>
 
-    <div class="tab" id="t-quiz">
-      <div id="v-quiz-list">
-        <p class="page-title">Questões</p>
-        <p class="page-sub" id="quiz-sub"></p>
-        <div class="filter-strip">
-          <button class="f-tag on" data-qf="all"     onclick="fQuiz('all',this)">Todas</button>
-          <button class="f-tag"    data-qf="pending"  onclick="fQuiz('pending',this)">Pendentes</button>
-          <button class="f-tag"    data-qf="done"     onclick="fQuiz('done',this)">Realizadas</button>
-        </div>
-        <div id="quiz-sess-list"></div>
-      </div>
-      <div id="v-quiz-play" style="display:none">
-        <button class="back-btn" onclick="backQuiz()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-          Voltar
-        </button>
-        <div class="quiz-progress">
-          <div class="qp-top">
-            <div class="qp-score" id="qp-score">0 / 0</div>
-            <div class="qp-pct" id="qp-pct">Responda as questões abaixo</div>
-          </div>
-          <div class="qp-track"><div class="qp-fill" id="qp-fill" style="width:0%"></div></div>
-        </div>
-        <div id="quiz-q-wrap"></div>
-        <button type="button" class="btn btn-accent" id="btn-finish" onclick="finishQuiz()" style="display:none;margin-top:4px">Finalizar quiz</button>
-      </div>
-    </div>
+    <div class="tab" id="t-quiz" style="display:none"></div>
 
     <div class="tab" id="t-metas">
       <p class="page-title">Metas</p>
@@ -822,11 +806,6 @@ input, textarea, select { font-family:'DM Sans', sans-serif; }
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
       Adicionar
     </button>
-    <button class="bn" data-t="quiz" onclick="goTab('quiz',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 12h6M9 16h6M9 8h3"/><path d="M5 3h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>
-      Questões
-      <div class="bn-pip" id="quiz-pip"></div>
-    </button>
     <button class="bn" data-t="metas" onclick="goTab('metas',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
       Metas
@@ -859,7 +838,7 @@ const ACH = [
   { id:'s1',   icon:'🌱', name:'Primeira sessão', ok: s => s.length >= 1 },
   { id:'s5',   icon:'⭐', name:'5 sessões',        ok: s => s.length >= 5 },
   { id:'s10',  icon:'🏅', name:'10 sessões',       ok: s => s.length >= 10 },
-  { id:'perf', icon:'💎', name:'Quiz perfeito',    ok: s => s.some(x => x.qDone && x.qC === x.qT && x.qT > 0) },
+  { id:'perf', icon:'💎', name:'Quiz perfeito',    ok: s => s.some(x => x.qT > 0 && x.qC === x.qT) },
   { id:'str3', icon:'🔥', name:'3 dias seguidos',  ok: s => streak(s) >= 3 },
   { id:'str7', icon:'🏆', name:'7 dias seguidos',  ok: s => streak(s) >= 7 },
   { id:'h10',  icon:'⏰', name:'10h estudadas',    ok: s => s.reduce((a,b)=>a+(b.h||0)*60+(b.m||0),0) >= 600 },
@@ -982,7 +961,6 @@ function initApp(){
   document.getElementById('q-auth').textContent = '— ' + q.a;
   // Render
   renderHome();
-  updatePip();
   renderNotifBadge();
 }
 
@@ -1013,7 +991,7 @@ function renderHome(){
 
   // Stats
   let totalMin=0, totalC=0, totalT=0;
-  my.forEach(s=>{ totalMin+=(s.h||0)*60+(s.m||0); if(s.qDone){totalC+=s.qC||0;totalT+=s.qT||0;} });
+  my.forEach(s=>{ totalMin+=(s.h||0)*60+(s.m||0); totalC+=s.qC||0; totalT+=s.qT||0; });
   const hrs=Math.floor(totalMin/60), mins=totalMin%60;
   document.getElementById('s-h').textContent = hrs+'h'+(mins?mins+'m':'');
   document.getElementById('s-c').textContent = totalC;
@@ -1029,8 +1007,8 @@ function renderHome(){
 
   // Duel
   let mPts=0, gPts=0;
-  getSess('manasses').forEach(s=>{ if(s.qDone) mPts+=s.qC||0; });
-  getSess('gleici').forEach(s=>{ if(s.qDone) gPts+=s.qC||0; });
+  getSess('manasses').forEach(s=>{ mPts+=s.qC||0; });
+  getSess('gleici').forEach(s=>{ gPts+=s.qC||0; });
   document.getElementById('d-m').textContent = mPts;
   document.getElementById('d-g').textContent = gPts;
   const tot = mPts+gPts||1;
@@ -1042,8 +1020,8 @@ function renderHome(){
 
   // Comparison bars
   let mQ=0,gQ=0;
-  getSess('manasses').forEach(s=>{ if(s.questions) mQ+=s.questions.length; });
-  getSess('gleici').forEach(s=>{ if(s.questions) gQ+=s.questions.length; });
+  getSess('manasses').forEach(s=>{ mQ+=s.qT||0; });
+  getSess('gleici').forEach(s=>{ gQ+=s.qT||0; });
   const maxQ = Math.max(mQ,gQ,1);
   document.getElementById('pm-bar').style.width = (mQ/maxQ*100)+'%';
   document.getElementById('pg-bar').style.width = (gQ/maxQ*100)+'%';
@@ -1103,13 +1081,15 @@ function renderRecent(sessions){
 }
 
 function sessHTML(s){
+  const hasQ = s.qT > 0;
+  const pct = hasQ ? Math.round(s.qC/s.qT*100) : null;
   return `<div class="sess">
     <div class="sess-top"><div class="sess-subj">${s.subject}</div><div class="sess-date">${s.dayLabel}</div></div>
-    <div class="sess-preview">${s.body}</div>
+    <div class="sess-preview">${s.body||'Sem anotações'}</div>
     <div class="chips">
       <span class="chip">${(s.h||0)}h${(s.m||0)?s.m+'m':''}</span>
       <span class="chip">${s.diff==='facil'?'Fácil':s.diff==='medio'?'Médio':'Difícil'}</span>
-      ${s.qDone?`<span class="chip ok">✓ ${s.qC}/${s.qT} acertos</span>`:'<span class="chip warn">Quiz pendente</span>'}
+      ${hasQ ? `<span class="chip ${pct>=70?'ok':pct>=40?'warn':'err'}">✓ ${s.qC}/${s.qT} acertos (${pct}%)</span>` : '<span class="chip">Sem questões</span>'}
     </div>
   </div>`;
 }
@@ -1139,7 +1119,7 @@ function applyMatFilter(){
   if(!subjects.length){ list.innerHTML='<div class="empty"><h3>Nenhuma matéria</h3><p>Adicione sua primeira sessão de estudos</p></div>'; return; }
 
   const filtered=subjects.filter(subj=>{
-    const done=sm[subj].filter(x=>x.qDone);
+    const done=sm[subj].filter(x=>x.qT>0);
     const pct=done.length?done.reduce((a,b)=>a+(b.qC||0),0)/done.reduce((a,b)=>a+(b.qT||0),0)*100:null;
     if(sFilter==='all') return true;
     if(sFilter==='ok')  return pct!==null && pct>=70;
@@ -1156,7 +1136,7 @@ function applyMatFilter(){
     const init=subj.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     const totalMin=s.reduce((a,b)=>a+(b.h||0)*60+(b.m||0),0);
     const hrs=Math.floor(totalMin/60), mins=totalMin%60;
-    const done=s.filter(x=>x.qDone);
+    const done=s.filter(x=>x.qT>0);
     const pct=done.length?Math.round(done.reduce((a,b)=>a+(b.qC||0),0)/done.reduce((a,b)=>a+(b.qT||0),0)*100):null;
     const pctColor=pct===null?'var(--ink3)':pct>=70?'var(--ok)':pct>=40?'var(--warn)':'var(--err)';
     return `<div class="subj-card" onclick="openMat(${JSON.stringify(subj)},${JSON.stringify(color)})">
@@ -1176,7 +1156,7 @@ function openMat(subject,color){
   const sessions=getSess(CU).filter(s=>s.subject===subject);
   document.getElementById('v-mat-list').style.display='none';
   document.getElementById('v-mat-detail').style.display='block';
-  const done=sessions.filter(x=>x.qDone);
+  const done=sessions.filter(x=>x.qT>0);
   const pct=done.length?Math.round(done.reduce((a,b)=>a+(b.qC||0),0)/done.reduce((a,b)=>a+(b.qT||0),0)*100):null;
   document.getElementById('mat-detail').innerHTML=`
     <p class="page-title" style="color:${color}">${subject}</p>
@@ -1190,7 +1170,7 @@ function openMat(subject,color){
         <div class="chips">
           <span class="chip">${(s.h||0)}h${(s.m||0)?s.m+'m':''}</span>
           <span class="chip">${s.diff==='facil'?'Fácil':s.diff==='medio'?'Médio':'Difícil'}</span>
-          ${s.qDone?`<span class="chip ok">✓ ${s.qC}/${s.qT}</span>`:'<span class="chip warn">Quiz pendente</span>'}
+          ${s.qT>0?`<span class="chip ${Math.round(s.qC/s.qT*100)>=70?'ok':Math.round(s.qC/s.qT*100)>=40?'warn':'err'}">✓ ${s.qC}/${s.qT}</span>`:'<span class="chip">Sem questões</span>'}
         </div>
       </div>`).join('')}`;
 }
@@ -1215,6 +1195,25 @@ function updateCC(){
   el.style.color=v.length<50?'var(--err)':v.length<100?'var(--warn)':'var(--ok)';
 }
 
+function updateQRate(){
+  const qt=parseInt(document.getElementById('f-qt').value)||0;
+  const qc=parseInt(document.getElementById('f-qc').value)||0;
+  const preview=document.getElementById('q-rate-preview');
+  const bar=document.getElementById('q-rate-bar');
+  const label=document.getElementById('q-rate-label');
+  if(qt>0){
+    const pct=Math.min(Math.round(qc/qt*100),100);
+    const clamp=Math.max(0,pct);
+    preview.style.display='block';
+    bar.style.width=clamp+'%';
+    bar.style.background=pct>=70?'var(--ok)':pct>=40?'var(--warn)':'var(--err)';
+    label.textContent=qc+'/'+qt+' acertos — '+clamp+'%';
+    label.style.color=pct>=70?'var(--ok)':pct>=40?'var(--warn)':'var(--err)';
+  } else {
+    preview.style.display='none';
+  }
+}
+
 function pickDiff(d){
   selDiff=d;
   document.querySelectorAll('.diff-opt').forEach(b=>{b.className='diff-opt';});
@@ -1227,216 +1226,52 @@ async function addSession(){
   const body=document.getElementById('f-body').value.trim();
   let h=parseInt(document.getElementById('f-h').value)||0;
   let m=parseInt(document.getElementById('f-m').value)||0;
-  const nq=parseInt(document.getElementById('f-nq').value)||5;
+  const qt=parseInt(document.getElementById('f-qt').value)||0;
+  const qc=Math.min(parseInt(document.getElementById('f-qc').value)||0, qt);
   const obs=document.getElementById('f-obs').value.trim();
 
   if(timerSec>0 && h===0 && m===0){ h=Math.floor(timerSec/3600); m=Math.floor((timerSec%3600)/60); }
 
   if(!subj){ toast('Informe a matéria'); return; }
-  if(body.length<30){ toast('Descreva com pelo menos 30 caracteres'); return; }
 
-  const btn=document.getElementById('add-btn');
-  btn.disabled=true;
-  btn.textContent='Gerando questões...';
+  if(qc>qt){ toast('Acertos não podem ser maiores que o total de questões'); return; }
 
-  try {
-    const qs=await genQ(subj,body,nq,selDiff);
-    const existing=getSess(CU).filter(s=>s.subject===subj);
-    const now=new Date();
-    const sess={
-      id:Date.now().toString(), subject:subj, body, h, m, obs, diff:selDiff,
-      date:now.toISOString().slice(0,10),
-      dayLabel:now.toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'}),
-      dayNum:existing.length+1,
-      questions:qs, qDone:false, qC:0, qT:qs.length
-    };
-    pushSess(CU,sess);
-    updateDL();
-    pushNotif(CU,`Sessão "${subj}" salva com ${qs.length} questões.`);
-    renderNotifBadge();
-    timerReset();
-    document.getElementById('f-subj').value='';
-    document.getElementById('f-body').value='';
-    document.getElementById('f-h').value='0';
-    document.getElementById('f-m').value='0';
-    document.getElementById('f-obs').value='';
-    updateCC();
-    toast('Sessão salva com sucesso!');
-    updatePip();
-    setTimeout(()=>{
-      goTab('quiz',document.querySelector('.bn[data-t="quiz"]'));
-      renderQuizList();
-      openQuiz(sess);
-    },1000);
-  } catch(e) {
-    toast('Erro ao gerar questões. Tente novamente.');
-    console.error(e);
-  }
-  btn.disabled=false;
-  btn.textContent='Salvar e gerar questões';
-}
-
-/* ──────────────────────────────────────────
-   AI GENERATION (Integrado com Google Gemini)
-────────────────────────────────────────── */
-async function genQ(subject,body,nq,diff){
-  const u=USERS[CU];
-  const dMap={facil:'básicas e conceituais, diretas, de fixação',medio:'de aplicação e análise, com alternativas plausíveis que exigem compreensão',dificil:'avançadas, com situações-problema complexas, distratores muito elaborados e pegadinhas técnicas'};
-  const prompt=`Você é um especialista em elaboração de questões de concurso e vestibular no Brasil.
-
-Perfil do aluno: ${u.name} — ${u.profile}
-Orientação específica: ${u.focus}
-Matéria: ${subject}
-Nível de dificuldade: ${diff} (${dMap[diff]})
-
-Conteúdo estudado:
-"""
-${body}
-"""
-
-Crie exatamente ${nq} questões de múltipla escolha com 4 alternativas (A, B, C, D).
-- Baseie-se EXCLUSIVAMENTE no conteúdo acima
-- Varie a posição da resposta correta (0, 1, 2 ou 3)
-- Cada explicação: 2-4 frases ensinando o conceito
-- Questões progressivas em complexidade
-
-RESPONDA APENAS com JSON puro e válido:
-{"questions":[{"question":"enunciado","options":["A) texto","B) texto","C) texto","D) texto"],"answer":0,"explanation":"explicação didática"}]}`;
-
-  // Sua chave de API do Google AI Studio
-  const GEMINI_API_KEY = 'AIzaSyDa7d0wTium4xJeck1XUi9U2k7JfmsiTqI'; 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{
-        parts: [{ text: prompt }]
-      }],
-      generationConfig: {
-        // Força a IA a devolver estritamente um JSON válido, evitando erros no código
-        response_mime_type: "application/json" 
-      }
-    })
-  });
-
-  if (!response.ok) {
-    throw new Error('Erro na API do Gemini: ' + response.status);
-  }
-
-  const data = await response.json();
-  const txt = data.candidates[0].content.parts[0].text;
-  
-  // Limpeza de segurança caso a resposta venha com formatação markdown
-  const clean = txt.replace(/```json|```/g,'').trim();
-  return JSON.parse(clean).questions;
-}
-
-/* ──────────────────────────────────────────
-   QUIZ
-────────────────────────────────────────── */
-function renderQuizList(){
-  const sessions=getSess(CU);
-  const pending=sessions.filter(s=>!s.qDone).length;
-  document.getElementById('quiz-sub').textContent=USERS[CU].name+' · '+pending+' quiz'+(pending!==1?'zes':'')+' pendente'+(pending!==1?'s':'');
-
-  const c=document.getElementById('quiz-sess-list');
-  if(!sessions.length){ c.innerHTML='<div class="empty"><h3>Nenhuma sessão</h3><p>Adicione uma sessão de estudos para gerar questões</p></div>'; return; }
-
-  const list=sessions.filter(s=>{
-    if(qFilter==='pending') return !s.qDone;
-    if(qFilter==='done') return s.qDone;
-    return true;
-  }).reverse();
-
-  if(!list.length){ c.innerHTML='<div class="empty" style="padding:28px"><p>Nenhuma sessão nessa categoria</p></div>'; return; }
-
-  c.innerHTML=list.map(s=>{
-    const pct=s.qDone?Math.round(s.qC/s.qT*100):null;
-    return `<div class="sess" style="cursor:pointer" onclick="openQuiz(${JSON.stringify(s).replace(/"/g,'&quot;')})">
-      <div class="sess-top"><div class="sess-subj">${s.subject}</div><div class="sess-date">${s.dayLabel}</div></div>
-      <div class="sess-preview">Dia ${s.dayNum} · ${s.questions?.length||0} questões</div>
-      <div class="chips">
-        <span class="chip">${s.diff==='facil'?'Fácil':s.diff==='medio'?'Médio':'Difícil'}</span>
-        ${s.qDone?`<span class="chip ${pct>=70?'ok':pct>=40?'warn':'err'}">✓ ${s.qC}/${s.qT} (${pct}%)</span>`:'<span class="chip warn">Pendente</span>'}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function fQuiz(f,el){
-  qFilter=f;
-  document.querySelectorAll('#t-quiz .f-tag').forEach(x=>x.classList.remove('on'));
-  el.classList.add('on');
-  renderQuizList();
-}
-
-function openQuiz(sess){
-  qSess=sess; qAns=0; qOk=0;
-  document.getElementById('v-quiz-list').style.display='none';
-  document.getElementById('v-quiz-play').style.display='block';
-  document.getElementById('btn-finish').style.display='none';
-  updateQP();
-
-  const qs=sess.questions||[];
-  document.getElementById('quiz-q-wrap').innerHTML=qs.map((q,i)=>`
-    <div class="quiz-card">
-      <div class="quiz-meta">
-        <span class="q-counter">${i+1} / ${qs.length}</span>
-        <span class="q-badge lv-${q.difficulty||sess.diff}">${q.difficulty==='facil'||sess.diff==='facil'?'Fácil':q.difficulty==='medio'||sess.diff==='medio'?'Médio':'Difícil'}</span>
-      </div>
-      <div class="q-text">${q.question}</div>
-      <div class="q-opts" id="qo-${i}">
-        ${q.options.map((o,oi)=>`<button type="button" class="q-opt" onclick="ansQ(${i},${oi},${q.answer},'${(q.explanation||'').replace(/'/g,"\\'").replace(/\n/g,' ')}',${qs.length})">${o}</button>`).join('')}
-      </div>
-      <div class="q-explain" id="qe-${i}">${q.explanation||''}</div>
-    </div>`).join('');
-}
-
-function ansQ(qi,chosen,correct,expl,total){
-  const opts=document.getElementById('qo-'+qi);
-  if(opts.querySelector('.right,.wrong')) return;
-  opts.querySelectorAll('.q-opt').forEach((b,i)=>{
-    b.disabled=true;
-    if(i===correct) b.classList.add('right');
-    else if(i===chosen) b.classList.add('wrong');
-  });
-  if(chosen===correct) qOk++;
-  qAns++;
-  document.getElementById('qe-'+qi).style.display='block';
-  updateQP();
-  if(qAns===total){
-    document.getElementById('btn-finish').style.display='block';
-    setTimeout(()=>document.getElementById('btn-finish').scrollIntoView({behavior:'smooth'}),200);
-  }
-}
-
-function updateQP(){
-  const total=qSess?.questions?.length||0;
-  document.getElementById('qp-score').textContent=qOk+' / '+qAns;
-  const pct=qAns?Math.round(qOk/qAns*100):0;
-  document.getElementById('qp-pct').textContent=qAns?pct+'% de aproveitamento':'Responda as questões abaixo';
-  document.getElementById('qp-fill').style.width=(total?qAns/total*100:0)+'%';
-}
-
-function finishQuiz(){
-  const total=qSess.questions.length;
-  markQuiz(CU,qSess.id,qOk,total);
-  const pct=Math.round(qOk/total*100);
-  const msg=pct===100?`Perfeito! ${qOk}/${total} — 100%`:pct>=70?`Ótimo resultado: ${qOk}/${total} (${pct}%)`:pct>=50?`Regular: ${qOk}/${total} (${pct}%)`:  `Revise o conteúdo: ${qOk}/${total} (${pct}%)`;
-  toast(msg);
-  pushNotif(CU,`Quiz "${qSess.subject}" concluído: ${qOk}/${total} (${pct}%)`);
-  if(pct===100) confetti();
-  updatePip();
+  const existing=getSess(CU).filter(s=>s.subject===subj);
+  const now=new Date();
+  const sess={
+    id:Date.now().toString(), subject:subj, body, h, m, obs, diff:selDiff,
+    date:now.toISOString().slice(0,10),
+    dayLabel:now.toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'}),
+    dayNum:existing.length+1,
+    qDone: qt>0, qC: qc, qT: qt
+  };
+  pushSess(CU,sess);
+  updateDL();
+  const qInfo = qt>0 ? ` · ${qc}/${qt} acertos` : '';
+  pushNotif(CU,`Sessão "${subj}" salva${qInfo}.`);
+  renderNotifBadge();
+  timerReset();
+  document.getElementById('f-subj').value='';
+  document.getElementById('f-body').value='';
+  document.getElementById('f-h').value='0';
+  document.getElementById('f-m').value='0';
+  document.getElementById('f-qt').value='0';
+  document.getElementById('f-qc').value='0';
+  document.getElementById('f-obs').value='';
+  document.getElementById('q-rate-preview').style.display='none';
+  updateCC();
+  toast('Sessão salva com sucesso!');
   renderHome();
-  backQuiz();
+  setTimeout(()=>{ goTab('home',document.querySelector('.bn[data-t="home"]')); },800);
 }
 
-function backQuiz(){
-  document.getElementById('v-quiz-list').style.display='block';
-  document.getElementById('v-quiz-play').style.display='none';
-  renderQuizList();
+/* ──────────────────────────────────────────
+   UTILS
+────────────────────────────────────────── */
+function renderMetas(){
+  renderRanking();
+  renderGoals();
+  renderFC();
 }
 
 /* ──────────────────────────────────────────
@@ -1452,7 +1287,7 @@ function renderRanking(){
   const pts=uid=>{
     const s=getSess(uid);
     const min=s.reduce((a,b)=>a+(b.h||0)*60+(b.m||0),0);
-    const c=s.filter(x=>x.qDone).reduce((a,b)=>a+(b.qC||0),0);
+    const c=s.reduce((a,b)=>a+(b.qC||0),0);
     return c*10+Math.floor(min/10)+streak(s)*50+s.length*5;
   };
   const players=[
@@ -1465,7 +1300,7 @@ function renderRanking(){
       <div class="rank-medal">${['🥇','🥈'][i]}</div>
       <div class="rank-info">
         <div class="rank-name">${p.emoji} ${p.name}</div>
-        <div class="rank-detail">${getSess(p.uid).filter(x=>x.qDone).reduce((a,b)=>a+(b.qC||0),0)} acertos · ${Math.floor(getSess(p.uid).reduce((a,b)=>a+(b.h||0)*60+(b.m||0),0)/60)}h estudadas</div>
+        <div class="rank-detail">${getSess(p.uid).reduce((a,b)=>a+(b.qC||0),0)} acertos · ${Math.floor(getSess(p.uid).reduce((a,b)=>a+(b.h||0)*60+(b.m||0),0)/60)}h estudadas</div>
       </div>
       <div class="rank-pts">${p.pts}<span style="font-size:11px;color:var(--ink3)">pts</span></div>
     </div>`).join('');
@@ -1496,7 +1331,7 @@ function rmGoal(i){ const g=getGoals(CU); g.splice(i,1); saveGoals(CU,g); render
 function renderFC(){
   const sessions=getSess(CU);
   if(!sessions.length) return;
-  fcCards=sessions.map(s=>({ front:`${s.subject} — Dia ${s.dayNum}`, back:s.body.slice(0,220)+(s.body.length>220?'…':'') }));
+  fcCards=sessions.map(s=>({ front:`${s.subject} — Dia ${s.dayNum}`, back:(s.body||'Sem anotações').slice(0,220)+((s.body||'').length>220?'…':'') }));
   fcIdx=0;
   document.getElementById('fc-nav').style.display='flex';
   showFC();
@@ -1588,11 +1423,6 @@ function streak(sessions){
   return n;
 }
 
-function updatePip(){
-  const n=getSess(CU).filter(s=>!s.qDone).length;
-  const pip=document.getElementById('quiz-pip');
-  if(n>0){ pip.style.display='flex'; pip.textContent=n; } else pip.style.display='none';
-}
 
 let toastT=null;
 function toast(msg){
