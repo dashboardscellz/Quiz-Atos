@@ -1023,11 +1023,21 @@ function getNotifs(uid){ return (db()[uid]||{}).notifs||[] }
 function getDiary(uid){ return (db()[uid]||{}).diary||[] }
 function getEvents(uid){ return (db()[uid]||{}).events||[] } // shared by both, stored under 'shared'
 function getSharedEvents(){ return (db()['shared']||{}).events||[] }
-// Live typing: stored per-user so partner can read
-function getLiveText(uid){ return (db()[uid]||{}).liveText||'' }
-function getLiveTs(uid){ return (db()[uid]||{}).liveTs||0 }
-function getLiveReaction(uid){ return (db()[uid]||{}).liveReaction||null }
-function getLiveMood(uid){ return (db()[uid]||{}).liveMood||'' }
+// Live typing: usa window.storage compartilhado para sincronizar entre dispositivos
+let _liveCache = {};
+async function _syncLiveCache(){
+  try {
+    const r = await window.storage.get('live-data', true);
+    if(r) _liveCache = JSON.parse(r.value);
+  } catch(e){ _liveCache = _liveCache || {}; }
+}
+async function _saveLiveCache(){
+  try { await window.storage.set('live-data', JSON.stringify(_liveCache), true); } catch(e){}
+}
+function getLiveText(uid){ return (_liveCache[uid]||{}).liveText||'' }
+function getLiveTs(uid){ return (_liveCache[uid]||{}).liveTs||0 }
+function getLiveReaction(uid){ return (_liveCache[uid]||{}).liveReaction||null }
+function getLiveMood(uid){ return (_liveCache[uid]||{}).liveMood||'' }
 
 function pushSess(uid,s){ const d=db();if(!d[uid])d[uid]={sessions:[]};if(!d[uid].sessions)d[uid].sessions=[];d[uid].sessions.push(s);save(d); }
 function setPass(uid,p){ const d=db();if(!d[uid])d[uid]={};d[uid].pass=p;save(d); }
@@ -1035,9 +1045,9 @@ function saveGoals(uid,g){ const d=db();if(!d[uid])d[uid]={};d[uid].goals=g;save
 function pushNotif(uid,msg){ const d=db();if(!d[uid])d[uid]={};if(!d[uid].notifs)d[uid].notifs=[];d[uid].notifs.unshift({msg,t:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})});d[uid].notifs=d[uid].notifs.slice(0,20);save(d); }
 function clearNotifs(uid){ const d=db();if(d[uid])d[uid].notifs=[];save(d); }
 function pushDiary(uid,entry){ const d=db();if(!d[uid])d[uid]={};if(!d[uid].diary)d[uid].diary=[];d[uid].diary.push(entry);save(d); }
-function saveLiveText(uid,text){ const d=db();if(!d[uid])d[uid]={};d[uid].liveText=text;d[uid].liveTs=Date.now();save(d); }
-function saveLiveReaction(uid,r){ const d=db();if(!d[uid])d[uid]={};d[uid].liveReaction={r,t:Date.now()};save(d); }
-function saveLiveMood(uid,mood){ const d=db();if(!d[uid])d[uid]={};d[uid].liveMood=mood;save(d); }
+function saveLiveText(uid,text){ if(!_liveCache[uid])_liveCache[uid]={};_liveCache[uid].liveText=text;_liveCache[uid].liveTs=Date.now();_saveLiveCache(); }
+function saveLiveReaction(uid,r){ if(!_liveCache[uid])_liveCache[uid]={};_liveCache[uid].liveReaction={r,t:Date.now()};_saveLiveCache(); }
+function saveLiveMood(uid,mood){ if(!_liveCache[uid])_liveCache[uid]={};_liveCache[uid].liveMood=mood;_saveLiveCache(); }
 function addSharedEvent(ev){ const d=db();if(!d['shared'])d['shared']={events:[]};if(!d['shared'].events)d['shared'].events=[];d['shared'].events.push(ev);save(d); }
 function removeSharedEvent(id){ const d=db();if(d['shared']&&d['shared'].events)d['shared'].events=d['shared'].events.filter(e=>e.id!==id);save(d); }
 
@@ -1300,11 +1310,12 @@ function addSession(){
 ══════════════════════════════════════════ */
 function startLivePolling(){
   if(liveInt) clearInterval(liveInt);
-  liveInt=setInterval(pollPartner,1500);
-  pollPartner();
+  _syncLiveCache().then(()=>pollPartner());
+  liveInt=setInterval(pollPartner,3000);
 }
-function pollPartner(){
+async function pollPartner(){
   if(!CU) return;
+  await _syncLiveCache();
   const partner=USERS[CU].partner;
   const pUser=USERS[partner];
   const text=getLiveText(partner);
