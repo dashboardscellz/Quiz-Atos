@@ -7,6 +7,30 @@
 <meta name="theme-color" content="#F7F5F0">
 <title>StudyCouple</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAvh5lk4V9t3PgolmLQyrkJR5b0ZUOCpH8",
+  authDomain: "quiz-atos.firebaseapp.com",
+  databaseURL: "https://quiz-atos-default-rtdb.firebaseio.com",
+  projectId: "quiz-atos",
+  storageBucket: "quiz-atos.firebasestorage.app",
+  messagingSenderId: "193416458072",
+  appId: "1:193416458072:web:e865a004c9459910eaff2d",
+  measurementId: "G-FD9BR7GJ3E"
+};
+
+const app = initializeApp(firebaseConfig);
+const fbdb = getDatabase(app);
+
+window._fbSet = async (path, data) => { await set(ref(fbdb, path), data); };
+window._fbGet = async (path) => { const s = await get(ref(fbdb, path)); return s.exists() ? s.val() : null; };
+window._fbListen = (path, cb) => { onValue(ref(fbdb, path), s => cb(s.exists() ? s.val() : null)); };
+window._firebaseReady = true;
+window.dispatchEvent(new Event('firebaseReady'));
+</script>
 <style>
 :root {
   --cream:#F4F6FB; --cream2:#E8ECF5; --cream3:#D8DEEC;
@@ -1023,17 +1047,29 @@ function getNotifs(uid){ return (db()[uid]||{}).notifs||[] }
 function getDiary(uid){ return (db()[uid]||{}).diary||[] }
 function getEvents(uid){ return (db()[uid]||{}).events||[] } // shared by both, stored under 'shared'
 function getSharedEvents(){ return (db()['shared']||{}).events||[] }
-// Live typing: usa window.storage compartilhado para sincronizar entre dispositivos
+// ── LIVE STORAGE via Firebase Realtime DB ──
 let _liveCache = {};
-async function _syncLiveCache(){
-  try {
-    const r = await window.storage.get('live-data', true);
-    if(r) _liveCache = JSON.parse(r.value);
-  } catch(e){ _liveCache = _liveCache || {}; }
+let _firebaseActive = false;
+
+function _initFirebaseLive(){
+  if(!window._fbListen) return;
+  _firebaseActive = true;
+  window._fbListen('live', data => {
+    if(data) _liveCache = data;
+    if(CU) _applyLiveUI();
+  });
 }
-async function _saveLiveCache(){
-  try { await window.storage.set('live-data', JSON.stringify(_liveCache), true); } catch(e){}
+window.addEventListener('firebaseReady', _initFirebaseLive);
+if(window._firebaseReady) _initFirebaseLive();
+
+async function _saveLive(uid, fields){
+  if(!_liveCache[uid]) _liveCache[uid] = {};
+  Object.assign(_liveCache[uid], fields);
+  if(_firebaseActive && window._fbSet){
+    try { await window._fbSet('live/' + uid, _liveCache[uid]); } catch(e){}
+  }
 }
+
 function getLiveText(uid){ return (_liveCache[uid]||{}).liveText||'' }
 function getLiveTs(uid){ return (_liveCache[uid]||{}).liveTs||0 }
 function getLiveReaction(uid){ return (_liveCache[uid]||{}).liveReaction||null }
@@ -1045,9 +1081,9 @@ function saveGoals(uid,g){ const d=db();if(!d[uid])d[uid]={};d[uid].goals=g;save
 function pushNotif(uid,msg){ const d=db();if(!d[uid])d[uid]={};if(!d[uid].notifs)d[uid].notifs=[];d[uid].notifs.unshift({msg,t:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})});d[uid].notifs=d[uid].notifs.slice(0,20);save(d); }
 function clearNotifs(uid){ const d=db();if(d[uid])d[uid].notifs=[];save(d); }
 function pushDiary(uid,entry){ const d=db();if(!d[uid])d[uid]={};if(!d[uid].diary)d[uid].diary=[];d[uid].diary.push(entry);save(d); }
-function saveLiveText(uid,text){ if(!_liveCache[uid])_liveCache[uid]={};_liveCache[uid].liveText=text;_liveCache[uid].liveTs=Date.now();_saveLiveCache(); }
-function saveLiveReaction(uid,r){ if(!_liveCache[uid])_liveCache[uid]={};_liveCache[uid].liveReaction={r,t:Date.now()};_saveLiveCache(); }
-function saveLiveMood(uid,mood){ if(!_liveCache[uid])_liveCache[uid]={};_liveCache[uid].liveMood=mood;_saveLiveCache(); }
+function saveLiveText(uid,text){ _saveLive(uid,{liveText:text,liveTs:Date.now()}); }
+function saveLiveReaction(uid,r){ _saveLive(uid,{liveReaction:{r,t:Date.now()}}); }
+function saveLiveMood(uid,mood){ _saveLive(uid,{liveMood:mood}); }
 function addSharedEvent(ev){ const d=db();if(!d['shared'])d['shared']={events:[]};if(!d['shared'].events)d['shared'].events=[];d['shared'].events.push(ev);save(d); }
 function removeSharedEvent(id){ const d=db();if(d['shared']&&d['shared'].events)d['shared'].events=d['shared'].events.filter(e=>e.id!==id);save(d); }
 
@@ -1310,12 +1346,12 @@ function addSession(){
 ══════════════════════════════════════════ */
 function startLivePolling(){
   if(liveInt) clearInterval(liveInt);
-  _syncLiveCache().then(()=>pollPartner());
+  pollPartner();
   liveInt=setInterval(pollPartner,3000);
 }
-async function pollPartner(){
+function _applyLiveUI(){ pollPartner(); }
+function pollPartner(){
   if(!CU) return;
-  await _syncLiveCache();
   const partner=USERS[CU].partner;
   const pUser=USERS[partner];
   const text=getLiveText(partner);
