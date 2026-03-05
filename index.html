@@ -7,10 +7,9 @@
 <meta name="theme-color" content="#F7F5F0">
 <title>StudyCouple</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyAvh5lk4V9t3PgolmLQyrkJR5b0ZUOCpH8",
   authDomain: "quiz-atos.firebaseapp.com",
@@ -21,15 +20,12 @@ const firebaseConfig = {
   appId: "1:193416458072:web:e865a004c9459910eaff2d",
   measurementId: "G-FD9BR7GJ3E"
 };
-
-const app = initializeApp(firebaseConfig);
-const fbdb = getDatabase(app);
-
-window._fbSet = async (path, data) => { await set(ref(fbdb, path), data); };
-window._fbGet = async (path) => { const s = await get(ref(fbdb, path)); return s.exists() ? s.val() : null; };
-window._fbListen = (path, cb) => { onValue(ref(fbdb, path), s => cb(s.exists() ? s.val() : null)); };
+firebase.initializeApp(firebaseConfig);
+const _fbdb = firebase.database();
+window._fbSet = async (path, data) => { await _fbdb.ref(path).set(data); };
+window._fbGet = async (path) => { const s = await _fbdb.ref(path).get(); return s.exists() ? s.val() : null; };
+window._fbListen = (path, cb) => { _fbdb.ref(path).on('value', s => cb(s.exists() ? s.val() : null)); };
 window._firebaseReady = true;
-window.dispatchEvent(new Event('firebaseReady'));
 </script>
 <style>
 :root {
@@ -1052,15 +1048,13 @@ let _liveCache = {};
 let _firebaseActive = false;
 
 function _initFirebaseLive(){
-  if(!window._fbListen) return;
+  if(!window._fbListen || _firebaseActive) return;
   _firebaseActive = true;
   window._fbListen('live', data => {
     if(data) _liveCache = data;
     if(CU) _applyLiveUI();
   });
 }
-window.addEventListener('firebaseReady', _initFirebaseLive);
-if(window._firebaseReady) _initFirebaseLive();
 
 async function _saveLive(uid, fields){
   if(!_liveCache[uid]) _liveCache[uid] = {};
@@ -1160,6 +1154,7 @@ function initApp(){
   renderNotifBadge();
   renderCalPip();
   // start live polling
+  _initFirebaseLive();
   startLivePolling();
 }
 
