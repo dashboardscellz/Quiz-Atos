@@ -1050,7 +1050,7 @@ function _initFirebase(){
       try{ localStorage.setItem('sc4', JSON.stringify(_db)); }catch(e){}
     }
     // Atualiza a UI após sincronizar
-    if(CU){ try{ renderHome(); }catch(e){} }
+    if(CU){ try{ renderHome(); }catch(e){} try{ renderReport(); }catch(e){} }
   });
   // Listener ao vivo (digitação em tempo real)
   window._fbListen('live', data => {
@@ -1060,10 +1060,13 @@ function _initFirebase(){
 }
 
 // Salva no Firebase E no cache local
+// Salva apenas os dados do usuário logado (não sobrescreve dados do parceiro)
 async function _fbSave(){
   try{ localStorage.setItem('sc4', JSON.stringify(_db)); }catch(e){}
-  if(_fbReady && window._fbSet){
-    try{ await window._fbSet('sc4', _db); }catch(e){}
+  if(_fbReady && window._fbSet && CU){
+    try{ await window._fbSet('sc4/' + CU, _db[CU]); }catch(e){}
+    // shared events também sincroniza separado
+    if(_db['shared']) try{ await window._fbSet('sc4/shared', _db['shared']); }catch(e){}
   }
 }
 
