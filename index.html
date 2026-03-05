@@ -1023,6 +1023,7 @@ function renderVerse(){
    STATE
 ══════════════════════════════════════════ */
 let CU = null, selU = 'manasses', selDiff = 'facil', selMood = '😊', selEventColor = EVENT_COLORS[0], selCat = 'prova';
+let relUid = null; // uid sendo exibido no relatório (null = CU)
 let timerInt = null, timerSec = 0, timerOn = false;
 let fcIdx = 0, fcCards = [];
 let notifOpen = false;
@@ -1133,7 +1134,7 @@ function togglePwd(){
 function doLogin(){
   const pass=document.getElementById('l-pass').value;
   if(pass===getPass(selU)){
-    CU=selU;
+    CU=selU; relUid=null;
     document.getElementById('screen-login').classList.add('hidden');
     document.getElementById('screen-app').classList.add('visible');
     initApp();
@@ -1843,9 +1844,10 @@ function renderReport(){
     </div>`;
 }
 
-function renderPartnerComparison(){
-  const partner=USERS[CU].partner;
-  const myS=getSess(CU),pS=getSess(partner);
+function renderPartnerComparison(uid){
+  uid = uid || CU;
+  const partner = uid === CU ? USERS[CU].partner : CU;
+  const myS=getSess(uid),pS=getSess(partner);
   const myMin=myS.reduce((a,b)=>a+(b.h||0)*60+(b.m||0),0);
   const pMin=pS.reduce((a,b)=>a+(b.h||0)*60+(b.m||0),0);
   const myQ=myS.reduce((a,b)=>a+(b.qT||0),0);
@@ -1858,8 +1860,10 @@ function renderPartnerComparison(){
     {label:'Questões respondidas',myV:`${myQ}`,pV:`${pQ}`,myPct:myQ/maxQ*100,pPct:pQ/maxQ*100},
     {label:'Total de acertos',myV:`${myC}`,pV:`${pC}`,myPct:myC/maxC*100,pPct:pC/maxC*100},
   ];
+  const myColor = uid==='manasses'?'var(--m-ink)':'var(--g-ink)';
+  const pColor = partner==='manasses'?'var(--m-ink)':'var(--g-ink)';
   return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;padding:0 4px">
-    <div style="color:var(--accent)">${USERS[CU].name}</div><div style="text-align:right;color:${CU==='manasses'?'var(--g-ink)':'var(--m-ink)'}">${USERS[partner].name}</div></div>`+rows.map(r=>`
+    <div style="color:${myColor}">${USERS[uid].name}</div><div style="text-align:right;color:${pColor}">${USERS[partner].name}</div></div>`+rows.map(r=>`
     <div style="margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--ink3);margin-bottom:6px"><span>${r.label}</span></div>
       <div style="display:flex;gap:6px;align-items:center">
@@ -2709,16 +2713,31 @@ function getENEMMessage(r){
 }
 
 /* ══════════════════════════════════════════
-   PATCH: renderReport() para incluir prob
+   PATCH: renderReport() para incluir prob + relatório do parceiro
 ══════════════════════════════════════════ */
 const _origRenderReport = renderReport;
-function renderReport(){
-  const u = USERS[CU];
+function renderReport(forceUid){
+  if(forceUid) relUid = forceUid;
+  const uid = relUid || CU;
+  const isMe = uid === CU;
+  const u = USERS[uid];
+  const partner = USERS[CU].partner;
+  const partnerU = USERS[partner];
   document.getElementById('rel-sub').textContent = u.name + ' · análise de desempenho';
-  const sessions = getSess(CU);
-  
+  const sessions = getSess(uid);
+
+  // Toggle buttons
+  const toggleHtml = `<div style="display:flex;gap:8px;margin-bottom:20px;background:#fff;border:1px solid var(--rule);border-radius:14px;padding:5px">
+    <button onclick="renderReport('${CU}')" style="flex:1;padding:10px;border-radius:10px;border:none;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;background:${isMe?'var(--accent)':'transparent'};color:${isMe?'#fff':'var(--ink3)'}">
+      ${USERS[CU].emoji} ${USERS[CU].name}
+    </button>
+    <button onclick="renderReport('${partner}')" style="flex:1;padding:10px;border-radius:10px;border:none;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;background:${!isMe?'var(--accent)':'transparent'};color:${!isMe?'#fff':'var(--ink3)'}">
+      ${partnerU.emoji} ${partnerU.name}
+    </button>
+  </div>`;
+
   if(!sessions.length){
-    document.getElementById('rel-content').innerHTML = '<div class="empty"><h3>Sem dados ainda</h3><p>Adicione sessões de estudo para ver seu relatório</p></div>';
+    document.getElementById('rel-content').innerHTML = toggleHtml + '<div class="empty"><h3>Sem dados ainda</h3><p>${isMe ? "Adicione sessões de estudo para ver seu relatório" : u.name + " ainda não tem sessões registradas"}</p></div>';
     return;
   }
 
@@ -2738,20 +2757,47 @@ function renderReport(){
   const withPct = subjPerf.filter(x=>x.pct!==null).sort((a,b)=>b.pct-a.pct);
   const byMin = [...subjPerf].sort((a,b)=>b.min-a.min);
   const maxMin = byMin[0]?.min||1;
-  const diary = getDiary(CU);
+  const diary = getDiary(uid);
   const moods = {};
   diary.forEach(e=>{ if(e.mood) moods[e.mood]=(moods[e.mood]||0)+1; });
   const topMood = Object.entries(moods).sort((a,b)=>b[1]-a[1])[0];
 
-document.getElementById('rel-content').innerHTML = `
-    <!-- BOTÃO LIMPAR SESSÕES -->
-    <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
-      <button onclick="clearAllSessions()" style="padding:9px 16px;border-radius:10px;border:1.5px solid var(--err);background:#fff;color:var(--err);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.15s" onmouseover="this.style.background='var(--err-bg)'" onmouseout="this.style.background='#fff'">🗑️ Apagar todas as sessões</button>
+  // Probabilidade para qualquer uid
+  const probSessions = getSess(uid);
+  const isManasses = uid === 'manasses';
+  const probData = isManasses ? calcOABProb(probSessions) : calcENEMProb(probSessions);
+  const probColor = getProbColor(probData.prob);
+  const probVerdict = getProbVerdict(probData.prob);
+  const examName = isManasses ? 'OAB' : 'ENEM';
+  const circumference = 2 * Math.PI * 36;
+  const dashOffset = circumference * (1 - probData.prob / 100);
+  const probHtml = probSessions.length ? `
+  <div class="prob-section" style="margin-bottom:20px">
+    <div style="background:linear-gradient(135deg,${isManasses?'#1a2a6c,#2D3144':'#6c1a1a,#2D1a44'});border-radius:18px;padding:20px 22px">
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:12px">🎯 Probabilidade de aprovação — ${examName}</div>
+      <div style="display:flex;align-items:center;gap:20px">
+        <svg width="90" height="90" viewBox="0 0 90 90">
+          <circle cx="45" cy="45" r="36" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8"/>
+          <circle cx="45" cy="45" r="36" fill="none" stroke="${probColor}" stroke-width="8"
+            stroke-dasharray="${circumference}" stroke-dashoffset="${dashOffset}"
+            stroke-linecap="round" transform="rotate(-90 45 45)"/>
+          <text x="45" y="49" text-anchor="middle" fill="white" font-size="18" font-weight="700" font-family="DM Serif Display,serif">${probData.prob}%</text>
+        </svg>
+        <div>
+          <div style="font-family:'DM Serif Display',serif;font-size:26px;color:#fff;line-height:1">${probData.prob}<span style="font-size:14px;color:rgba(255,255,255,0.5)">%</span></div>
+          <div style="margin-top:6px"><span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8)">${probVerdict.text.toUpperCase()}</span></div>
+          <div style="margin-top:8px;font-size:11px;color:rgba(255,255,255,0.5)">${probData.totalHours}h estudadas · ${probSessions.reduce((a,b)=>a+(b.qT||0),0)} questões</div>
+        </div>
+      </div>
     </div>
-    <!-- ① PROBABILIDADE (topo do relatório) -->
+  </div>` : '';
 
-    <!-- ① PROBABILIDADE (topo do relatório) -->
-    ${renderProbSection()}
+document.getElementById('rel-content').innerHTML = toggleHtml + `
+    ${isMe ? `<div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+      <button onclick="clearAllSessions()" style="padding:9px 16px;border-radius:10px;border:1.5px solid var(--err);background:#fff;color:var(--err);font-size:12px;font-weight:700;cursor:pointer" onmouseover="this.style.background='var(--err-bg)'" onmouseout="this.style.background='#fff'">🗑️ Apagar todas as sessões</button>
+    </div>` : ''}
+
+    ${probHtml}
 
     <!-- ② OVERVIEW -->
     <div class="home-section-label" style="margin-top:24px">📊 Visão geral</div>
@@ -2817,8 +2863,8 @@ document.getElementById('rel-content').innerHTML = `
     </div>
 
     <div class="report-card">
-      <div class="card-label">Comparação com ${USERS[USERS[CU].partner].name}</div>
-      ${renderPartnerComparison()}
+      <div class="card-label">Comparação com ${USERS[uid === CU ? partner : CU].name}</div>
+      ${renderPartnerComparison(uid)}
     </div>
 
     <div class="report-card">
