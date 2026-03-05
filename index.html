@@ -1032,35 +1032,66 @@ let liveInt = null;
 let diaryTypingTimer = null;
 
 /* ══════════════════════════════════════════
-   STORAGE
+   STORAGE — Firebase Realtime DB (sincronizado entre dispositivos)
 ══════════════════════════════════════════ */
-function db(){ try{return JSON.parse(localStorage.getItem('sc4')||'{}')}catch{return{}} }
-function save(d){ localStorage.setItem('sc4',JSON.stringify(d)) }
-function getSess(uid){ return (db()[uid]||{}).sessions||[] }
-function getPass(uid){ return (db()[uid]||{}).pass||'estudo123' }
-function getGoals(uid){ return (db()[uid]||{}).goals||[] }
-function getNotifs(uid){ return (db()[uid]||{}).notifs||[] }
-function getDiary(uid){ return (db()[uid]||{}).diary||[] }
-function getEvents(uid){ return (db()[uid]||{}).events||[] } // shared by both, stored under 'shared'
-function getSharedEvents(){ return (db()['shared']||{}).events||[] }
-// ── LIVE STORAGE via Firebase Realtime DB ──
-let _liveCache = {};
-let _firebaseActive = false;
+// Cache local — espelho do Firebase
+let _db = {};
+let _fbReady = false;
 
-function _initFirebaseLive(){
-  if(!window._fbListen || _firebaseActive) return;
-  _firebaseActive = true;
+// Inicializa listener do Firebase — sincroniza TUDO em tempo real
+function _initFirebase(){
+  if(!window._fbListen || _fbReady) return;
+  _fbReady = true;
+  // Listener principal: dados de usuários (sessões, metas, diário, eventos, notifs)
+  window._fbListen('sc4', data => {
+    if(data){
+      _db = data;
+      // Persiste localmente como cache offline
+      try{ localStorage.setItem('sc4', JSON.stringify(_db)); }catch(e){}
+    }
+    // Atualiza a UI após sincronizar
+    if(CU){ try{ renderHome(); }catch(e){} }
+  });
+  // Listener ao vivo (digitação em tempo real)
   window._fbListen('live', data => {
     if(data) _liveCache = data;
     if(CU) _applyLiveUI();
   });
 }
 
+// Salva no Firebase E no cache local
+async function _fbSave(){
+  try{ localStorage.setItem('sc4', JSON.stringify(_db)); }catch(e){}
+  if(_fbReady && window._fbSet){
+    try{ await window._fbSet('sc4', _db); }catch(e){}
+  }
+}
+
+// Compatibilidade com código existente
+function db(){ return _db; }
+function save(d){ _db = d; _fbSave(); }
+
+function getSess(uid){ return (_db[uid]||{}).sessions||[] }
+function getPass(uid){ return (_db[uid]||{}).pass||'estudo123' }
+function getGoals(uid){ return (_db[uid]||{}).goals||[] }
+function getNotifs(uid){ return (_db[uid]||{}).notifs||[] }
+function getDiary(uid){ return (_db[uid]||{}).diary||[] }
+function getEvents(uid){ return (_db[uid]||{}).events||[] }
+function getSharedEvents(){ return (_db['shared']||{}).events||[] }
+
+// ── LIVE STORAGE ──
+let _liveCache = {};
+let _firebaseActive = false;
+
+function _initFirebaseLive(){
+  // já tratado dentro de _initFirebase
+}
+
 async function _saveLive(uid, fields){
   if(!_liveCache[uid]) _liveCache[uid] = {};
   Object.assign(_liveCache[uid], fields);
-  if(_firebaseActive && window._fbSet){
-    try { await window._fbSet('live/' + uid, _liveCache[uid]); } catch(e){}
+  if(_fbReady && window._fbSet){
+    try{ await window._fbSet('live/' + uid, _liveCache[uid]); }catch(e){}
   }
 }
 
@@ -1069,17 +1100,17 @@ function getLiveTs(uid){ return (_liveCache[uid]||{}).liveTs||0 }
 function getLiveReaction(uid){ return (_liveCache[uid]||{}).liveReaction||null }
 function getLiveMood(uid){ return (_liveCache[uid]||{}).liveMood||'' }
 
-function pushSess(uid,s){ const d=db();if(!d[uid])d[uid]={sessions:[]};if(!d[uid].sessions)d[uid].sessions=[];d[uid].sessions.push(s);save(d); }
-function setPass(uid,p){ const d=db();if(!d[uid])d[uid]={};d[uid].pass=p;save(d); }
-function saveGoals(uid,g){ const d=db();if(!d[uid])d[uid]={};d[uid].goals=g;save(d); }
-function pushNotif(uid,msg){ const d=db();if(!d[uid])d[uid]={};if(!d[uid].notifs)d[uid].notifs=[];d[uid].notifs.unshift({msg,t:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})});d[uid].notifs=d[uid].notifs.slice(0,20);save(d); }
-function clearNotifs(uid){ const d=db();if(d[uid])d[uid].notifs=[];save(d); }
-function pushDiary(uid,entry){ const d=db();if(!d[uid])d[uid]={};if(!d[uid].diary)d[uid].diary=[];d[uid].diary.push(entry);save(d); }
+function pushSess(uid,s){ if(!_db[uid])_db[uid]={sessions:[]};if(!_db[uid].sessions)_db[uid].sessions=[];_db[uid].sessions.push(s);_fbSave(); }
+function setPass(uid,p){ if(!_db[uid])_db[uid]={};_db[uid].pass=p;_fbSave(); }
+function saveGoals(uid,g){ if(!_db[uid])_db[uid]={};_db[uid].goals=g;_fbSave(); }
+function pushNotif(uid,msg){ if(!_db[uid])_db[uid]={};if(!_db[uid].notifs)_db[uid].notifs=[];_db[uid].notifs.unshift({msg,t:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})});_db[uid].notifs=_db[uid].notifs.slice(0,20);_fbSave(); }
+function clearNotifs(uid){ if(_db[uid])_db[uid].notifs=[];_fbSave(); }
+function pushDiary(uid,entry){ if(!_db[uid])_db[uid]={};if(!_db[uid].diary)_db[uid].diary=[];_db[uid].diary.push(entry);_fbSave(); }
 function saveLiveText(uid,text){ _saveLive(uid,{liveText:text,liveTs:Date.now()}); }
 function saveLiveReaction(uid,r){ _saveLive(uid,{liveReaction:{r,t:Date.now()}}); }
 function saveLiveMood(uid,mood){ _saveLive(uid,{liveMood:mood}); }
-function addSharedEvent(ev){ const d=db();if(!d['shared'])d['shared']={events:[]};if(!d['shared'].events)d['shared'].events=[];d['shared'].events.push(ev);save(d); }
-function removeSharedEvent(id){ const d=db();if(d['shared']&&d['shared'].events)d['shared'].events=d['shared'].events.filter(e=>e.id!==id);save(d); }
+function addSharedEvent(ev){ if(!_db['shared'])_db['shared']={events:[]};if(!_db['shared'].events)_db['shared'].events=[];_db['shared'].events.push(ev);_fbSave(); }
+function removeSharedEvent(id){ if(_db['shared']&&_db['shared'].events)_db['shared'].events=_db['shared'].events.filter(e=>e.id!==id);_fbSave(); }
 
 /* ══════════════════════════════════════════
    LOGIN
@@ -1149,12 +1180,14 @@ function initApp(){
   calYear=now.getFullYear(); calMonth=now.getMonth();
   // init event color picks
   renderColorPicks();
+  // Carrega cache local enquanto Firebase sincroniza
+  try{ const lc=localStorage.getItem('sc4'); if(lc) _db=JSON.parse(lc); }catch(e){}
+  // Inicializa Firebase (sincroniza tudo em tempo real)
+  _initFirebase();
   // render
   renderHome();
   renderNotifBadge();
   renderCalPip();
-  // start live polling
-  _initFirebaseLive();
   startLivePolling();
 }
 
