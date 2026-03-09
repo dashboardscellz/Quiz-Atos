@@ -1,0 +1,1391 @@
+/* ============================================
+   MANA E KELINHA - APLICAÇÃO PRINCIPAL
+   ============================================ */
+
+// ============================================
+// COMPONENTE: SISTEMA DE BADGES
+// ============================================
+const BadgesScreen = ({ userId, sessions, unlockedBadges, addToast }) => {
+  const user = USERS[userId];
+  
+  const stats = useMemo(() => {
+    const totalSessions = sessions.length;
+    const totalMinutes = sessions.reduce((acc, s) => acc + (s.h || 0) * 60 + (s.m || 0), 0);
+    const totalQuestions = sessions.reduce((acc, s) => acc + (s.qT || 0), 0);
+    const uniqueSubjects = new Set(sessions.map(s => s.subject)).size;
+    
+    const accuracies = sessions.filter(s => s.qT > 0).map(s => (s.qC / s.qT) * 100);
+    const bestAccuracy = accuracies.length > 0 ? Math.max(...accuracies) : 0;
+    
+    const easySessions = sessions.filter(s => s.diff === 'facil').length;
+    const mediumSessions = sessions.filter(s => s.diff === 'medio').length;
+    const hardSessions = sessions.filter(s => s.diff === 'dificil').length;
+    
+    const sessionMinutes = sessions.map(s => (s.h || 0) * 60 + (s.m || 0));
+    const longestSession = sessionMinutes.length > 0 ? Math.max(...sessionMinutes) : 0;
+    const shortSessions = sessions.filter(s => {
+      const mins = (s.h || 0) * 60 + (s.m || 0);
+      return mins >= 15 && mins <= 25;
+    }).length;
+    
+    return {
+      totalSessions,
+      totalMinutes,
+      totalQuestions,
+      uniqueSubjects,
+      bestAccuracy,
+      easySessions,
+      mediumSessions,
+      hardSessions,
+      longestSession,
+      shortSessions,
+      streak: 0,
+      hasStudiedLateNight: false,
+      hasStudiedWeekend: false,
+      maxHoursInDay: 0,
+      maxHoursInWeek: 0,
+      bothStudiedSameDay: false,
+      duelsWon: 0,
+      totalBadges: unlockedBadges.length
+    };
+  }, [sessions, unlockedBadges]);
+  
+  const badgesByCategory = {
+    marcos: Object.values(BADGES).filter(b => b.category === 'marcos'),
+    tempo: Object.values(BADGES).filter(b => b.category === 'tempo'),
+    streak: Object.values(BADGES).filter(b => b.category === 'streak'),
+    performance: Object.values(BADGES).filter(b => b.category === 'performance'),
+    materias: Object.values(BADGES).filter(b => b.category === 'materias'),
+    dificuldade: Object.values(BADGES).filter(b => b.category === 'dificuldade'),
+    especial: Object.values(BADGES).filter(b => b.category === 'especial'),
+    consistencia: Object.values(BADGES).filter(b => b.category === 'consistencia'),
+    duo: Object.values(BADGES).filter(b => b.category === 'duo'),
+    final: Object.values(BADGES).filter(b => b.category === 'final')
+  };
+  
+  const categoryNames = {
+    marcos: '🏁 Marcos Iniciais',
+    tempo: '⏱️ Tempo de Estudo',
+    streak: '🔥 Streaks',
+    performance: '📊 Performance',
+    materias: '📚 Matérias',
+    dificuldade: '💪 Dificuldade',
+    especial: '✨ Especiais',
+    consistencia: '📅 Consistência',
+    duo: '💕 Casal',
+    final: '👑 Finais'
+  };
+  
+  return React.createElement('div', null,
+    React.createElement('div', { className: 'mb-6' },
+      React.createElement('h2', { className: 'text-2xl font-bold mb-1' }, 'Conquistas'),
+      React.createElement('p', { className: 'text-white-60' }, 
+        `${unlockedBadges.length} de ${Object.keys(BADGES).length} badges desbloqueados`
+      )
+    ),
+    
+    React.createElement(GlassCard, { className: 'mb-4' },
+      React.createElement('div', { className: 'p-5' },
+        React.createElement('div', { className: 'flex items-center justify-between' },
+          React.createElement('div', null,
+            React.createElement('p', { className: 'text-sm text-white-60' }, 'Progresso Total'),
+            React.createElement('p', { className: 'text-3xl font-bold text-gradient' }, 
+              `${Math.round((unlockedBadges.length / Object.keys(BADGES).length) * 100)}%`
+            )
+          ),
+          React.createElement(ProgressRing, {
+            value: unlockedBadges.length,
+            max: Object.keys(BADGES).length,
+            size: 80,
+            color: 'yellow'
+          }, `${unlockedBadges.length}`)
+        )
+      )
+    ),
+    
+    Object.entries(badgesByCategory).map(([category, badges]) => 
+      React.createElement('div', { key: category, className: 'badge-category' },
+        React.createElement('h3', { className: 'badge-category-title' }, 
+          categoryNames[category]
+        ),
+        React.createElement('div', { className: 'badge-grid' },
+          badges.map(badge => {
+            const isUnlocked = unlockedBadges.includes(badge.id);
+            return React.createElement('div', {
+              key: badge.id,
+              className: `badge-item ${!isUnlocked ? 'locked' : ''}`
+            },
+              React.createElement('span', { className: `badge-rarity ${badge.rarity}` }),
+              React.createElement('span', { className: 'badge-icon' }, badge.emoji),
+              React.createElement('p', { className: 'badge-name' }, badge.name),
+              React.createElement('p', { className: 'badge-desc' }, badge.description),
+              isUnlocked && React.createElement('span', { 
+                className: 'tag tag-gold mt-2',
+                style: { fontSize: '10px' }
+              }, `+${badge.xpReward} XP`)
+            );
+          })
+        )
+      )
+    )
+  );
+};
+
+// ============================================
+// COMPONENTE: SISTEMA DE NÍVEIS E XP
+// ============================================
+const LevelScreen = ({ userId, xp, addToast }) => {
+  const user = USERS[userId];
+  
+  const currentLevel = useMemo(() => {
+    return LEVELS.find(l => xp >= l.minXP && xp < l.maxXP) || LEVELS[LEVELS.length - 1];
+  }, [xp]);
+  
+  const nextLevel = useMemo(() => {
+    return LEVELS.find(l => l.level === currentLevel.level + 1);
+  }, [currentLevel]);
+  
+  const xpInLevel = xp - currentLevel.minXP;
+  const xpNeeded = nextLevel ? nextLevel.minXP - currentLevel.minXP : 0;
+  const xpProgress = nextLevel ? (xpInLevel / xpNeeded) * 100 : 100;
+  
+  const xpSources = [
+    { name: 'Sessões', icon: '📚', xp: Math.floor(xp * 0.3) },
+    { name: 'Questões', icon: '📝', xp: Math.floor(xp * 0.25) },
+    { name: 'Streaks', icon: '🔥', xp: Math.floor(xp * 0.2) },
+    { name: 'Badges', icon: '🏆', xp: Math.floor(xp * 0.25) }
+  ];
+  
+  return React.createElement('div', null,
+    React.createElement('div', { className: 'mb-6' },
+      React.createElement('h2', { className: 'text-2xl font-bold mb-1' }, 'Nível & XP'),
+      React.createElement('p', { className: 'text-white-60' }, 'Acompanhe sua evolução')
+    ),
+    
+    React.createElement('div', { className: 'level-card' },
+      React.createElement('div', { className: 'level-header' },
+        React.createElement('div', { className: 'level-info' },
+          React.createElement('div', { className: 'level-badge' }, currentLevel.emoji),
+          React.createElement('div', null,
+            React.createElement('p', { className: 'level-title' }, currentLevel.name),
+            React.createElement('p', { className: 'level-subtitle' }, `Nível ${currentLevel.level}`)
+          )
+        ),
+        React.createElement('div', { className: 'level-xp' },
+          React.createElement('p', { className: 'level-xp-value' }, xp.toLocaleString()),
+          React.createElement('p', { className: 'level-xp-label' }, 'XP Total')
+        )
+      ),
+      
+      React.createElement('div', { className: 'xp-bar-container' },
+        React.createElement('div', { className: 'xp-bar' },
+          React.createElement('div', { 
+            className: 'xp-bar-fill',
+            style: { width: `${xpProgress}%` }
+          })
+        ),
+        React.createElement('div', { className: 'xp-bar-labels' },
+          React.createElement('span', null, `${xpInLevel.toLocaleString()} XP`),
+          React.createElement('span', null, nextLevel 
+            ? `Faltam ${(nextLevel.minXP - xp).toLocaleString()} XP para ${nextLevel.name}`
+            : 'Nível Máximo! 🎉'
+          )
+        )
+      )
+    ),
+    
+    nextLevel && React.createElement(GlassCard, { className: 'mb-4' },
+      React.createElement('div', { className: 'p-5' },
+        React.createElement('div', { className: 'flex items-center gap-4' },
+          React.createElement('div', { 
+            className: 'streak-icon',
+            style: { 
+              background: `linear-gradient(135deg, ${nextLevel.color}, ${currentLevel.color})`,
+              width: '48px',
+              height: '48px',
+              fontSize: '24px'
+            }
+          }, nextLevel.emoji),
+          React.createElement('div', null,
+            React.createElement('p', { className: 'text-sm text-white-60' }, 'Próximo Nível'),
+            React.createElement('p', { className: 'text-lg font-semibold' }, nextLevel.name)
+          )
+        )
+      )
+    ),
+    
+    React.createElement('h3', { className: 'text-lg font-semibold mb-3' }, 'Fontes de XP'),
+    React.createElement('div', { className: 'xp-source-grid' },
+      xpSources.map((source, i) => 
+        React.createElement('div', { key: i, className: 'xp-source-item' },
+          React.createElement('div', { className: 'xp-source-icon' }, source.icon),
+          React.createElement('p', { className: 'xp-source-name' }, source.name),
+          React.createElement('p', { className: 'xp-source-value' }, `+${source.xp.toLocaleString()} XP`)
+        )
+      )
+    ),
+    
+    React.createElement('div', { className: 'mt-6' },
+      React.createElement('h3', { className: 'text-lg font-semibold mb-3' }, 'Como Ganhar XP'),
+      React.createElement(GlassCard, null,
+        React.createElement('div', { className: 'p-4 space-y-3' },
+          React.createElement('div', { className: 'flex items-center justify-between' },
+            React.createElement('span', { className: 'text-sm' }, '⏱️ Cada hora de estudo'),
+            React.createElement('span', { className: 'text-yellow font-semibold' }, '+50 XP')
+          ),
+          React.createElement('div', { className: 'flex items-center justify-between' },
+            React.createElement('span', { className: 'text-sm' }, '📝 Questão resolvida'),
+            React.createElement('span', { className: 'text-yellow font-semibold' }, '+2 XP')
+          ),
+          React.createElement('div', { className: 'flex items-center justify-between' },
+            React.createElement('span', { className: 'text-sm' }, '✅ Questão certa'),
+            React.createElement('span', { className: 'text-yellow font-semibold' }, '+5 XP (bônus)')
+          ),
+          React.createElement('div', { className: 'flex items-center justify-between' },
+            React.createElement('span', { className: 'text-sm' }, '🔥 Dia de streak'),
+            React.createElement('span', { className: 'text-yellow font-semibold' }, '+10 XP × streak')
+          ),
+          React.createElement('div', { className: 'flex items-center justify-between' },
+            React.createElement('span', { className: 'text-sm' }, '🏆 Badge desbloqueado'),
+            React.createElement('span', { className: 'text-yellow font-semibold' }, 'Variável')
+          ),
+          React.createElement('div', { className: 'flex items-center justify-between' },
+            React.createElement('span', { className: 'text-sm' }, '📚 Nova matéria'),
+            React.createElement('span', { className: 'text-yellow font-semibold' }, '+25 XP')
+          )
+        )
+      )
+    )
+  );
+};
+
+// ============================================
+// COMPONENTE: LEADERBOARD E DESAFIOS
+// ============================================
+const ChallengesScreen = ({ userId, sessions, partnerSessions, addToast }) => {
+  const user = USERS[userId];
+  const partner = USERS[user.partner];
+  
+  const userStats = useMemo(() => ({
+    totalHours: sessions.reduce((acc, s) => acc + (s.h || 0) + (s.m || 0) / 60, 0),
+    totalSessions: sessions.length,
+    totalQuestions: sessions.reduce((acc, s) => acc + (s.qT || 0), 0),
+    avgAccuracy: sessions.filter(s => s.qT > 0).length > 0
+      ? sessions.filter(s => s.qT > 0).reduce((acc, s) => acc + (s.qC / s.qT) * 100, 0) / sessions.filter(s => s.qT > 0).length
+      : 0
+  }), [sessions]);
+  
+  const partnerStats = useMemo(() => ({
+    totalHours: partnerSessions.reduce((acc, s) => acc + (s.h || 0) + (s.m || 0) / 60, 0),
+    totalSessions: partnerSessions.length,
+    totalQuestions: partnerSessions.reduce((acc, s) => acc + (s.qT || 0), 0),
+    avgAccuracy: partnerSessions.filter(s => s.qT > 0).length > 0
+      ? partnerSessions.filter(s => s.qT > 0).reduce((acc, s) => acc + (s.qC / s.qT) * 100, 0) / partnerSessions.filter(s => s.qT > 0).length
+      : 0
+  }), [partnerSessions]);
+  
+  const rankings = [
+    { 
+      name: user.name, 
+      emoji: user.emoji, 
+      score: Math.round(userStats.totalHours * 10), 
+      stats: `${userStats.totalSessions} sessões`,
+      isUser: true 
+    },
+    { 
+      name: partner.name, 
+      emoji: partner.emoji, 
+      score: Math.round(partnerStats.totalHours * 10), 
+      stats: `${partnerStats.totalSessions} sessões`,
+      isUser: false 
+    }
+  ].sort((a, b) => b.score - a.score);
+  
+  const currentChallenge = WEEKLY_CHALLENGES[0];
+  const userWinning = rankings[0].isUser;
+  
+  return React.createElement('div', null,
+    React.createElement('div', { className: 'mb-6' },
+      React.createElement('h2', { className: 'text-2xl font-bold mb-1' }, 'Desafios'),
+      React.createElement('p', { className: 'text-white-60' }, 'Compita e evolua juntos!')
+    ),
+    
+    React.createElement('div', { className: 'leaderboard-card' },
+      React.createElement('div', { className: 'leaderboard-header' },
+        React.createElement('div', null,
+          React.createElement('h3', { className: 'leaderboard-title' }, '🏆 Ranking do Casal')
+        ),
+        React.createElement('span', { className: 'leaderboard-period' }, 'Sempre atualizado')
+      ),
+      
+      rankings.map((rank, i) => 
+        React.createElement('div', { 
+          key: rank.name, 
+          className: 'leaderboard-item',
+          style: rank.isUser ? { border: '1px solid rgba(139,92,246,0.3)' } : {}
+        },
+          React.createElement('div', { 
+            className: `leaderboard-rank ${i === 0 ? 'gold' : 'silver'}` 
+          }, i + 1),
+          React.createElement('div', { 
+            className: 'leaderboard-avatar',
+            style: { 
+              background: rank.isUser 
+                ? 'linear-gradient(135deg, #8b5cf6, #7c3aed)' 
+                : 'linear-gradient(135deg, #ec4899, #db2777)' 
+            }
+          }, rank.emoji),
+          React.createElement('div', { className: 'leaderboard-info' },
+            React.createElement('p', { className: 'leaderboard-name' }, 
+              rank.name,
+              rank.isUser && React.createElement('span', { className: 'tag tag-primary ml-2', style: { fontSize: '9px' } }, 'Você')
+            ),
+            React.createElement('p', { className: 'leaderboard-stats' }, rank.stats)
+          ),
+          React.createElement('div', { className: 'leaderboard-score' },
+            React.createElement('p', { className: 'leaderboard-score-value' }, rank.score),
+            React.createElement('p', { className: 'leaderboard-score-label' }, 'pontos')
+          )
+        )
+      )
+    ),
+    
+    React.createElement('h3', { className: 'text-lg font-semibold mb-3' }, 'Desafio Ativo'),
+    React.createElement('div', { className: `challenge-card ${userWinning ? 'active' : ''}` },
+      React.createElement('div', { className: 'challenge-header' },
+        React.createElement('div', { className: 'challenge-icon' }, currentChallenge.emoji),
+        React.createElement('div', { className: 'challenge-info' },
+          React.createElement('p', { className: 'challenge-title' }, currentChallenge.title),
+          React.createElement('p', { className: 'challenge-desc' }, currentChallenge.description)
+        )
+      ),
+      
+      React.createElement('div', { className: 'challenge-reward' },
+        React.createElement('div', { className: 'challenge-reward-item' },
+          '✨', `+${currentChallenge.reward.xp} XP`
+        ),
+        React.createElement('div', { className: 'challenge-reward-item' },
+          '🏆', currentChallenge.reward.badge
+        )
+      ),
+      
+      React.createElement('div', { className: 'challenge-progress' },
+        React.createElement('div', { className: 'challenge-progress-bar' },
+          React.createElement('div', { 
+            className: 'challenge-progress-fill',
+            style: { width: `${userWinning ? 100 : 50}%` }
+          })
+        ),
+        React.createElement('p', { className: 'challenge-progress-text' }, 
+          userWinning 
+            ? '🎉 Você está na frente!' 
+            : '💪 Continue estudando para ultrapassar!'
+        )
+      ),
+      
+      React.createElement('span', { className: `challenge-status ${userWinning ? 'completed' : 'active'}` },
+        userWinning ? 'Ganhando!' : 'Em andamento'
+      )
+    ),
+    
+    React.createElement('h3', { className: 'text-lg font-semibold mb-3 mt-6' }, 'Próximos Desafios'),
+    WEEKLY_CHALLENGES.slice(1, 4).map((challenge, i) => 
+      React.createElement('div', { key: challenge.id, className: 'challenge-card' },
+        React.createElement('div', { className: 'challenge-header' },
+          React.createElement('div', { className: 'challenge-icon' }, challenge.emoji),
+          React.createElement('div', { className: 'challenge-info' },
+            React.createElement('p', { className: 'challenge-title' }, challenge.title),
+            React.createElement('p', { className: 'challenge-desc' }, challenge.description)
+          )
+        ),
+        React.createElement('div', { className: 'challenge-reward' },
+          React.createElement('div', { className: 'challenge-reward-item' },
+            '✨', `+${challenge.reward.xp} XP`
+          ),
+          React.createElement('div', { className: 'challenge-reward-item' },
+            '🏆', challenge.reward.badge
+          )
+        )
+      )
+    )
+  );
+};
+
+// ============================================
+// COMPONENTE: PLANO DE ESTUDOS COM IA
+// ============================================
+const StudyPlanScreen = ({ userId, sessions, addToast }) => {
+  const user = USERS[userId];
+  const daysUntilExam = getDaysUntilExam();
+  
+  const subjectStats = useMemo(() => {
+    const stats = {};
+    sessions.forEach(s => {
+      if (!stats[s.subject]) {
+        stats[s.subject] = { hours: 0, questions: 0, correct: 0, sessions: 0 };
+      }
+      stats[s.subject].hours += (s.h || 0) + (s.m || 0) / 60;
+      stats[s.subject].questions += s.qT || 0;
+      stats[s.subject].correct += s.qC || 0;
+      stats[s.subject].sessions += 1;
+    });
+    
+    return Object.entries(stats)
+      .map(([subject, data]) => ({
+        subject,
+        ...data,
+        accuracy: data.questions > 0 ? (data.correct / data.questions) * 100 : 0
+      }))
+      .sort((a, b) => a.hours - b.hours);
+  }, [sessions]);
+  
+  const weakestSubject = subjectStats[0];
+  const strongestSubject = subjectStats[subjectStats.length - 1];
+  
+  const recommendations = [
+    weakestSubject && {
+      type: 'warning',
+      title: '⚠️ Foco Necessário',
+      text: `Você estudou apenas ${weakestSubject.hours.toFixed(1)}h de ${weakestSubject.subject}. Que tal dedicar mais tempo a essa matéria?`
+    },
+    {
+      type: 'tip',
+      title: '💡 Dica da IA',
+      text: `Faltam ${daysUntilExam} dias para a prova. Estude pelo menos 3 horas por dia para garantir uma boa preparação!`
+    },
+    strongestSubject && {
+      type: 'success',
+      title: '✅ Bom Desempenho',
+      text: `${strongestSubject.subject} é sua matéria mais estudada (${strongestSubject.hours.toFixed(1)}h). Mantenha o ritmo!`
+    }
+  ].filter(Boolean);
+  
+  const studySchedule = [
+    { day: 1, subject: weakestSubject?.subject || 'Matéria Prioritária', time: '2h', done: false },
+    { day: 2, subject: 'Revisão Geral', time: '1.5h', done: false },
+    { day: 3, subject: 'Questões de Provas Anteriores', time: '2h', done: false },
+    { day: 4, subject: strongestSubject?.subject || 'Matéria Forte', time: '1h', done: false },
+    { day: 5, subject: 'Simulado Completo', time: '3h', done: false },
+    { day: 6, subject: 'Revisão de Erros', time: '1.5h', done: false },
+    { day: 7, subject: 'Descanso Ativo', time: '30min', done: false }
+  ];
+  
+  return React.createElement('div', null,
+    React.createElement('div', { className: 'mb-6' },
+      React.createElement('h2', { className: 'text-2xl font-bold mb-1' }, 'Plano de Estudos'),
+      React.createElement('p', { className: 'text-white-60' }, 'Personalizado pela IA')
+    ),
+    
+    React.createElement('div', { className: 'study-plan-card' },
+      React.createElement('div', { className: 'study-plan-header' },
+        React.createElement('div', { className: 'study-plan-icon' }, '🤖'),
+        React.createElement('div', null,
+          React.createElement('p', { className: 'study-plan-title' }, 'Assistente IA'),
+          React.createElement('p', { className: 'study-plan-subtitle' }, 'Análise personalizada')
+        )
+      ),
+      
+      React.createElement('div', { className: 'study-plan-countdown' },
+        React.createElement('p', { className: 'study-plan-countdown-value' }, daysUntilExam),
+        React.createElement('p', { className: 'study-plan-countdown-label' }, 'dias até a prova (09/11/2026)')
+      ),
+      
+      recommendations.map((rec, i) => 
+        React.createElement('div', { key: i, className: 'study-plan-recommendation' },
+          React.createElement('div', { className: 'study-plan-recommendation-header' },
+            React.createElement('span', { style: { fontSize: '16px' } }, rec.title.split(' ')[0]),
+            React.createElement('p', { className: 'study-plan-recommendation-title' }, 
+              rec.title.split(' ').slice(1).join(' ')
+            )
+          ),
+          React.createElement('p', { className: 'study-plan-recommendation-text' }, rec.text)
+        )
+      )
+    ),
+    
+    React.createElement('div', { className: 'study-plan-schedule' },
+      React.createElement('h3', { className: 'study-plan-schedule-title' }, '📅 Cronograma Sugerido'),
+      studySchedule.map((day, i) => 
+        React.createElement('div', { key: i, className: 'study-plan-day' },
+          React.createElement('div', { className: 'study-plan-day-number' }, day.day),
+          React.createElement('div', { className: 'study-plan-day-content' },
+            React.createElement('p', { className: 'study-plan-day-subject' }, day.subject),
+            React.createElement('p', { className: 'study-plan-day-time' }, day.time)
+          ),
+          React.createElement('span', { className: `study-plan-day-status ${day.done ? 'done' : 'pending'}` },
+            day.done ? '✅ Feito' : '⏳ Pendente'
+          )
+        )
+      )
+    ),
+    
+    React.createElement(GlassCard, { className: 'mt-4' },
+      React.createElement('div', { className: 'p-4' },
+        React.createElement('h4', { className: 'text-sm font-semibold mb-3' }, '📊 Análise por Matéria'),
+        subjectStats.length === 0 
+          ? React.createElement('p', { className: 'text-white-60 text-sm' }, 'Comece a estudar para ver a análise!')
+          : React.createElement('div', { className: 'space-y-3' },
+              subjectStats.map((stat, i) => 
+                React.createElement('div', { key: i, className: 'subject-item' },
+                  React.createElement('span', { className: 'name' }, stat.subject),
+                  React.createElement('div', { className: 'bar-container' },
+                    React.createElement('div', { 
+                      className: 'bar-fill',
+                      style: { 
+                        width: `${Math.min((stat.hours / 20) * 100, 100)}%`,
+                        background: stat.accuracy >= 70 ? '#22c55e' : stat.accuracy >= 40 ? '#eab308' : '#ef4444'
+                      }
+                    })
+                  ),
+                  React.createElement('span', { className: 'value' }, `${stat.hours.toFixed(1)}h`)
+                )
+              )
+            )
+      )
+    )
+  );
+};
+
+// ============================================
+// COMPONENTE: HISTÓRICO DE SESSÕES
+// ============================================
+const HistoryScreen = ({ 
+  userId, 
+  sessions, 
+  onEditSession, 
+  onDeleteSession,
+  addToast 
+}) => {
+  const [filter, setFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const user = USERS[userId];
+  
+  const subjects = [...new Set(sessions.map(s => s.subject))];
+  
+  const filteredSessions = useMemo(() => {
+    let result = [...sessions].sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    if (filter !== 'all') {
+      result = result.filter(s => s.subject === filter);
+    }
+    
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(s => 
+        s.subject.toLowerCase().includes(term) ||
+        (s.body && s.body.toLowerCase().includes(term))
+      );
+    }
+    
+    return result;
+  }, [sessions, filter, searchTerm]);
+  
+  const handleDelete = (session) => {
+    if (confirm(`Tem certeza que deseja excluir a sessão "${session.subject}"?`)) {
+      onDeleteSession(session.id);
+      addToast('Sessão excluída com sucesso', 'success');
+    }
+  };
+  
+  return React.createElement('div', null,
+    React.createElement('div', { className: 'mb-6' },
+      React.createElement('h2', { className: 'text-2xl font-bold mb-1' }, 'Histórico'),
+      React.createElement('p', { className: 'text-white-60' }, 'Todas as suas sessões de estudo')
+    ),
+    
+    React.createElement('div', { className: 'mb-4' },
+      React.createElement('div', { style: { position: 'relative' } },
+        React.createElement('input', {
+          type: 'text',
+          value: searchTerm,
+          onChange: (e) => setSearchTerm(e.target.value),
+          placeholder: 'Buscar por matéria ou conteúdo...',
+          className: 'input',
+          style: { paddingLeft: '44px' }
+        }),
+        React.createElement('div', { 
+          style: { 
+            position: 'absolute', 
+            left: '14px', 
+            top: '50%', 
+            transform: 'translateY(-50%)',
+            color: 'rgba(255,255,255,0.4)'
+          } 
+        }, Icons.search({ width: 18, height: 18 }))
+      )
+    ),
+    
+    subjects.length > 0 && React.createElement('div', { className: 'filter-bar' },
+      React.createElement('button', {
+        className: `filter-btn ${filter === 'all' ? 'active' : ''}`,
+        onClick: () => setFilter('all')
+      }, 'Todas'),
+      subjects.map(subject => 
+        React.createElement('button', {
+          key: subject,
+          className: `filter-btn ${filter === subject ? 'active' : ''}`,
+          onClick: () => setFilter(subject)
+        }, subject)
+      )
+    ),
+    
+    filteredSessions.length === 0 
+      ? React.createElement(GlassCard, null,
+          React.createElement('div', { className: 'empty-state' },
+            React.createElement('div', { className: 'icon' }, '📚'),
+            React.createElement('h3', null, searchTerm || filter !== 'all' ? 'Nenhuma sessão encontrada' : 'Nenhuma sessão registrada'),
+            React.createElement('p', null, searchTerm || filter !== 'all' 
+              ? 'Tente ajustar os filtros de busca' 
+              : 'Adicione sua primeira sessão de estudo'
+            )
+          )
+        )
+      : React.createElement('div', { className: 'session-list' },
+          filteredSessions.map(session => 
+            React.createElement(SessionItem, {
+              key: session.id,
+              session,
+              userColor: user.color,
+              onEdit: onEditSession,
+              onDelete: handleDelete
+            })
+          )
+        )
+  );
+};
+
+// ============================================
+// COMPONENTE: RELATÓRIO DO PARCEIRO
+// ============================================
+const PartnerReport = ({ userId, partnerSessions, partnerData, partnerOnlineStatus, addToast }) => {
+  const user = USERS[userId];
+  const partner = USERS[user.partner];
+  
+  const partnerStats = useMemo(() => {
+    const totalSessions = partnerSessions.length;
+    const totalMinutes = partnerSessions.reduce((acc, s) => acc + (s.h || 0) * 60 + (s.m || 0), 0);
+    const totalHours = (totalMinutes / 60).toFixed(1);
+    const totalQuestions = partnerSessions.reduce((acc, s) => acc + (s.qT || 0), 0);
+    const correctQuestions = partnerSessions.reduce((acc, s) => acc + (s.qC || 0), 0);
+    const accuracy = totalQuestions > 0 ? Math.round((correctQuestions / totalQuestions) * 100) : 0;
+    
+    return {
+      totalSessions,
+      totalHours,
+      totalQuestions,
+      accuracy
+    };
+  }, [partnerSessions]);
+  
+  const partnerLevel = LEVELS.find(l => l.level === partnerData.level) || LEVELS[0];
+  const previewBadges = partnerData.unlockedBadges.slice(0, 5);
+  const hasMoreBadges = partnerData.unlockedBadges.length > 5;
+  
+  const getLastSeenText = () => {
+    if (!partnerOnlineStatus.lastSeen) return 'Nunca';
+    const lastSeen = new Date(partnerOnlineStatus.lastSeen);
+    const now = new Date();
+    const diffMinutes = Math.floor((now - lastSeen) / (1000 * 60));
+    
+    if (diffMinutes < 1) return 'Agora mesmo';
+    if (diffMinutes < 60) return `${diffMinutes}min atrás`;
+    if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)}h atrás`;
+    return `${Math.floor(diffMinutes / 1440)}d atrás`;
+  };
+  
+  return React.createElement('div', { className: 'partner-report-card' },
+    React.createElement('div', { className: 'partner-report-header' },
+      React.createElement('div', { 
+        className: 'partner-report-avatar',
+        style: { background: `linear-gradient(135deg, ${partner.themeColor}, ${partner.themeColor}80)` }
+      }, 
+        partner.emoji,
+        partnerOnlineStatus.isOnline && React.createElement('div', {
+          style: {
+            position: 'absolute',
+            bottom: '-2px',
+            right: '-2px',
+            width: '16px',
+            height: '16px',
+            borderRadius: '50%',
+            background: '#22c55e',
+            border: '2px solid #0a0a0f'
+          }
+        })
+      ),
+      React.createElement('div', { className: 'partner-report-info' },
+        React.createElement('div', { className: 'flex items-center gap-2' },
+          React.createElement('p', { className: 'partner-report-name' }, partner.name),
+          React.createElement('span', { 
+            className: `online-status ${partnerOnlineStatus.isOnline ? 'online' : 'offline'}` 
+          },
+            React.createElement('span', { className: 'dot' }),
+            partnerOnlineStatus.isOnline ? 'Online' : `Visto ${getLastSeenText()}`
+          )
+        ),
+        React.createElement('p', { className: 'partner-report-level' }, 
+          `${partnerLevel.emoji} ${partnerLevel.name} • Nível ${partnerData.level}`
+        )
+      )
+    ),
+    
+    React.createElement('div', { className: 'partner-stats-grid' },
+      React.createElement('div', { className: 'partner-stat' },
+        React.createElement('p', { className: 'partner-stat-value' }, partnerStats.totalHours),
+        React.createElement('p', { className: 'partner-stat-label' }, 'Horas')
+      ),
+      React.createElement('div', { className: 'partner-stat' },
+        React.createElement('p', { className: 'partner-stat-value' }, partnerStats.totalSessions),
+        React.createElement('p', { className: 'partner-stat-label' }, 'Sessões')
+      ),
+      React.createElement('div', { className: 'partner-stat' },
+        React.createElement('p', { className: 'partner-stat-value' }, partnerStats.totalQuestions),
+        React.createElement('p', { className: 'partner-stat-label' }, 'Questões')
+      ),
+      React.createElement('div', { className: 'partner-stat' },
+        React.createElement('p', { className: 'partner-stat-value' }, `${partnerStats.accuracy}%`),
+        React.createElement('p', { className: 'partner-stat-label' }, 'Acerto')
+      )
+    ),
+    
+    React.createElement('div', { className: 'flex items-center justify-between mb-2' },
+      React.createElement('p', { className: 'text-sm font-semibold' }, '🏆 Conquistas'),
+      React.createElement('p', { className: 'text-xs text-white-60' }, 
+        `${partnerData.unlockedBadges.length} badges`
+      )
+    ),
+    
+    previewBadges.length > 0 ? React.createElement('div', { className: 'partner-badges-preview' },
+      previewBadges.map(badgeId => {
+        const badge = BADGES[badgeId];
+        return badge ? React.createElement('div', {
+          key: badgeId,
+          className: 'partner-badge-item',
+          title: badge.name
+        }, badge.emoji) : null;
+      }),
+      hasMoreBadges && React.createElement('div', { className: 'partner-badge-more' },
+        `+${partnerData.unlockedBadges.length - 5}`
+      )
+    ) : React.createElement('p', { className: 'text-xs text-white-40' }, 
+      'Nenhuma conquista ainda'
+    ),
+    
+    React.createElement('div', { className: 'mt-4 pt-4', style: { borderTop: '1px solid rgba(255,255,255,0.1)' } },
+      React.createElement('div', { className: 'flex items-center justify-between' },
+        React.createElement('div', null,
+          React.createElement('p', { className: 'text-xs text-white-60' }, 'XP Total'),
+          React.createElement('p', { className: 'text-lg font-bold text-yellow' }, 
+            partnerData.xp.toLocaleString()
+          )
+        ),
+        React.createElement(ProgressRing, {
+          value: partnerData.xp - partnerLevel.minXP,
+          max: (LEVELS.find(l => l.level === partnerLevel.level + 1)?.minXP || partnerLevel.minXP + 1000) - partnerLevel.minXP,
+          size: 60,
+          color: 'pink'
+        }, `${partnerLevel.level}`)
+      )
+    )
+  );
+};
+
+// ============================================
+// COMPONENTE: DASHBOARD
+// ============================================
+const Dashboard = ({ 
+  userId, 
+  sessions, 
+  partnerSessions,
+  xp,
+  level,
+  streak,
+  unlockedBadges,
+  partnerData,
+  partnerOnlineStatus,
+  onAddSession,
+  addToast 
+}) => {
+  const user = USERS[userId];
+  const partner = USERS[user.partner];
+  
+  const stats = useMemo(() => {
+    const totalSessions = sessions.length;
+    const totalMinutes = sessions.reduce((acc, s) => acc + (s.h || 0) * 60 + (s.m || 0), 0);
+    const totalHours = (totalMinutes / 60).toFixed(1);
+    const totalQuestions = sessions.reduce((acc, s) => acc + (s.qT || 0), 0);
+    const correctQuestions = sessions.reduce((acc, s) => acc + (s.qC || 0), 0);
+    const accuracy = totalQuestions > 0 ? Math.round((correctQuestions / totalQuestions) * 100) : 0;
+    
+    const today = new Date().toISOString().slice(0, 10);
+    const studiedToday = sessions.some(s => s.date === today);
+    
+    const partnerTotalMinutes = partnerSessions.reduce((acc, s) => acc + (s.h || 0) * 60 + (s.m || 0), 0);
+    
+    return {
+      totalSessions,
+      totalHours,
+      totalQuestions,
+      accuracy,
+      studiedToday,
+      partnerTotalHours: (partnerTotalMinutes / 60).toFixed(1)
+    };
+  }, [sessions, partnerSessions]);
+  
+  const currentLevel = LEVELS.find(l => l.level === level) || LEVELS[0];
+  const daysUntilExam = getDaysUntilExam();
+  
+  return React.createElement('div', { className: 'dashboard-grid' },
+    React.createElement('div', null,
+      React.createElement('div', { className: `hero-card ${user.color}` },
+        React.createElement('p', { className: 'text-white-80 mb-1' }, `Olá, ${user.name}! 💕`),
+        React.createElement('h2', { className: 'text-3xl font-bold mb-2' }, 
+          currentLevel.emoji, ' ', currentLevel.name
+        ),
+        React.createElement('p', { className: 'text-white-70 mb-3' }, 
+          `Nível ${level} • ${xp.toLocaleString()} XP`
+        ),
+        React.createElement('div', { className: 'flex gap-2 flex-wrap' },
+          React.createElement('span', { className: 'tag tag-primary' }, 
+            '🔥 ', streak, ' dias de streak'
+          ),
+          stats.studiedToday && React.createElement('span', { className: 'tag tag-green' }, 
+            '✅ Estudou hoje'
+          ),
+          React.createElement('span', { className: 'tag' }, 
+            '📅 ', daysUntilExam, ' dias para prova'
+          )
+        )
+      ),
+      
+      React.createElement('div', { className: 'stats-grid mb-4' },
+        React.createElement(GlassCard, { className: 'stat-card' },
+          React.createElement('p', { className: 'stat-value text-violet' }, stats.totalHours),
+          React.createElement('p', { className: 'stat-label' }, 'Horas Totais')
+        ),
+        React.createElement(GlassCard, { className: 'stat-card' },
+          React.createElement('p', { className: 'stat-value text-pink' }, stats.totalSessions),
+          React.createElement('p', { className: 'stat-label' }, 'Sessões')
+        ),
+        React.createElement(GlassCard, { className: 'stat-card' },
+          React.createElement('p', { className: 'stat-value text-green' }, stats.totalQuestions),
+          React.createElement('p', { className: 'stat-label' }, 'Questões')
+        ),
+        React.createElement(GlassCard, { className: 'stat-card' },
+          React.createElement('p', { className: 'stat-value text-yellow' }, `${stats.accuracy}%`),
+          React.createElement('p', { className: 'stat-label' }, 'Acerto Médio')
+        )
+      ),
+      
+      React.createElement(GlassCard, { className: 'mb-4' },
+        React.createElement('div', { className: 'p-5' },
+          React.createElement('div', { className: 'flex items-center justify-between mb-4' },
+            React.createElement('div', null,
+              React.createElement('h3', { className: 'text-lg font-semibold' }, '🏆 Duelo do Casal'),
+              React.createElement('p', { className: 'text-sm text-white-60' }, 'Quem estuda mais?')
+            ),
+            React.createElement('span', { className: 'tag tag-gold' }, 'Ao vivo')
+          ),
+          
+          React.createElement('div', { className: 'flex items-center gap-4 mb-4' },
+            React.createElement('div', { className: 'text-center flex-1' },
+              React.createElement('div', { 
+                className: 'w-12 h-12 rounded-xl flex items-center justify-center text-2xl mx-auto mb-2',
+                style: { background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }
+              }, user.emoji),
+              React.createElement('p', { className: 'font-semibold' }, user.name),
+              React.createElement('p', { className: 'text-violet font-bold' }, `${stats.totalHours}h`)
+            ),
+            React.createElement('div', { className: 'text-2xl font-bold text-white-40' }, 'VS'),
+            React.createElement('div', { className: 'text-center flex-1' },
+              React.createElement('div', { 
+                className: 'w-12 h-12 rounded-xl flex items-center justify-center text-2xl mx-auto mb-2',
+                style: { background: 'linear-gradient(135deg, #ec4899, #db2777)' }
+              }, partner.emoji),
+              React.createElement('p', { className: 'font-semibold' }, partner.name),
+              React.createElement('p', { className: 'text-pink font-bold' }, `${stats.partnerTotalHours}h`)
+            )
+          ),
+          
+          React.createElement('div', { className: 'progress-bar', style: { height: '12px' } },
+            React.createElement('div', { 
+              className: 'progress-bar-fill',
+              style: { 
+                width: `${Math.min((parseFloat(stats.totalHours) / (parseFloat(stats.totalHours) + parseFloat(stats.partnerTotalHours))) * 100, 100)}%`,
+                background: 'linear-gradient(90deg, #8b5cf6, #ec4899)'
+              }
+            })
+          )
+        )
+      ),
+      
+      React.createElement('button', {
+        className: `btn ${user.color === 'kelinha' ? 'btn-gleici' : 'btn-primary'} mb-4`,
+        onClick: onAddSession
+      }, React.createElement(React.Fragment, null, Icons.plus({ width: 18, height: 18 }), ' Nova Sessão de Estudo'))
+    ),
+    
+    // Coluna lateral com relatório do parceiro
+    React.createElement('div', null,
+      React.createElement(PartnerReport, {
+        userId,
+        partnerSessions,
+        partnerData,
+        partnerOnlineStatus,
+        addToast
+      })
+    )
+  );
+};
+
+
+// ============================================
+// COMPONENTE: APP PRINCIPAL
+// ============================================
+const App = () => {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [currentScreen, setCurrentScreen] = useState('dashboard');
+  const [toasts, setToasts] = useState([]);
+  const [editingSession, setEditingSession] = useState(null);
+  
+  // Estado para status online do parceiro
+  const [partnerOnlineStatus, setPartnerOnlineStatus] = useState({
+    isOnline: false,
+    lastSeen: null
+  });
+  
+  // Dados persistidos
+  const [sessions, setSessions] = useState(() => {
+    const saved = localStorage.getItem('manaKelinha_sessions');
+    return saved ? JSON.parse(saved) : { mana: [], kelinha: [] };
+  });
+  
+  const [userData, setUserData] = useState(() => {
+    const saved = localStorage.getItem('manaKelinha_userData');
+    return saved ? JSON.parse(saved) : {
+      mana: { xp: 0, level: 1, streak: 0, unlockedBadges: [] },
+      kelinha: { xp: 0, level: 1, streak: 0, unlockedBadges: [] }
+    };
+  });
+  
+  // Salvar no localStorage
+  useEffect(() => {
+    localStorage.setItem('manaKelinha_sessions', JSON.stringify(sessions));
+  }, [sessions]);
+  
+  useEffect(() => {
+    localStorage.setItem('manaKelinha_userData', JSON.stringify(userData));
+  }, [userData]);
+  
+  // SISTEMA DE STATUS ONLINE/OFFLINE
+  useEffect(() => {
+    if (!currentUser) return;
+    
+    const user = USERS[currentUser];
+    const partnerId = user.partner;
+    
+    // Função para atualizar status do usuário atual
+    const updateOnlineStatus = () => {
+      const status = {
+        userId: currentUser,
+        isOnline: true,
+        lastSeen: new Date().toISOString(),
+        timestamp: Date.now()
+      };
+      localStorage.setItem('manaKelinha_onlineStatus', JSON.stringify(status));
+    };
+    
+    // Função para verificar status do parceiro
+    const checkPartnerStatus = () => {
+      const saved = localStorage.getItem('manaKelinha_onlineStatus');
+      if (saved) {
+        const status = JSON.parse(saved);
+        // Só considera online se foi atualizado nos últimos 30 segundos
+        const isOnline = status.userId === partnerId && 
+                        (Date.now() - status.timestamp) < 30000;
+        
+        setPartnerOnlineStatus(prev => {
+          // Notifica quando parceiro fica online
+          if (isOnline && !prev.isOnline && status.userId === partnerId) {
+            addToast(`${USERS[partnerId].name} está online! 💕`, 'online');
+          }
+          return {
+            isOnline,
+            lastSeen: status.lastSeen
+          };
+        });
+      }
+    };
+    
+    // Atualiza status a cada 10 segundos
+    updateOnlineStatus();
+    const updateInterval = setInterval(updateOnlineStatus, 10000);
+    
+    // Verifica status do parceiro a cada 5 segundos
+    checkPartnerStatus();
+    const checkInterval = setInterval(checkPartnerStatus, 5000);
+    
+    // Listener para mudanças no localStorage (outras abas)
+    const handleStorageChange = (e) => {
+      if (e.key === 'manaKelinha_onlineStatus') {
+        checkPartnerStatus();
+      }
+      // Detecta quando parceiro desbloqueia badges
+      if (e.key === 'manaKelinha_userData') {
+        const newData = JSON.parse(e.newValue);
+        const oldData = JSON.parse(e.oldValue || '{}');
+        if (newData[partnerId]?.unlockedBadges?.length > oldData[partnerId]?.unlockedBadges?.length) {
+          const newBadges = newData[partnerId].unlockedBadges.filter(
+            b => !oldData[partnerId]?.unlockedBadges?.includes(b)
+          );
+          newBadges.forEach(badgeId => {
+            const badge = BADGES[badgeId];
+            if (badge) {
+              addToast(`🏆 ${USERS[partnerId].name} desbloqueou: ${badge.name}!`, 'badge');
+            }
+          });
+        }
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Marca como offline ao sair
+    const handleBeforeUnload = () => {
+      const status = {
+        userId: currentUser,
+        isOnline: false,
+        lastSeen: new Date().toISOString(),
+        timestamp: Date.now()
+      };
+      localStorage.setItem('manaKelinha_onlineStatus', JSON.stringify(status));
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      clearInterval(updateInterval);
+      clearInterval(checkInterval);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      handleBeforeUnload();
+    };
+  }, [currentUser]);
+  
+  const addToast = (message, type = 'info', xp = 0) => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type, xp }]);
+  };
+  
+  const removeToast = (id) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
+  
+  const calculateXP = (session) => {
+    let xp = 0;
+    
+    // XP por tempo (50 XP por hora)
+    const minutes = (session.h || 0) * 60 + (session.m || 0);
+    xp += Math.floor(minutes / 60 * 50);
+    
+    // XP por questões
+    xp += (session.qT || 0) * 2;
+    xp += (session.qC || 0) * 3; // Bônus por acerto
+    
+    // Bônus por dificuldade
+    if (session.diff === 'medio') xp += 20;
+    if (session.diff === 'dificil') xp += 50;
+    
+    return xp;
+  };
+  
+  const checkBadges = (userId, userSessions) => {
+    const currentBadges = userData[userId].unlockedBadges;
+    const newBadges = [];
+    
+    const stats = {
+      totalSessions: userSessions.length,
+      totalMinutes: userSessions.reduce((acc, s) => acc + (s.h || 0) * 60 + (s.m || 0), 0),
+      totalQuestions: userSessions.reduce((acc, s) => acc + (s.qT || 0), 0),
+      uniqueSubjects: new Set(userSessions.map(s => s.subject)).size,
+      bestAccuracy: userSessions.filter(s => s.qT > 0).length > 0
+        ? Math.max(...userSessions.filter(s => s.qT > 0).map(s => (s.qC / s.qT) * 100))
+        : 0,
+      easySessions: userSessions.filter(s => s.diff === 'facil').length,
+      mediumSessions: userSessions.filter(s => s.diff === 'medio').length,
+      hardSessions: userSessions.filter(s => s.diff === 'dificil').length,
+      longestSession: userSessions.length > 0
+        ? Math.max(...userSessions.map(s => (s.h || 0) * 60 + (s.m || 0)))
+        : 0,
+      shortSessions: userSessions.filter(s => {
+        const mins = (s.h || 0) * 60 + (s.m || 0);
+        return mins >= 15 && mins <= 25;
+      }).length,
+      streak: userData[userId].streak,
+      hasStudiedLateNight: false,
+      hasStudiedWeekend: false,
+      maxHoursInDay: 0,
+      maxHoursInWeek: 0,
+      bothStudiedSameDay: false,
+      duelsWon: 0,
+      totalBadges: currentBadges.length
+    };
+    
+    Object.values(BADGES).forEach(badge => {
+      if (!currentBadges.includes(badge.id) && badge.condition(stats)) {
+        newBadges.push(badge);
+      }
+    });
+    
+    return newBadges;
+  };
+  
+  const handleSaveSession = (session) => {
+    const userSessions = sessions[currentUser] || [];
+    let newSessions;
+    
+    if (editingSession) {
+      newSessions = userSessions.map(s => s.id === session.id ? session : s);
+    } else {
+      newSessions = [...userSessions, session];
+    }
+    
+    setSessions(prev => ({ ...prev, [currentUser]: newSessions }));
+    
+    // Calcular e adicionar XP
+    const xpGained = editingSession ? 0 : calculateXP(session);
+    if (xpGained > 0) {
+      setUserData(prev => ({
+        ...prev,
+        [currentUser]: {
+          ...prev[currentUser],
+          xp: prev[currentUser].xp + xpGained
+        }
+      }));
+      addToast('XP ganho!', 'xp', xpGained);
+    }
+    
+    // Verificar badges
+    const newBadges = checkBadges(currentUser, newSessions);
+    if (newBadges.length > 0) {
+      const badgeXP = newBadges.reduce((acc, b) => acc + b.xpReward, 0);
+      setUserData(prev => ({
+        ...prev,
+        [currentUser]: {
+          ...prev[currentUser],
+          unlockedBadges: [...prev[currentUser].unlockedBadges, ...newBadges.map(b => b.id)],
+          xp: prev[currentUser].xp + badgeXP
+        }
+      }));
+      
+      newBadges.forEach((badge, i) => {
+        setTimeout(() => {
+          addToast(`🏆 Badge desbloqueado: ${badge.name}!`, 'badge', badge.xpReward);
+        }, i * 500);
+      });
+    }
+    
+    setEditingSession(null);
+    setCurrentScreen('dashboard');
+  };
+  
+  const handleDeleteSession = (sessionId) => {
+    setSessions(prev => ({
+      ...prev,
+      [currentUser]: prev[currentUser].filter(s => s.id !== sessionId)
+    }));
+  };
+  
+  const handleEditSession = (session) => {
+    setEditingSession(session);
+    setCurrentScreen('session');
+  };
+  
+  const handleLogout = () => {
+    // Marca como offline ao sair
+    if (currentUser) {
+      const status = {
+        userId: currentUser,
+        isOnline: false,
+        lastSeen: new Date().toISOString(),
+        timestamp: Date.now()
+      };
+      localStorage.setItem('manaKelinha_onlineStatus', JSON.stringify(status));
+    }
+    setCurrentUser(null);
+    setCurrentScreen('dashboard');
+    setEditingSession(null);
+  };
+  
+  // Renderização condicional
+  if (!currentUser) {
+    return React.createElement(LoginScreen, { onLogin: setCurrentUser, addToast });
+  }
+  
+  const user = USERS[currentUser];
+  const userSessions = sessions[currentUser] || [];
+  const partnerSessions = sessions[user.partner] || [];
+  const { xp, level, streak, unlockedBadges } = userData[currentUser];
+  const partnerData = userData[user.partner];
+  
+  // Toast container
+  const toastContainer = React.createElement('div', { className: 'toast-container' },
+    toasts.map(t => 
+      React.createElement(Toast, {
+        key: t.id,
+        message: t.message,
+        type: t.type,
+        xp: t.xp,
+        onClose: () => removeToast(t.id)
+      })
+    )
+  );
+  
+  // Navegação mobile
+  const navItems = [
+    { id: 'dashboard', label: 'Início', icon: Icons.home },
+    { id: 'session', label: 'Estudar', icon: Icons.plus },
+    { id: 'badges', label: 'Badges', icon: Icons.award },
+    { id: 'level', label: 'Nível', icon: Icons['trending-up'] },
+    { id: 'challenges', label: 'Desafios', icon: Icons.trophy },
+    { id: 'plan', label: 'Plano', icon: Icons['cpu'] },
+    { id: 'history', label: 'Histórico', icon: Icons.calendar }
+  ];
+  
+  const bottomNav = React.createElement('nav', { className: 'nav-bottom' },
+    React.createElement('div', { className: 'nav-items' },
+      navItems.slice(0, 5).map(item => 
+        React.createElement('button', {
+          key: item.id,
+          className: `nav-item ${currentScreen === item.id ? 'active ' + user.color : ''}`,
+          onClick: () => {
+            if (item.id === 'session') {
+              setEditingSession(null);
+            }
+            setCurrentScreen(item.id);
+          }
+        },
+          item.icon({ width: 20, height: 20 }),
+          React.createElement('span', null, item.label)
+        )
+      )
+    )
+  );
+  
+  // Top bar
+  const topBar = React.createElement('header', { className: 'top-bar' },
+    React.createElement('div', { className: 'top-bar-inner' },
+      React.createElement('div', { className: 'logo text-gradient' }, 'Mana e Kelinha 💕'),
+      React.createElement('div', { className: 'actions' },
+        React.createElement('button', {
+          className: `user-chip ${user.color}`,
+          onClick: handleLogout
+        },
+          React.createElement('span', null, user.emoji),
+          React.createElement('span', null, user.name)
+        )
+      )
+    )
+  );
+  
+  // Conteúdo principal
+  let mainContent;
+  switch (currentScreen) {
+    case 'dashboard':
+      mainContent = React.createElement(Dashboard, {
+        userId: currentUser,
+        sessions: userSessions,
+        partnerSessions,
+        xp,
+        level,
+        streak,
+        unlockedBadges,
+        partnerData,
+        partnerOnlineStatus,
+        onAddSession: () => {
+          setEditingSession(null);
+          setCurrentScreen('session');
+        },
+        addToast
+      });
+      break;
+    case 'session':
+      mainContent = React.createElement(SessionForm, {
+        userId: currentUser,
+        existingSessions: userSessions,
+        editingSession,
+        onSave: handleSaveSession,
+        onCancel: () => {
+          setEditingSession(null);
+          setCurrentScreen('dashboard');
+        },
+        addToast
+      });
+      break;
+    case 'badges':
+      mainContent = React.createElement(BadgesScreen, {
+        userId: currentUser,
+        sessions: userSessions,
+        unlockedBadges,
+        addToast
+      });
+      break;
+    case 'level':
+      mainContent = React.createElement(LevelScreen, {
+        userId: currentUser,
+        xp,
+        addToast
+      });
+      break;
+    case 'challenges':
+      mainContent = React.createElement(ChallengesScreen, {
+        userId: currentUser,
+        sessions: userSessions,
+        partnerSessions,
+        addToast
+      });
+      break;
+    case 'plan':
+      mainContent = React.createElement(StudyPlanScreen, {
+        userId: currentUser,
+        sessions: userSessions,
+        addToast
+      });
+      break;
+    case 'history':
+      mainContent = React.createElement(HistoryScreen, {
+        userId: currentUser,
+        sessions: userSessions,
+        onEditSession: handleEditSession,
+        onDeleteSession: handleDeleteSession,
+        addToast
+      });
+      break;
+    default:
+      mainContent = React.createElement(Dashboard, {
+        userId: currentUser,
+        sessions: userSessions,
+        partnerSessions,
+        xp,
+        level,
+        streak,
+        unlockedBadges,
+        partnerData,
+        partnerOnlineStatus,
+        onAddSession: () => setCurrentScreen('session'),
+        addToast
+      });
+  }
+  
+  return React.createElement(React.Fragment, null,
+    toastContainer,
+    topBar,
+    React.createElement('main', { className: 'content' }, mainContent),
+    bottomNav
+  );
+};
+
+// Renderizar app
+const root = ReactDOM.createRoot(document.getElementById('app'));
+root.render(React.createElement(App));
