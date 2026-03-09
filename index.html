@@ -1,2727 +1,4 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#0a0a0f">
-  <meta name="description" content="Mana e Kelinha - Sistema de estudos gamificado para casais">
-  <title>Mana e Kelinha 💕</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    /* ============================================
-       MANA E KELINHA - CSS COMPLETO
-       Design System: Glassmorphism + Dark Theme
-       ============================================ */
-    
-    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    
-    :root {
-      --bg: #0a0a0f;
-      --bg-card: rgba(255,255,255,0.05);
-      --violet: #8b5cf6;
-      --pink: #ec4899;
-      --green: #22c55e;
-      --yellow: #eab308;
-      --red: #ef4444;
-      --blue: #3b82f6;
-      --orange: #f97316;
-      --cyan: #06b6d4;
-      --purple: #a855f7;
-      --white: #ffffff;
-      --white-80: rgba(255,255,255,0.8);
-      --white-60: rgba(255,255,255,0.6);
-      --white-40: rgba(255,255,255,0.4);
-      --white-20: rgba(255,255,255,0.2);
-      --white-10: rgba(255,255,255,0.1);
-      --white-05: rgba(255,255,255,0.05);
-      --border: rgba(255,255,255,0.1);
-      
-      /* Sombras */
-      --shadow-violet: 0 10px 40px -10px rgba(139,92,246,0.4);
-      --shadow-pink: 0 10px 40px -10px rgba(236,72,153,0.4);
-      --shadow-green: 0 10px 40px -10px rgba(34,197,94,0.4);
-      --shadow-gold: 0 10px 40px -10px rgba(234,179,8,0.4);
-    }
-    
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg);
-      color: var(--white);
-      min-height: 100vh;
-      overflow-x: hidden;
-      line-height: 1.5;
-    }
-    
-    /* ============================================
-       BACKGROUND ANIMADO
-       ============================================ */
-    .bg-orb {
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(120px);
-      opacity: 0.25;
-      pointer-events: none;
-      z-index: 0;
-      animation: float 20s ease-in-out infinite;
-    }
-    .orb-1 { 
-      width: 600px; height: 600px; 
-      background: var(--violet); 
-      top: -250px; left: -200px; 
-      animation-delay: 0s;
-    }
-    .orb-2 { 
-      width: 500px; height: 500px; 
-      background: var(--pink); 
-      bottom: -200px; right: -150px; 
-      animation-delay: -10s;
-    }
-    @keyframes float {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      33% { transform: translate(30px, -30px) scale(1.05); }
-      66% { transform: translate(-20px, 20px) scale(0.95); }
-    }
-    
-    /* ============================================
-       LAYOUT RESPONSIVO
-       ============================================ */
-    .app { 
-      position: relative; 
-      z-index: 1; 
-      max-width: 500px; 
-      margin: 0 auto; 
-      min-height: 100vh; 
-    }
-    .content { padding: 80px 16px 100px; }
-    
-    /* ============================================
-       COMPONENTES UI - GLASS CARDS
-       ============================================ */
-    .card {
-      background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      margin-bottom: 16px;
-      overflow: hidden;
-      animation: fadeIn 0.4s ease-out;
-      transition: transform 0.3s, box-shadow 0.3s;
-    }
-    .card-hover:hover {
-      transform: translateY(-3px);
-      box-shadow: var(--shadow-violet);
-    }
-    .card-header {
-      padding: 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .card-body { padding: 20px; }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(15px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(-20px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
-    }
-    
-    @keyframes shimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
-    }
-    
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
-    }
-    
-    @keyframes glow {
-      0%, 100% { box-shadow: 0 0 5px currentColor; }
-      50% { box-shadow: 0 0 20px currentColor, 0 0 30px currentColor; }
-    }
-    
-    /* ============================================
-       TIPOGRAFIA
-       ============================================ */
-    .text-gradient {
-      background: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .text-gradient-green {
-      background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .text-gradient-gold {
-      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 0%, #d97706 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    
-    /* ============================================
-       BOTÕES
-       ============================================ */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 14px 24px;
-      border-radius: 12px;
-      font-weight: 600;
-      font-size: 14px;
-      border: none;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      width: 100%;
-      position: relative;
-      overflow: hidden;
-    }
-    .btn::before {
-      content: '';
-      position: absolute;
-      top: 0; left: -100%;
-      width: 100%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-      transition: left 0.5s;
-    }
-    .btn:hover::before { left: 100%; }
-    .btn:active { transform: scale(0.98); }
-    
-    .btn-primary {
-      background: linear-gradient(135deg, var(--violet) 0%, #7c3aed 100%);
-      color: white;
-    }
-    .btn-primary:hover { 
-      transform: translateY(-2px); 
-      box-shadow: var(--shadow-violet); 
-    }
-    .btn-gleici {
-      background: linear-gradient(135deg, var(--pink) 0%, #db2777 100%);
-      color: white;
-    }
-    .btn-gleici:hover { 
-      transform: translateY(-2px); 
-      box-shadow: var(--shadow-pink); 
-    }
-    .btn-success {
-      background: linear-gradient(135deg, var(--green) 0%, #16a34a 100%);
-      color: white;
-    }
-    .btn-success:hover { 
-      transform: translateY(-2px); 
-      box-shadow: var(--shadow-green); 
-    }
-    .btn-gold {
-      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-      color: #1a1a1a;
-    }
-    .btn-gold:hover { 
-      transform: translateY(-2px); 
-      box-shadow: var(--shadow-gold); 
-    }
-    .btn-outline {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: white;
-    }
-    .btn-outline:hover { background: var(--white-05); }
-    .btn-danger {
-      background: linear-gradient(135deg, var(--red) 0%, #dc2626 100%);
-      color: white;
-    }
-    .btn-sm {
-      padding: 8px 16px;
-      font-size: 12px;
-    }
-    .btn-icon {
-      width: 40px;
-      height: 40px;
-      padding: 0;
-      border-radius: 10px;
-    }
-    .btn:disabled { 
-      opacity: 0.5; 
-      cursor: not-allowed;
-      transform: none !important;
-    }
-    
-    /* ============================================
-       INPUTS E FORMULÁRIOS
-       ============================================ */
-    .input {
-      width: 100%;
-      padding: 14px 16px;
-      border-radius: 12px;
-      background: var(--white-05);
-      border: 1px solid var(--border);
-      color: white;
-      font-size: 14px;
-      transition: all 0.3s;
-      font-family: inherit;
-    }
-    .input:focus { 
-      outline: none; 
-      border-color: var(--violet); 
-      box-shadow: 0 0 0 3px rgba(139,92,246,0.2); 
-    }
-    .input::placeholder { color: var(--white-40); }
-    textarea.input { resize: none; min-height: 80px; }
-    .input-group {
-      display: flex;
-      gap: 12px;
-    }
-    .input-group .input { flex: 1; }
-    
-    .form-label {
-      display: block;
-      font-size: 13px;
-      color: var(--white-60);
-      margin-bottom: 8px;
-      font-weight: 500;
-    }
-    .form-label .optional {
-      color: var(--white-40);
-      font-weight: 400;
-    }
-    
-    /* ============================================
-       SELEÇÃO DE USUÁRIO (LOGIN)
-       ============================================ */
-    .user-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .user-btn {
-      padding: 24px 16px;
-      border-radius: 16px;
-      border: 2px solid var(--border);
-      background: var(--white-05);
-      cursor: pointer;
-      transition: all 0.3s;
-      text-align: center;
-    }
-    .user-btn:hover { 
-      background: var(--white-10); 
-      transform: translateY(-2px);
-    }
-    .user-btn.selected.mana { 
-      border-color: var(--violet); 
-      background: rgba(139,92,246,0.15); 
-    }
-    .user-btn.selected.kelinha { 
-      border-color: var(--pink); 
-      background: rgba(236,72,153,0.15); 
-    }
-    .user-btn .emoji { font-size: 44px; margin-bottom: 10px; display: block; }
-    .user-btn .name { font-weight: 600; color: white; font-size: 16px; }
-    .user-btn .profile { font-size: 12px; color: var(--white-40); margin-top: 4px; }
-    
-    /* ============================================
-       ESTATÍSTICAS
-       ============================================ */
-    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .stat-card { padding: 20px; }
-    .stat-value { 
-      font-size: 28px; 
-      font-weight: 700; 
-      color: white;
-      line-height: 1.2;
-    }
-    .stat-label { 
-      font-size: 11px; 
-      color: var(--white-60); 
-      text-transform: uppercase; 
-      letter-spacing: 0.5px; 
-      margin-top: 4px; 
-    }
-    .stat-change {
-      font-size: 11px;
-      margin-top: 4px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .stat-change.positive { color: var(--green); }
-    .stat-change.negative { color: var(--red); }
-    
-    /* ============================================
-       PROGRESS RING
-       ============================================ */
-    .progress-ring { position: relative; width: 120px; height: 120px; }
-    .progress-ring svg { transform: rotate(-90deg); }
-    .progress-ring circle { fill: none; stroke-width: 8; }
-    .progress-ring .bg { stroke: var(--white-10); }
-    .progress-ring .progress { 
-      stroke-linecap: round; 
-      transition: stroke-dashoffset 1.5s ease-out; 
-    }
-    .progress-ring .value {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 28px;
-      font-weight: 700;
-    }
-    
-    /* ============================================
-       PROGRESS BAR
-       ============================================ */
-    .progress-bar { 
-      height: 8px; 
-      background: var(--white-10); 
-      border-radius: 4px; 
-      overflow: hidden; 
-    }
-    .progress-bar-fill { 
-      height: 100%; 
-      border-radius: 4px; 
-      transition: width 1s ease-out; 
-    }
-    
-    /* ============================================
-       DIFICULDADE
-       ============================================ */
-    .diff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .diff-btn {
-      padding: 14px 8px;
-      border-radius: 12px;
-      border: 2px solid var(--border);
-      background: var(--white-05);
-      color: var(--white-60);
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-    }
-    .diff-btn:hover { background: var(--white-10); }
-    .diff-btn.active.facil { 
-      border-color: var(--green); 
-      background: rgba(34,197,94,0.15); 
-      color: var(--green); 
-    }
-    .diff-btn.active.medio { 
-      border-color: var(--yellow); 
-      background: rgba(234,179,8,0.15); 
-      color: var(--yellow); 
-    }
-    .diff-btn.active.dificil { 
-      border-color: var(--red); 
-      background: rgba(239,68,68,0.15); 
-      color: var(--red); 
-    }
-    
-    /* ============================================
-       CRONÔMETRO
-       ============================================ */
-    .timer-display {
-      font-family: 'SF Mono', 'Courier New', monospace;
-      font-size: 52px;
-      font-weight: 700;
-      text-align: center;
-      letter-spacing: 4px;
-      color: var(--violet);
-      text-shadow: 0 0 30px rgba(139,92,246,0.5);
-      line-height: 1;
-    }
-    .timer-display.paused { 
-      color: var(--white-40); 
-      text-shadow: none; 
-    }
-    .timer-status {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-    .timer-status.running {
-      background: rgba(34,197,94,0.2);
-      color: var(--green);
-    }
-    .timer-status.paused {
-      background: var(--white-10);
-      color: var(--white-60);
-    }
-    
-    /* ============================================
-       NAVEGAÇÃO MOBILE
-       ============================================ */
-    .nav-bottom {
-      position: fixed;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100%;
-      max-width: 500px;
-      background: linear-gradient(to top, rgba(10,10,15,0.98), rgba(10,10,15,0.9));
-      backdrop-filter: blur(20px);
-      border-top: 1px solid var(--border);
-      padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
-      z-index: 100;
-    }
-    .nav-items { display: flex; justify-content: space-around; }
-    .nav-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      padding: 8px 10px;
-      border-radius: 12px;
-      color: var(--white-40);
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 10px;
-      transition: all 0.3s;
-      flex: 1;
-    }
-    .nav-item:hover { color: white; }
-    .nav-item.active.mana { 
-      color: var(--violet); 
-      background: rgba(139,92,246,0.15); 
-    }
-    .nav-item.active.kelinha { 
-      color: var(--pink); 
-      background: rgba(236,72,153,0.15); 
-    }
-    .nav-item svg { width: 20px; height: 20px; }
-    
-    /* ============================================
-       TOP BAR MOBILE
-       ============================================ */
-    .top-bar {
-      position: fixed;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100%;
-      max-width: 500px;
-      background: linear-gradient(to bottom, rgba(10,10,15,0.98), rgba(10,10,15,0.9));
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-      padding: 12px 16px;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .top-bar .logo { font-size: 20px; font-weight: 700; }
-    .top-bar .actions { display: flex; gap: 8px; align-items: center; }
-    
-    .icon-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      background: var(--white-05);
-      border: none;
-      color: white;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s;
-      position: relative;
-    }
-    .icon-btn:hover { background: var(--white-10); }
-    .icon-btn svg { width: 18px; height: 18px; }
-    
-    .badge {
-      position: absolute;
-      top: -4px;
-      right: -4px;
-      min-width: 18px;
-      height: 18px;
-      padding: 0 5px;
-      border-radius: 9px;
-      background: var(--red);
-      color: white;
-      font-size: 10px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .user-chip {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      border-radius: 10px;
-      cursor: pointer;
-      border: none;
-      font-size: 13px;
-      color: white;
-      transition: all 0.3s;
-    }
-    .user-chip.mana { 
-      background: rgba(139,92,246,0.2); 
-      border: 1px solid rgba(139,92,246,0.3); 
-    }
-    .user-chip.kelinha { 
-      background: rgba(236,72,153,0.2); 
-      border: 1px solid rgba(236,72,153,0.3); 
-    }
-    
-    /* ============================================
-       PAINEL DE NOTIFICAÇÕES
-       ============================================ */
-    .notif-panel {
-      position: fixed;
-      top: 70px;
-      right: 16px;
-      width: 320px;
-      max-height: 400px;
-      z-index: 200;
-      animation: slideIn 0.3s ease-out;
-    }
-    .notif-item {
-      padding: 14px;
-      border-radius: 12px;
-      background: var(--white-05);
-      margin-bottom: 8px;
-      border: 1px solid var(--border);
-    }
-    .notif-item .time { 
-      font-size: 11px; 
-      color: var(--white-40); 
-      margin-bottom: 4px; 
-    }
-    .notif-item .msg { font-size: 13px; color: var(--white-80); }
-    
-    /* ============================================
-       GRÁFICO SEMANAL
-       ============================================ */
-    .week-chart { 
-      display: flex; 
-      align-items: flex-end; 
-      justify-content: space-between; 
-      height: 100px; 
-      gap: 8px; 
-    }
-    .week-bar { 
-      flex: 1; 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-      gap: 8px; 
-    }
-    .week-bar .bar {
-      width: 100%;
-      border-radius: 4px 4px 0 0;
-      transition: height 0.6s ease-out;
-      min-height: 4px;
-    }
-    .week-bar .bar.has-data { 
-      background: linear-gradient(to top, var(--violet), #a78bfa); 
-    }
-    .week-bar .bar.no-data { background: var(--white-10); }
-    .week-bar .label { font-size: 10px; color: var(--white-40); }
-    
-    /* ============================================
-       LISTA DE MATÉRIAS
-       ============================================ */
-    .subject-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px;
-      border-radius: 12px;
-      background: var(--white-05);
-      margin-bottom: 8px;
-      border: 1px solid var(--border);
-    }
-    .subject-item .name { flex: 1; font-size: 14px; }
-    .subject-item .bar-container { 
-      flex: 2; 
-      height: 6px; 
-      background: var(--white-10); 
-      border-radius: 3px; 
-      overflow: hidden; 
-    }
-    .subject-item .bar-fill { 
-      height: 100%; 
-      border-radius: 3px; 
-      transition: width 0.8s ease-out; 
-    }
-    .subject-item .value { 
-      width: 45px; 
-      text-align: right; 
-      font-size: 12px; 
-      font-weight: 600; 
-    }
-    
-    /* ============================================
-       HERO CARD
-       ============================================ */
-    .hero-card {
-      padding: 28px;
-      border-radius: 24px;
-      margin-bottom: 20px;
-    }
-    .hero-card.mana {
-      background: linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(124,58,237,0.2) 50%, rgba(59,130,246,0.2) 100%);
-    }
-    .hero-card.kelinha {
-      background: linear-gradient(135deg, rgba(236,72,153,0.3) 0%, rgba(219,39,119,0.2) 50%, rgba(249,115,22,0.2) 100%);
-    }
-    
-    /* ============================================
-       TAGS
-       ============================================ */
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      border-radius: 20px;
-      background: var(--white-10);
-      font-size: 12px;
-      color: var(--white-60);
-    }
-    .tag-primary {
-      background: rgba(139,92,246,0.2);
-      color: var(--violet);
-    }
-    .tag-gold {
-      background: rgba(251,191,36,0.2);
-      color: #fbbf24;
-    }
-    .tag-green {
-      background: rgba(34,197,94,0.2);
-      color: var(--green);
-    }
-    
-    /* ============================================
-       STREAK
-       ============================================ */
-    .streak-icon {
-      width: 60px;
-      height: 60px;
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-    }
-    .streak-icon.gold { 
-      background: linear-gradient(135deg, #eab308 0%, #f97316 100%); 
-    }
-    .streak-icon.orange { 
-      background: linear-gradient(135deg, #f97316 0%, #ef4444 100%); 
-    }
-    .streak-icon.green { 
-      background: linear-gradient(135deg, #22c55e 0%, #10b981 100%); 
-    }
-    
-    /* ============================================
-       MODAL
-       ============================================ */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(4px);
-      z-index: 300;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      animation: fadeIn 0.2s;
-    }
-    .modal-content {
-      width: 100%;
-      max-width: 450px;
-      max-height: 90vh;
-      overflow-y: auto;
-      animation: slideIn 0.3s;
-    }
-    .modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px;
-      border-bottom: 1px solid var(--border);
-    }
-    .modal-header h3 {
-      font-size: 18px;
-      font-weight: 600;
-    }
-    .modal-body { padding: 20px; }
-    
-    /* ============================================
-       LISTA DE SESSÕES (HISTÓRICO)
-       ============================================ */
-    .session-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .session-item {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 16px;
-      border-radius: 14px;
-      background: var(--white-05);
-      border: 1px solid var(--border);
-      transition: all 0.3s;
-    }
-    .session-item:hover {
-      background: var(--white-10);
-      border-color: var(--white-20);
-    }
-    .session-item .icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      flex-shrink: 0;
-    }
-    .session-item .icon.facil { background: rgba(34,197,94,0.2); }
-    .session-item .icon.medio { background: rgba(234,179,8,0.2); }
-    .session-item .icon.dificil { background: rgba(239,68,68,0.2); }
-    .session-item .content { flex: 1; min-width: 0; }
-    .session-item .subject {
-      font-weight: 600;
-      font-size: 15px;
-      margin-bottom: 4px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .session-item .meta {
-      font-size: 12px;
-      color: var(--white-60);
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .session-item .meta span {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .session-item .actions {
-      display: flex;
-      gap: 6px;
-    }
-    .session-item .action-btn {
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
-      border: none;
-      background: var(--white-10);
-      color: var(--white-60);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-    }
-    .session-item .action-btn:hover {
-      background: var(--white-20);
-      color: white;
-    }
-    .session-item .action-btn.delete:hover {
-      background: rgba(239,68,68,0.2);
-      color: var(--red);
-    }
-    
-    /* ============================================
-       METAS
-       ============================================ */
-    .goal-card {
-      padding: 20px;
-      border-radius: 16px;
-      background: var(--white-05);
-      border: 1px solid var(--border);
-      margin-bottom: 12px;
-    }
-    .goal-card .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 12px;
-    }
-    .goal-card .title {
-      font-weight: 600;
-      font-size: 15px;
-    }
-    .goal-card .subtitle {
-      font-size: 12px;
-      color: var(--white-60);
-      margin-top: 2px;
-    }
-    .goal-card .progress-text {
-      font-size: 18px;
-      font-weight: 700;
-    }
-    .goal-card .progress-bar {
-      height: 10px;
-      margin-top: 8px;
-    }
-    
-    /* ============================================
-       FILTROS
-       ============================================ */
-    .filter-bar {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-      scrollbar-width: none;
-    }
-    .filter-bar::-webkit-scrollbar { display: none; }
-    .filter-btn {
-      padding: 8px 16px;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      background: var(--white-05);
-      color: var(--white-60);
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.3s;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .filter-btn:hover { background: var(--white-10); }
-    .filter-btn.active {
-      background: var(--violet);
-      border-color: var(--violet);
-      color: white;
-    }
-    
-    /* ============================================
-       CONFETTI
-       ============================================ */
-    .confetti {
-      position: fixed;
-      width: 10px;
-      height: 10px;
-      pointer-events: none;
-      z-index: 9999;
-      animation: confetti-fall 2.5s ease-out forwards;
-    }
-    @keyframes confetti-fall {
-      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-    }
-    
-    /* ============================================
-       TOAST NOTIFICATIONS
-       ============================================ */
-    .toast-container {
-      position: fixed;
-      top: 80px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 400;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      width: 90%;
-      max-width: 400px;
-    }
-    .toast {
-      padding: 14px 18px;
-      border-radius: 12px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      animation: slideIn 0.3s;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-    }
-    .toast.success { border-color: var(--green); }
-    .toast.error { border-color: var(--red); }
-    .toast.info { border-color: var(--violet); }
-    .toast.warning { border-color: var(--yellow); }
-    .toast.xp { border-color: var(--yellow); background: linear-gradient(135deg, rgba(251,191,36,0.1), rgba(245,158,11,0.05)); }
-    .toast.badge { border-color: var(--violet); background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(124,58,237,0.05)); }
-    .toast-icon { font-size: 20px; }
-    .toast-message { flex: 1; font-size: 14px; }
-    .toast-xp { font-size: 12px; color: var(--yellow); font-weight: 600; }
-    
-    /* ============================================
-       EXPORT/IMPORT
-       ============================================ */
-    .export-section {
-      padding: 20px;
-    }
-    .export-btn-group {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 16px;
-    }
-    
-    /* ============================================
-       EMPTY STATE
-       ============================================ */
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-    }
-    .empty-state .icon {
-      font-size: 64px;
-      margin-bottom: 16px;
-      opacity: 0.5;
-    }
-    .empty-state h3 {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-    .empty-state p {
-      color: var(--white-60);
-      font-size: 14px;
-    }
-    
-    /* ============================================
-       LOGIN
-       ============================================ */
-    .login-container {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .login-box { width: 100%; max-width: 400px; }
-    .logo-box {
-      width: 90px;
-      height: 90px;
-      border-radius: 24px;
-      background: linear-gradient(135deg, var(--violet) 0%, var(--pink) 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 45px;
-      margin: 0 auto 24px;
-      box-shadow: 0 10px 40px -10px rgba(139,92,246,0.5);
-      animation: pulse 2s ease-in-out infinite;
-    }
-    
-    /* ============================================
-       SISTEMA DE BADGES
-       ============================================ */
-    .badge-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-    }
-    .badge-item {
-      padding: 16px 12px;
-      border-radius: 16px;
-      background: var(--white-05);
-      border: 1px solid var(--border);
-      text-align: center;
-      transition: all 0.3s;
-      position: relative;
-    }
-    .badge-item:hover {
-      transform: translateY(-2px);
-      background: var(--white-08);
-    }
-    .badge-item.locked {
-      opacity: 0.5;
-      filter: grayscale(0.8);
-    }
-    .badge-item.newly-unlocked {
-      animation: glow 1s ease-in-out 3;
-      border-color: var(--yellow);
-      box-shadow: 0 0 20px rgba(251,191,36,0.3);
-    }
-    .badge-icon {
-      font-size: 36px;
-      margin-bottom: 8px;
-      display: block;
-    }
-    .badge-name {
-      font-size: 11px;
-      font-weight: 600;
-      color: white;
-      margin-bottom: 4px;
-    }
-    .badge-desc {
-      font-size: 9px;
-      color: var(--white-40);
-      line-height: 1.3;
-    }
-    .badge-rarity {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-    }
-    .badge-rarity.bronze { background: #cd7f32; }
-    .badge-rarity.prata { background: #c0c0c0; }
-    .badge-rarity.ouro { background: linear-gradient(135deg, #ffd700, #ffb700); }
-    .badge-rarity.platina { background: linear-gradient(135deg, #e5e4e2, #a0b2c6); }
-    .badge-rarity.diamante { background: linear-gradient(135deg, #b9f2ff, #00bfff); }
-    .badge-rarity.especial { background: linear-gradient(135deg, #ff6b6b, #feca57); animation: pulse 1s infinite; }
-    
-    .badge-category {
-      margin-bottom: 24px;
-    }
-    .badge-category-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--white-60);
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    /* ============================================
-       SISTEMA DE NÍVEIS E XP
-       ============================================ */
-    .level-card {
-      padding: 24px;
-      border-radius: 20px;
-      background: linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(236,72,153,0.1) 100%);
-      border: 1px solid rgba(139,92,246,0.3);
-      margin-bottom: 16px;
-    }
-    .level-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
-    .level-info {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-    .level-badge {
-      width: 64px;
-      height: 64px;
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 32px;
-      background: linear-gradient(135deg, var(--violet), var(--pink));
-      box-shadow: 0 8px 32px rgba(139,92,246,0.4);
-    }
-    .level-title {
-      font-size: 24px;
-      font-weight: 700;
-      color: white;
-    }
-    .level-subtitle {
-      font-size: 13px;
-      color: var(--white-60);
-    }
-    .level-xp {
-      text-align: right;
-    }
-    .level-xp-value {
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--yellow);
-    }
-    .level-xp-label {
-      font-size: 11px;
-      color: var(--white-40);
-    }
-    .xp-bar-container {
-      margin-top: 8px;
-    }
-    .xp-bar {
-      height: 12px;
-      background: var(--white-10);
-      border-radius: 6px;
-      overflow: hidden;
-      position: relative;
-    }
-    .xp-bar-fill {
-      height: 100%;
-      border-radius: 6px;
-      background: linear-gradient(90deg, var(--violet), var(--pink));
-      transition: width 1s ease-out;
-      position: relative;
-    }
-    .xp-bar-fill::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-      animation: shimmer 2s infinite;
-    }
-    .xp-bar-labels {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 6px;
-      font-size: 11px;
-      color: var(--white-40);
-    }
-    
-    .xp-source-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-top: 16px;
-    }
-    .xp-source-item {
-      padding: 12px;
-      border-radius: 12px;
-      background: var(--white-05);
-      border: 1px solid var(--border);
-    }
-    .xp-source-icon {
-      font-size: 20px;
-      margin-bottom: 6px;
-    }
-    .xp-source-name {
-      font-size: 12px;
-      color: var(--white-60);
-      margin-bottom: 2px;
-    }
-    .xp-source-value {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--yellow);
-    }
-    
-    /* ============================================
-       LEADERBOARD
-       ============================================ */
-    .leaderboard-card {
-      padding: 20px;
-      border-radius: 20px;
-      background: var(--white-05);
-      border: 1px solid var(--border);
-      margin-bottom: 16px;
-    }
-    .leaderboard-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
-    .leaderboard-title {
-      font-size: 16px;
-      font-weight: 600;
-    }
-    .leaderboard-period {
-      font-size: 12px;
-      color: var(--white-40);
-    }
-    .leaderboard-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px;
-      border-radius: 12px;
-      background: var(--white-05);
-      margin-bottom: 8px;
-      transition: all 0.3s;
-    }
-    .leaderboard-item:hover {
-      background: var(--white-10);
-    }
-    .leaderboard-rank {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      font-weight: 700;
-    }
-    .leaderboard-rank.gold {
-      background: linear-gradient(135deg, #ffd700, #ffb700);
-      color: #1a1a1a;
-    }
-    .leaderboard-rank.silver {
-      background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
-      color: #1a1a1a;
-    }
-    .leaderboard-rank.bronze {
-      background: linear-gradient(135deg, #cd7f32, #b87333);
-      color: white;
-    }
-    .leaderboard-rank.normal {
-      background: var(--white-10);
-      color: var(--white-60);
-    }
-    .leaderboard-avatar {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-    }
-    .leaderboard-info {
-      flex: 1;
-    }
-    .leaderboard-name {
-      font-weight: 600;
-      font-size: 14px;
-    }
-    .leaderboard-stats {
-      font-size: 12px;
-      color: var(--white-60);
-    }
-    .leaderboard-score {
-      text-align: right;
-    }
-    .leaderboard-score-value {
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--yellow);
-    }
-    .leaderboard-score-label {
-      font-size: 10px;
-      color: var(--white-40);
-    }
-    
-    /* ============================================
-       DESAFIOS
-       ============================================ */
-    .challenge-card {
-      padding: 20px;
-      border-radius: 16px;
-      background: var(--white-05);
-      border: 1px solid var(--border);
-      margin-bottom: 12px;
-      position: relative;
-      overflow: hidden;
-    }
-    .challenge-card.active {
-      border-color: var(--violet);
-      background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(139,92,246,0.05));
-    }
-    .challenge-card.completed {
-      border-color: var(--green);
-      background: linear-gradient(135deg, rgba(34,197,94,0.1), rgba(34,197,94,0.05));
-    }
-    .challenge-header {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-    .challenge-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      background: var(--white-10);
-      flex-shrink: 0;
-    }
-    .challenge-info {
-      flex: 1;
-    }
-    .challenge-title {
-      font-weight: 600;
-      font-size: 15px;
-      margin-bottom: 4px;
-    }
-    .challenge-desc {
-      font-size: 12px;
-      color: var(--white-60);
-    }
-    .challenge-reward {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid var(--border);
-    }
-    .challenge-reward-item {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 12px;
-      color: var(--yellow);
-    }
-    .challenge-progress {
-      margin-top: 12px;
-    }
-    .challenge-progress-bar {
-      height: 8px;
-      background: var(--white-10);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    .challenge-progress-fill {
-      height: 100%;
-      border-radius: 4px;
-      background: linear-gradient(90deg, var(--violet), var(--pink));
-      transition: width 0.5s ease-out;
-    }
-    .challenge-progress-text {
-      font-size: 11px;
-      color: var(--white-60);
-      margin-top: 4px;
-      text-align: right;
-    }
-    .challenge-status {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 10px;
-      font-weight: 600;
-    }
-    .challenge-status.active {
-      background: rgba(139,92,246,0.2);
-      color: var(--violet);
-    }
-    .challenge-status.completed {
-      background: rgba(34,197,94,0.2);
-      color: var(--green);
-    }
-    
-    /* ============================================
-       PLANO DE ESTUDOS IA
-       ============================================ */
-    .study-plan-card {
-      padding: 20px;
-      border-radius: 20px;
-      background: linear-gradient(135deg, rgba(6,182,212,0.1) 0%, rgba(139,92,246,0.1) 100%);
-      border: 1px solid rgba(6,182,212,0.3);
-      margin-bottom: 16px;
-    }
-    .study-plan-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .study-plan-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      background: linear-gradient(135deg, var(--cyan), var(--blue));
-    }
-    .study-plan-title {
-      font-size: 16px;
-      font-weight: 600;
-    }
-    .study-plan-subtitle {
-      font-size: 12px;
-      color: var(--white-60);
-    }
-    .study-plan-countdown {
-      padding: 12px 16px;
-      border-radius: 12px;
-      background: var(--white-05);
-      text-align: center;
-      margin-bottom: 16px;
-    }
-    .study-plan-countdown-value {
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--cyan);
-    }
-    .study-plan-countdown-label {
-      font-size: 12px;
-      color: var(--white-60);
-    }
-    .study-plan-recommendation {
-      padding: 16px;
-      border-radius: 12px;
-      background: var(--white-05);
-      margin-bottom: 12px;
-    }
-    .study-plan-recommendation-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-    .study-plan-recommendation-title {
-      font-weight: 600;
-      font-size: 14px;
-    }
-    .study-plan-recommendation-text {
-      font-size: 13px;
-      color: var(--white-80);
-      line-height: 1.5;
-    }
-    .study-plan-schedule {
-      margin-top: 16px;
-    }
-    .study-plan-schedule-title {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 12px;
-    }
-    .study-plan-day {
-      padding: 14px;
-      border-radius: 12px;
-      background: var(--white-05);
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .study-plan-day-number {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: 700;
-      background: var(--white-10);
-    }
-    .study-plan-day-content {
-      flex: 1;
-    }
-    .study-plan-day-subject {
-      font-weight: 600;
-      font-size: 14px;
-    }
-    .study-plan-day-time {
-      font-size: 12px;
-      color: var(--white-60);
-    }
-    .study-plan-day-status {
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 10px;
-      font-weight: 600;
-    }
-    .study-plan-day-status.pending {
-      background: var(--white-10);
-      color: var(--white-60);
-    }
-    .study-plan-day-status.done {
-      background: rgba(34,197,94,0.2);
-      color: var(--green);
-    }
-    
-    /* ============================================
-       SCROLLBAR
-       ============================================ */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { 
-      background: var(--white-20); 
-      border-radius: 3px; 
-    }
-    ::-webkit-scrollbar-thumb:hover { background: var(--white-40); }
-    
-    /* ============================================
-       SELECTION
-       ============================================ */
-    ::selection { 
-      background: rgba(139,92,246,0.3); 
-      color: white; 
-    }
-    
-    /* ============================================
-       UTILITY CLASSES
-       ============================================ */
-    .p-4 { padding: 16px; }
-    .p-5 { padding: 20px; }
-    .p-6 { padding: 24px; }
-    .mb-1 { margin-bottom: 4px; }
-    .mb-2 { margin-bottom: 8px; }
-    .mb-3 { margin-bottom: 12px; }
-    .mb-4 { margin-bottom: 16px; }
-    .mb-6 { margin-bottom: 24px; }
-    .mt-2 { margin-top: 8px; }
-    .mt-3 { margin-top: 12px; }
-    .mt-4 { margin-top: 16px; }
-    .flex { display: flex; }
-    .flex-1 { flex: 1; }
-    .items-center { align-items: center; }
-    .items-start { align-items: flex-start; }
-    .justify-between { justify-content: space-between; }
-    .justify-center { justify-content: center; }
-    .gap-2 { gap: 8px; }
-    .gap-3 { gap: 12px; }
-    .gap-4 { gap: 16px; }
-    .text-center { text-align: center; }
-    .text-right { text-align: right; }
-    .text-xs { font-size: 11px; }
-    .text-sm { font-size: 13px; }
-    .text-lg { font-size: 18px; }
-    .text-xl { font-size: 20px; }
-    .text-2xl { font-size: 24px; }
-    .text-3xl { font-size: 30px; }
-    .text-4xl { font-size: 36px; }
-    .text-5xl { font-size: 48px; }
-    .font-bold { font-weight: 700; }
-    .font-semibold { font-weight: 600; }
-    .font-medium { font-weight: 500; }
-    .text-white { color: white; }
-    .text-white-60 { color: var(--white-60); }
-    .text-white-40 { color: var(--white-40); }
-    .text-violet { color: var(--violet); }
-    .text-pink { color: var(--pink); }
-    .text-green { color: var(--green); }
-    .text-yellow { color: var(--yellow); }
-    .text-red { color: var(--red); }
-    .text-cyan { color: var(--cyan); }
-    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .w-full { width: 100%; }
-    .hidden { display: none; }
-    .grid { display: grid; }
-    .grid-cols-2 { grid-template-columns: 1fr 1fr; }
-    .grid-cols-3 { grid-template-columns: 1fr 1fr 1fr; }
-    .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
-    
-    /* ============================================
-       RESPONSIVO - DESKTOP
-       ============================================ */
-    @media (min-width: 1024px) {
-      .app { max-width: none; display: flex; }
-      
-      .nav-sidebar {
-        display: flex;
-        flex-direction: column;
-        width: 280px;
-        min-height: 100vh;
-        background: linear-gradient(180deg, rgba(10,10,15,0.98) 0%, rgba(10,10,15,0.95) 100%);
-        backdrop-filter: blur(20px);
-        border-right: 1px solid var(--border);
-        padding: 28px 20px;
-        position: fixed;
-        left: 0;
-        top: 0;
-        z-index: 100;
-      }
-      .nav-sidebar .logo {
-        font-size: 28px;
-        font-weight: 800;
-        margin-bottom: 40px;
-        padding-left: 12px;
-      }
-      .nav-sidebar .nav-items {
-        flex-direction: column;
-        gap: 8px;
-      }
-      .nav-sidebar .nav-item {
-        flex-direction: row;
-        justify-content: flex-start;
-        padding: 14px 16px;
-        font-size: 14px;
-        gap: 12px;
-      }
-      .nav-sidebar .nav-item svg { width: 22px; height: 22px; }
-      .nav-sidebar .user-section {
-        margin-top: auto;
-        padding-top: 20px;
-        border-top: 1px solid var(--border);
-      }
-      .nav-sidebar .user-card {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 16px;
-        border-radius: 16px;
-        background: var(--white-05);
-        border: 1px solid var(--border);
-        cursor: pointer;
-        transition: all 0.3s;
-      }
-      .nav-sidebar .user-card:hover { background: var(--white-10); }
-      .nav-sidebar .user-card .emoji { font-size: 32px; }
-      .nav-sidebar .user-card .info { flex: 1; }
-      .nav-sidebar .user-card .name { font-weight: 600; font-size: 15px; }
-      .nav-sidebar .user-card .profile { font-size: 12px; color: var(--white-60); }
-      
-      .nav-bottom { display: none; }
-      
-      .top-bar { 
-        left: 280px; 
-        width: calc(100% - 280px);
-        max-width: none;
-        transform: none;
-      }
-      
-      .content {
-        margin-left: 280px;
-        width: calc(100% - 280px);
-        padding: 100px 40px 40px;
-      }
-      
-      .stats-grid { grid-template-columns: repeat(4, 1fr); }
-      .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
-      
-      .card { border-radius: 24px; margin-bottom: 24px; }
-      .hero-card { padding: 40px; }
-      .timer-display { font-size: 72px; }
-      
-      .badge-grid { grid-template-columns: repeat(4, 1fr); }
-      .xp-source-grid { grid-template-columns: repeat(4, 1fr); }
-    }
-  </style>
-</head>
-<body>
-  <div class="bg-animated">
-    <div class="bg-orb orb-1"></div>
-    <div class="bg-orb orb-2"></div>
-  </div>
-  
-  <div id="app" class="app"></div>
-  <div id="toast-container" class="toast-container"></div>
-  
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  
-  <script>
-    /* ============================================
-       MANA E KELINHA - APLICAÇÃO COMPLETA
-       ============================================
-       
-       FUNCIONALIDADES IMPLEMENTADAS:
-       1. Sistema de Badges & Conquistas (50+ badges)
-       2. Sistema de Níveis & XP (bem elaborado)
-       3. Desafios & Leaderboards
-       4. Plano de Estudos Personalizado com IA
-       5. Timer Pomodoro Integrado
-       6. Registro de sessões de estudo
-       7. Histórico completo com filtros
-       8. Metas de estudo
-       9. Exportação/Importação de dados
-       
-       ============================================ */
-    
-    const { useState, useEffect, useMemo, useRef, useCallback } = React;
-    
-    // ============================================
-    // DATA LIMITE DA PROVA
-    // ============================================
-    const EXAM_DATE = new Date('2025-11-09T23:59:59');
-    
-    // ============================================
-    // SISTEMA DE NÍVEIS E XP
-    // ============================================
-    const LEVELS = [
-      { level: 1, name: 'Estudante Curioso', minXP: 0, maxXP: 500, emoji: '📚', color: '#8b5cf6' },
-      { level: 2, name: 'Aprendiz Dedicado', minXP: 500, maxXP: 1200, emoji: '📖', color: '#7c3aed' },
-      { level: 3, name: 'Discípulo Esforçado', minXP: 1200, maxXP: 2200, emoji: '✏️', color: '#a855f7' },
-      { level: 4, name: 'Conhecedor Ativo', minXP: 2200, maxXP: 3500, emoji: '🎯', color: '#9333ea' },
-      { level: 5, name: 'Estudante Avançado', minXP: 3500, maxXP: 5000, emoji: '🚀', color: '#8b5cf6' },
-      { level: 6, name: 'Especialista em Formação', minXP: 5000, maxXP: 6800, emoji: '🔬', color: '#7c3aed' },
-      { level: 7, name: 'Mestre do Conhecimento', minXP: 6800, maxXP: 9000, emoji: '🎓', color: '#a855f7' },
-      { level: 8, name: 'Sábio Aprendiz', minXP: 9000, maxXP: 11500, emoji: '🦉', color: '#9333ea' },
-      { level: 9, name: 'Guru dos Estudos', minXP: 11500, maxXP: 14500, emoji: '👑', color: '#fbbf24' },
-      { level: 10, name: 'Lenda Acadêmica', minXP: 14500, maxXP: 18000, emoji: '🏆', color: '#f59e0b' },
-      { level: 11, name: 'Mestre Supremo', minXP: 18000, maxXP: 22000, emoji: '💎', color: '#d946ef' },
-      { level: 12, name: 'Deus do Conhecimento', minXP: 22000, maxXP: 27000, emoji: '🔱', color: '#8b5cf6' },
-      { level: 13, name: 'Titã da Sabedoria', minXP: 27000, maxXP: 33000, emoji: '⚡', color: '#eab308' },
-      { level: 14, name: 'Imortal Acadêmico', minXP: 33000, maxXP: 40000, emoji: '🌟', color: '#f97316' },
-      { level: 15, name: 'Entidade do Saber', minXP: 40000, maxXP: Infinity, emoji: '👁️', color: '#ec4899' }
-    ];
-    
-    // ============================================
-    // SISTEMA DE BADGES (50+ BADGES)
-    // ============================================
-    const BADGES = {
-      // BADGES DE MARCO INICIAL
-      primeira_sessao: {
-        id: 'primeira_sessao',
-        name: 'Primeiros Passos',
-        description: 'Complete sua primeira sessão de estudo',
-        emoji: '🌱',
-        rarity: 'bronze',
-        category: 'marcos',
-        condition: (stats) => stats.totalSessions >= 1,
-        xpReward: 50
-      },
-      dez_sessoes: {
-        id: 'dez_sessoes',
-        name: 'Dezena de Estudos',
-        description: 'Complete 10 sessões de estudo',
-        emoji: '📊',
-        rarity: 'bronze',
-        category: 'marcos',
-        condition: (stats) => stats.totalSessions >= 10,
-        xpReward: 100
-      },
-      cinquenta_sessoes: {
-        id: 'cinquenta_sessoes',
-        name: 'Cinquenta Conquistas',
-        description: 'Complete 50 sessões de estudo',
-        emoji: '📈',
-        rarity: 'prata',
-        category: 'marcos',
-        condition: (stats) => stats.totalSessions >= 50,
-        xpReward: 250
-      },
-      cem_sessoes: {
-        id: 'cem_sessoes',
-        name: 'Centenário de Estudos',
-        description: 'Complete 100 sessões de estudo',
-        emoji: '💯',
-        rarity: 'ouro',
-        category: 'marcos',
-        condition: (stats) => stats.totalSessions >= 100,
-        xpReward: 500
-      },
-      duzentas_sessoes: {
-        id: 'duzentas_sessoes',
-        name: 'Mestre das Sessões',
-        description: 'Complete 200 sessões de estudo',
-        emoji: '🏅',
-        rarity: 'platina',
-        category: 'marcos',
-        condition: (stats) => stats.totalSessions >= 200,
-        xpReward: 1000
-      },
-      
-      // BADGES DE TEMPO
-      primeira_hora: {
-        id: 'primeira_hora',
-        name: 'Hora Inicial',
-        description: 'Estude por 1 hora no total',
-        emoji: '⏱️',
-        rarity: 'bronze',
-        category: 'tempo',
-        condition: (stats) => stats.totalMinutes >= 60,
-        xpReward: 50
-      },
-      dez_horas: {
-        id: 'dez_horas',
-        name: 'Dez Horas de Foco',
-        description: 'Estude por 10 horas no total',
-        emoji: '⏰',
-        rarity: 'bronze',
-        category: 'tempo',
-        condition: (stats) => stats.totalMinutes >= 600,
-        xpReward: 100
-      },
-      cinquenta_horas: {
-        id: 'cinquenta_horas',
-        name: 'Maratonista',
-        description: 'Estude por 50 horas no total',
-        emoji: '🏃',
-        rarity: 'prata',
-        category: 'tempo',
-        condition: (stats) => stats.totalMinutes >= 3000,
-        xpReward: 300
-      },
-      cem_horas: {
-        id: 'cem_horas',
-        name: 'Cem Horas de Glória',
-        description: 'Estude por 100 horas no total',
-        emoji: '🕐',
-        rarity: 'ouro',
-        category: 'tempo',
-        condition: (stats) => stats.totalMinutes >= 6000,
-        xpReward: 600
-      },
-      duzentas_horas: {
-        id: 'duzentas_horas',
-        name: 'Veterano de Estudos',
-        description: 'Estude por 200 horas no total',
-        emoji: '🎖️',
-        rarity: 'platina',
-        category: 'tempo',
-        condition: (stats) => stats.totalMinutes >= 12000,
-        xpReward: 1200
-      },
-      trezentas_horas: {
-        id: 'trezentas_horas',
-        name: 'Lenda do Tempo',
-        description: 'Estude por 300 horas no total',
-        emoji: '⏳',
-        rarity: 'diamante',
-        category: 'tempo',
-        condition: (stats) => stats.totalMinutes >= 18000,
-        xpReward: 2000
-      },
-      
-      // BADGES DE STREAK
-      streak_3: {
-        id: 'streak_3',
-        name: 'Começo Quente',
-        description: 'Estude 3 dias seguidos',
-        emoji: '🔥',
-        rarity: 'bronze',
-        category: 'streak',
-        condition: (stats) => stats.streak >= 3,
-        xpReward: 75
-      },
-      streak_7: {
-        id: 'streak_7',
-        name: 'Semana Perfeita',
-        description: 'Estude 7 dias seguidos',
-        emoji: '📅',
-        rarity: 'prata',
-        category: 'streak',
-        condition: (stats) => stats.streak >= 7,
-        xpReward: 200
-      },
-      streak_14: {
-        id: 'streak_14',
-        name: 'Duas Semanas de Fogo',
-        description: 'Estude 14 dias seguidos',
-        emoji: '🌋',
-        rarity: 'ouro',
-        category: 'streak',
-        condition: (stats) => stats.streak >= 14,
-        xpReward: 400
-      },
-      streak_30: {
-        id: 'streak_30',
-        name: 'Mês de Disciplina',
-        description: 'Estude 30 dias seguidos',
-        emoji: '📆',
-        rarity: 'platina',
-        category: 'streak',
-        condition: (stats) => stats.streak >= 30,
-        xpReward: 800
-      },
-      streak_60: {
-        id: 'streak_60',
-        name: 'Bimestre Impecável',
-        description: 'Estude 60 dias seguidos',
-        emoji: '🗓️',
-        rarity: 'diamante',
-        category: 'streak',
-        condition: (stats) => stats.streak >= 60,
-        xpReward: 1500
-      },
-      streak_100: {
-        id: 'streak_100',
-        name: 'Centena de Dias',
-        description: 'Estude 100 dias seguidos',
-        emoji: '💯',
-        rarity: 'especial',
-        category: 'streak',
-        condition: (stats) => stats.streak >= 100,
-        xpReward: 3000
-      },
-      
-      // BADGES DE PERFORMANCE (QUESTÕES)
-      acerto_70: {
-        id: 'acerto_70',
-        name: 'Bom Desempenho',
-        description: 'Alcance 70% de acerto em uma sessão',
-        emoji: '✅',
-        rarity: 'bronze',
-        category: 'performance',
-        condition: (stats) => stats.bestAccuracy >= 70,
-        xpReward: 75
-      },
-      acerto_80: {
-        id: 'acerto_80',
-        name: 'Muito Bem!',
-        description: 'Alcance 80% de acerto em uma sessão',
-        emoji: '🌟',
-        rarity: 'prata',
-        category: 'performance',
-        condition: (stats) => stats.bestAccuracy >= 80,
-        xpReward: 150
-      },
-      acerto_90: {
-        id: 'acerto_90',
-        name: 'Mestre das Questões',
-        description: 'Alcance 90% de acerto em uma sessão',
-        emoji: '🎯',
-        rarity: 'ouro',
-        category: 'performance',
-        condition: (stats) => stats.bestAccuracy >= 90,
-        xpReward: 300
-      },
-      acerto_100: {
-        id: 'acerto_100',
-        name: 'Perfeição Absoluta',
-        description: 'Alcance 100% de acerto em uma sessão',
-        emoji: '💎',
-        rarity: 'diamante',
-        category: 'performance',
-        condition: (stats) => stats.bestAccuracy >= 100,
-        xpReward: 500
-      },
-      cem_questoes: {
-        id: 'cem_questoes',
-        name: 'Cem Desafios',
-        description: 'Resolva 100 questões no total',
-        emoji: '📝',
-        rarity: 'bronze',
-        category: 'performance',
-        condition: (stats) => stats.totalQuestions >= 100,
-        xpReward: 100
-      },
-      quinhentas_questoes: {
-        id: 'quinhentas_questoes',
-        name: 'Quinhentas Conquistas',
-        description: 'Resolva 500 questões no total',
-        emoji: '📚',
-        rarity: 'prata',
-        category: 'performance',
-        condition: (stats) => stats.totalQuestions >= 500,
-        xpReward: 300
-      },
-      mil_questoes: {
-        id: 'mil_questoes',
-        name: 'Milênio de Questões',
-        description: 'Resolva 1000 questões no total',
-        emoji: '🏆',
-        rarity: 'ouro',
-        category: 'performance',
-        condition: (stats) => stats.totalQuestions >= 1000,
-        xpReward: 600
-      },
-      duas_mil_questoes: {
-        id: 'duas_mil_questoes',
-        name: 'Veterano de Questões',
-        description: 'Resolva 2000 questões no total',
-        emoji: '🎖️',
-        rarity: 'platina',
-        category: 'performance',
-        condition: (stats) => stats.totalQuestions >= 2000,
-        xpReward: 1200
-      },
-      
-      // BADGES DE MATÉRIAS
-      duas_materias: {
-        id: 'duas_materias',
-        name: 'Explorador',
-        description: 'Estude 2 matérias diferentes',
-        emoji: '🔍',
-        rarity: 'bronze',
-        category: 'materias',
-        condition: (stats) => stats.uniqueSubjects >= 2,
-        xpReward: 50
-      },
-      cinco_materias: {
-        id: 'cinco_materias',
-        name: 'Polímata',
-        description: 'Estude 5 matérias diferentes',
-        emoji: '📚',
-        rarity: 'prata',
-        category: 'materias',
-        condition: (stats) => stats.uniqueSubjects >= 5,
-        xpReward: 150
-      },
-      dez_materias: {
-        id: 'dez_materias',
-        name: 'Especialista Geral',
-        description: 'Estude 10 matérias diferentes',
-        emoji: '🎓',
-        rarity: 'ouro',
-        category: 'materias',
-        condition: (stats) => stats.uniqueSubjects >= 10,
-        xpReward: 350
-      },
-      
-      // BADGES DE DIFICULDADE
-      dificuldade_facil: {
-        id: 'dificuldade_facil',
-        name: 'Começo Tranquilo',
-        description: 'Complete 10 sessões no modo Fácil',
-        emoji: '🌸',
-        rarity: 'bronze',
-        category: 'dificuldade',
-        condition: (stats) => stats.easySessions >= 10,
-        xpReward: 75
-      },
-      dificuldade_media: {
-        id: 'dificuldade_media',
-        name: 'Desafio Médio',
-        description: 'Complete 10 sessões no modo Médio',
-        emoji: '⚡',
-        rarity: 'prata',
-        category: 'dificuldade',
-        condition: (stats) => stats.mediumSessions >= 10,
-        xpReward: 150
-      },
-      dificuldade_dificil: {
-        id: 'dificuldade_dificil',
-        name: 'Guerreiro do Difícil',
-        description: 'Complete 10 sessões no modo Difícil',
-        emoji: '🔥',
-        rarity: 'ouro',
-        category: 'dificuldade',
-        condition: (stats) => stats.hardSessions >= 10,
-        xpReward: 300
-      },
-      
-      // BADGES ESPECIAIS
-      madrugada: {
-        id: 'madrugada',
-        name: 'Coruja Noturna',
-        description: 'Estude entre 00h e 05h',
-        emoji: '🦉',
-        rarity: 'prata',
-        category: 'especial',
-        condition: (stats) => stats.hasStudiedLateNight,
-        xpReward: 200
-      },
-      fim_de_semana: {
-        id: 'fim_de_semana',
-        name: 'Guerreiro de FDS',
-        description: 'Estude em um sábado ou domingo',
-        emoji: '🌞',
-        rarity: 'bronze',
-        category: 'especial',
-        condition: (stats) => stats.hasStudiedWeekend,
-        xpReward: 100
-      },
-      sessao_longa: {
-        id: 'sessao_longa',
-        name: 'Maratona de Estudos',
-        description: 'Uma sessão de mais de 3 horas',
-        emoji: '🏃',
-        rarity: 'ouro',
-        category: 'especial',
-        condition: (stats) => stats.longestSession >= 180,
-        xpReward: 250
-      },
-      sessao_curta: {
-        id: 'sessao_curta',
-        name: 'Foco Rápido',
-        description: '10 sessões de 15-25 minutos',
-        emoji: '⚡',
-        rarity: 'bronze',
-        category: 'especial',
-        condition: (stats) => stats.shortSessions >= 10,
-        xpReward: 100
-      },
-      
-      // BADGES DE CONSISTÊNCIA
-      dia_completo: {
-        id: 'dia_completo',
-        name: 'Dia Produtivo',
-        description: 'Estude mais de 4 horas em um dia',
-        emoji: '📅',
-        rarity: 'prata',
-        category: 'consistencia',
-        condition: (stats) => stats.maxHoursInDay >= 4,
-        xpReward: 150
-      },
-      semana_intensa: {
-        id: 'semana_intensa',
-        name: 'Semana de Ferro',
-        description: 'Estude mais de 20 horas em uma semana',
-        emoji: '💪',
-        rarity: 'ouro',
-        category: 'consistencia',
-        condition: (stats) => stats.maxHoursInWeek >= 20,
-        xpReward: 400
-      },
-      
-      // BADGES DE DUO/CASAL
-      ambos_estudaram: {
-        id: 'ambos_estudaram',
-        name: 'Dia de Casal',
-        description: 'Ambos estudaram no mesmo dia',
-        emoji: '💕',
-        rarity: 'prata',
-        category: 'duo',
-        condition: (stats) => stats.bothStudiedSameDay,
-        xpReward: 150
-      },
-      venceu_duelo: {
-        id: 'venceu_duelo',
-        name: 'Campeão do Duelo',
-        description: 'Vença um duelo semanal',
-        emoji: '🏆',
-        rarity: 'ouro',
-        category: 'duo',
-        condition: (stats) => stats.duelsWon >= 1,
-        xpReward: 300
-      },
-      
-      // BADGES DE CONQUISTA FINAL
-      prova_chegando: {
-        id: 'prova_chegando',
-        name: 'Pronto para a Prova',
-        description: 'Estude pelo menos 100 horas antes da prova',
-        emoji: '📋',
-        rarity: 'platina',
-        category: 'final',
-        condition: (stats) => stats.totalMinutes >= 6000,
-        xpReward: 1000
-      },
-      mestre_absoluto: {
-        id: 'mestre_absoluto',
-        name: 'Mestre Absoluto',
-        description: 'Desbloqueie todos os outros badges',
-        emoji: '👑',
-        rarity: 'especial',
-        category: 'final',
-        condition: (stats) => stats.totalBadges >= 30,
-        xpReward: 5000
-      }
-    };
-    
-    // ============================================
-    // DESAFIOS SEMANAIS
-    // ============================================
-    const WEEKLY_CHALLENGES = [
-      {
-        id: 'mais_horas',
-        title: 'Quem Estuda Mais?',
-        description: 'Vença quem estudar mais horas esta semana!',
-        emoji: '⏱️',
-        reward: { xp: 500, badge: 'Campeão Semanal' }
-      },
-      {
-        id: 'mais_sessoes',
-        title: 'Mestre da Consistência',
-        description: 'Complete mais sessões de estudo esta semana',
-        emoji: '📚',
-        reward: { xp: 400, badge: 'Rei das Sessões' }
-      },
-      {
-        id: 'melhor_acerto',
-        title: 'Precisão Cirúrgica',
-        description: 'Tenha a melhor média de acertos esta semana',
-        emoji: '🎯',
-        reward: { xp: 450, badge: 'Atirador de Elite' }
-      },
-      {
-        id: 'streak_maior',
-        title: 'Guerreiro do Streak',
-        description: 'Mantenha o maior streak de dias seguidos',
-        emoji: '🔥',
-        reward: { xp: 600, badge: 'Imparável' }
-      },
-      {
-        id: 'mais_questoes',
-        title: 'Máquina de Questões',
-        description: 'Resolva mais questões esta semana',
-        emoji: '📝',
-        reward: { xp: 500, badge: 'Resolvedor Profissional' }
-      }
-    ];
-    
-    // ============================================
-    // ÍCONES SVG
-    // ============================================
-    const Icons = {
-      home: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('path', { d: 'm3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' }), React.createElement('polyline', { points: '9 22 9 12 15 12 15 22' })),
-      plus: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('path', { d: 'M5 12h14' }), React.createElement('path', { d: 'M12 5v14' })),
-      radio: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('path', { d: 'M4.9 19.1C1 15.2 1 8.8 4.9 4.9' }), React.createElement('path', { d: 'M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5' }), React.createElement('circle', { cx: '12', cy: '12', r: '2' }), React.createElement('path', { d: 'M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5' }), React.createElement('path', { d: 'M19.1 4.9C23 8.8 23 15.1 19.1 19' })),
-      calendar: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('path', { d: 'M8 2v4' }), React.createElement('path', { d: 'M16 2v4' }), React.createElement('rect', { width: '18', height: '18', x: '3', y: '4', rx: '2' }), React.createElement('path', { d: 'M3 10h18' })),
-      'bar-chart-3': (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('path', { d: 'M3 3v18h18' }), React.createElement('path', { d: 'M18 17V9' }), React.createElement('path', { d: 'M13 17V5' }), React.createElement('path', { d: 'M8 17v-3' })),
-      target: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('circle', { cx: '12', cy: '12', r: '10' }), React.createElement('circle', { cx: '12', cy: '12', r: '6' }), React.createElement('circle', { cx: '12', cy: '12', r: '2' })),
-      bell: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('path', { d: 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9' }), React.createElement('path', { d: 'M10.3 21a1.94 1.94 0 0 0 3.4 0' })),
-      x: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('path', { d: 'M18 6 6 18' }), React.createElement('path', { d: 'm6 6 12 12' })),
-      user: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('path', { d: 'M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2' }), React.createElement('circle', { cx: '12', cy: '7', r: '4' })),
-      users: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('path', { d: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2' }), React.createElement('circle', { cx: '9', cy: '7', r: '4' }), React.createElement('path', { d: 'M22 21v-2a4 4 0 0 0-3-3.87' }), React.createElement('path', { d: 'M16 3.13a4 4 0 0 1 0 7.75' })),
-      crown: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('path', { d: 'm2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14' })),
-      'trending-up': (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('polyline', { points: '22 7 13.5 15.5 8.5 10.5 2 17' }), React.createElement('polyline', { points: '16 7 22 7 22 13' })),
-      clock: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('circle', { cx: '12', cy: '12', r: '10' }), React.createElement('polyline', { points: '12 6 12 12 16 14' })),
-      play: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('polygon', { points: '5 3 19 12 5 21 5 3' })),
-      pause: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('rect', { width: '4', height: '16', x: '6', y: '4' }), React.createElement('rect', { width: '4', height: '16', x: '14', y: '4' })),
-      'rotate-ccw': (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('path', { d: 'M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8' }), React.createElement('path', { d: 'M3 3v5h5' })),
-      'book-open': (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('path', { d: 'M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z' }), React.createElement('path', { d: 'M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z' })),
-      'check-circle': (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('path', { d: 'M22 11.08V12a10 10 0 1 1-5.93-9.14' }), React.createElement('polyline', { points: '22 4 12 14.01 9 11.01' })),
-      'alert-circle': (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('circle', { cx: '12', cy: '12', r: '10' }), React.createElement('line', { x1: '12', x2: '12', y1: '8', y2: '12' }), React.createElement('line', { x1: '12', x2: '12.01', y1: '16', y2: '16' })),
-      brain: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('path', { d: 'M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z' }), React.createElement('path', { d: 'M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z' })),
-      'trash-2': (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('path', { d: 'M3 6h18' }), React.createElement('path', { d: 'M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6' }), React.createElement('path', { d: 'M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2' }), React.createElement('line', { x1: '10', x2: '10', y1: '11', y2: '17' }), React.createElement('line', { x1: '14', x2: '14', y1: '11', y2: '17' })),
-      zap: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('polygon', { points: '13 2 3 14 12 14 11 22 21 10 12 10 13 2' })),
-      eye: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('path', { d: 'M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z' }), React.createElement('circle', { cx: '12', cy: '12', r: '3' })),
-      'eye-off': (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('path', { d: 'M9.88 9.88a3 3 0 1 0 4.24 4.24' }), React.createElement('path', { d: 'M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68' }), React.createElement('path', { d: 'M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61' }), React.createElement('line', { x1: '2', x2: '22', y1: '2', y2: '22' })),
-      edit: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('path', { d: 'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7' }), React.createElement('path', { d: 'M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z' })),
-      download: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('path', { d: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4' }), React.createElement('polyline', { points: '7 10 12 15 17 10' }), React.createElement('line', { x1: '12', x2: '12', y1: '15', y2: '3' })),
-      upload: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('path', { d: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4' }), React.createElement('polyline', { points: '17 8 12 3 7 8' }), React.createElement('line', { x1: '12', x2: '12', y1: '3', y2: '15' })),
-      search: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('circle', { cx: '11', cy: '11', r: '8' }), React.createElement('path', { d: 'm21 21-4.3-4.3' })),
-      filter: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('polygon', { points: '22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3' })),
-      'more-vertical': (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('circle', { cx: '12', cy: '12', r: '1' }), React.createElement('circle', { cx: '12', cy: '5', r: '1' }), React.createElement('circle', { cx: '12', cy: '19', r: '1' })),
-      flag: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('path', { d: 'M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z' }), React.createElement('line', { x1: '4', x2: '4', y1: '22', y2: '15' })),
-      award: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('circle', { cx: '12', cy: '8', r: '7' }), React.createElement('polyline', { points: '8.21 13.89 7 23 12 20 17 23 15.79 13.88' })),
-      list: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('line', { x1: '8', x2: '21', y1: '6', y2: '6' }), React.createElement('line', { x1: '8', x2: '21', y1: '12', y2: '12' }), React.createElement('line', { x1: '8', x2: '21', y1: '18', y2: '18' }), React.createElement('line', { x1: '3', x2: '3.01', y1: '6', y2: '6' }), React.createElement('line', { x1: '3', x2: '3.01', y1: '12', y2: '12' }), React.createElement('line', { x1: '3', x2: '3.01', y1: '18', y2: '18' })),
-      star: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('polygon', { points: '12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2' })),
-      trophy: (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('path', { d: 'M6 9H4.5a2.5 2.5 0 0 1 0-5H6' }), React.createElement('path', { d: 'M18 9h1.5a2.5 2.5 0 0 0 0-5H18' }), React.createElement('path', { d: 'M4 22h16' }), React.createElement('path', { d: 'M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22' }), React.createElement('path', { d: 'M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22' }), React.createElement('path', { d: 'M18 2H6v7a6 6 0 0 0 12 0V2Z' })),
-      'cpu': (props) => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', ...props }, 
-        React.createElement('rect', { x: '4', y: '4', width: '16', height: '16', rx: '2' }), React.createElement('rect', { x: '9', y: '9', width: '6', height: '6' }), React.createElement('path', { d: 'M15 2v2' }), React.createElement('path', { d: 'M15 20v2' }), React.createElement('path', { d: 'M2 15h2' }), React.createElement('path', { d: 'M2 9h2' }), React.createElement('path', { d: 'M20 15h2' }), React.createElement('path', { d: 'M20 9h2' }), React.createElement('path', { d: 'M9 2v2' }), React.createElement('path', { d: 'M9 20v2' })),
-    };
-    
-    // ============================================
-    // DADOS DOS USUÁRIOS
-    // ============================================
-    const USERS = {
-      mana: { 
-        id: 'mana', 
-        name: 'Mana', 
-        emoji: '👨‍💼', 
-        color: 'mana', 
-        profile: 'OAB · Direito', 
-        partner: 'kelinha', 
-        exam: 'oab',
-        themeColor: '#8b5cf6'
-      },
-      kelinha: { 
-        id: 'kelinha', 
-        name: 'Kelinha', 
-        emoji: '👩‍🎓', 
-        color: 'kelinha', 
-        profile: 'ENEM · Ensino Médio', 
-        partner: 'mana', 
-        exam: 'enem',
-        themeColor: '#ec4899'
-      }
-    };
-    
-    const DEFAULT_PASSWORD = 'estudo123';
-    
-    // ============================================
-    // UTILITÁRIOS
-    // ============================================
-    const formatDate = (dateStr) => {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('pt-BR', { 
-        day: '2-digit', 
-        month: 'short', 
-        year: 'numeric' 
-      });
-    };
-    
-    const formatTime = (totalSeconds) => {
-      const h = Math.floor(totalSeconds / 3600);
-      const m = Math.floor((totalSeconds % 3600) / 60);
-      const s = totalSeconds % 60;
-      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    };
-    
-    const formatDuration = (minutes) => {
-      const h = Math.floor(minutes / 60);
-      const m = minutes % 60;
-      if (h === 0) return `${m}min`;
-      if (m === 0) return `${h}h`;
-      return `${h}h ${m}min`;
-    };
-    
-    const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
-    
-    // Calcular dias até a prova
-    const getDaysUntilExam = () => {
-      const now = new Date();
-      const diff = EXAM_DATE - now;
-      return Math.ceil(diff / (1000 * 60 * 60 * 24));
-    };
-    
-    // ============================================
-    // COMPONENTE: TOAST NOTIFICATIONS
-    // ============================================
-    const Toast = ({ message, type = 'info', xp = 0, onClose }) => {
-      useEffect(() => {
-        const timer = setTimeout(onClose, 4000);
-        return () => clearTimeout(timer);
-      }, [onClose]);
-      
-      const icons = {
-        success: '✅',
-        error: '❌',
-        info: 'ℹ️',
-        warning: '⚠️',
-        xp: '✨',
-        badge: '🏆'
-      };
-      
-      return React.createElement('div', { className: `toast ${type}` },
-        React.createElement('span', { className: 'toast-icon' }, icons[type] || 'ℹ️'),
-        React.createElement('span', { className: 'toast-message' }, message),
-        xp > 0 && React.createElement('span', { className: 'toast-xp' }, `+${xp} XP`)
-      );
-    };
-    
-    // ============================================
-    // COMPONENTE: GLASS CARD
-    // ============================================
-    const GlassCard = ({ children, className = '', style = {}, onClick }) => {
-      return React.createElement('div', { 
-        className: `card ${className}`, 
-        style,
-        onClick 
-      }, children);
-    };
-    
-    // ============================================
-    // COMPONENTE: PROGRESS RING
-    // ============================================
-    const ProgressRing = ({ value, max = 100, size = 120, color = 'violet', children }) => {
-      const percentage = Math.min((value / max) * 100, 100);
-      const radius = (size - 10) / 2;
-      const circumference = radius * 2 * Math.PI;
-      const offset = circumference - (percentage / 100) * circumference;
-      
-      const colorMap = { 
-        violet: '#8b5cf6', 
-        pink: '#ec4899', 
-        green: '#22c55e', 
-        yellow: '#eab308', 
-        red: '#ef4444',
-        blue: '#3b82f6',
-        cyan: '#06b6d4'
-      };
-      
-      return React.createElement('div', { 
-        className: 'progress-ring', 
-        style: { width: size, height: size } 
-      },
-        React.createElement('svg', { width: size, height: size },
-          React.createElement('circle', { cx: size/2, cy: size/2, r: radius, className: 'bg' }),
-          React.createElement('circle', { 
-            cx: size/2, cy: size/2, r: radius, 
-            className: 'progress', 
-            stroke: colorMap[color],
-            strokeDasharray: circumference,
-            strokeDashoffset: offset,
-            style: { filter: `drop-shadow(0 0 10px ${colorMap[color]}60)` }
-          })
-        ),
-        React.createElement('div', { 
-          className: 'value', 
-          style: { color: colorMap[color] } 
-        }, children || `${Math.round(percentage)}%`)
-      );
-    };
-    
-    // ============================================
-    // COMPONENTE: MODAL
-    // ============================================
-    const Modal = ({ isOpen, onClose, title, children }) => {
-      if (!isOpen) return null;
-      
-      return React.createElement('div', { 
-        className: 'modal-overlay',
-        onClick: (e) => e.target === e.currentTarget && onClose()
-      },
-        React.createElement('div', { className: 'modal-content card' },
-          title && React.createElement('div', { className: 'modal-header' },
-            React.createElement('h3', null, title),
-            React.createElement('button', { 
-              className: 'icon-btn',
-              onClick: onClose,
-              style: { width: '36px', height: '36px' }
-            }, Icons.x({ width: 18, height: 18 }))
-          ),
-          React.createElement('div', { className: 'modal-body' }, children)
-        )
-      );
-    };
-    
-    // ============================================
-    // COMPONENTE: LOGIN SCREEN
-    // ============================================
-    const LoginScreen = ({ onLogin, addToast }) => {
-      const [selectedUser, setSelectedUser] = useState(null);
-      const [password, setPassword] = useState('');
-      const [showPassword, setShowPassword] = useState(false);
-      const [error, setError] = useState('');
-      const [isLoading, setIsLoading] = useState(false);
-      
-      const handleLogin = async () => {
-        if (!selectedUser || !password) {
-          setError('Selecione um usuário e digite a senha');
-          return;
-        }
-        setIsLoading(true);
-        setError('');
-        
-        await new Promise(r => setTimeout(r, 600));
-        
-        if (password === DEFAULT_PASSWORD) {
-          onLogin(selectedUser);
-          addToast(`Bem-vindo, ${USERS[selectedUser].name}! 💕`, 'success');
-        } else {
-          setError('Senha incorreta');
-          addToast('Senha incorreta. Tente novamente.', 'error');
-          setIsLoading(false);
-        }
-      };
-      
-      return React.createElement('div', { className: 'login-container' },
-        React.createElement('div', { className: 'login-box' },
-          React.createElement('div', { className: 'text-center mb-6' },
-            React.createElement('div', { className: 'logo-box' }, '💕'),
-            React.createElement('h1', { className: 'text-3xl font-bold text-gradient mb-2' }, 'Mana e Kelinha'),
-            React.createElement('p', { className: 'text-white-60' }, 'Seu diário de estudos gamificado')
-          ),
-          
-          React.createElement(GlassCard, { className: 'mb-4' },
-            React.createElement('div', { className: 'p-5' },
-              React.createElement('h2', { className: 'text-lg font-semibold mb-4' }, 'Quem está estudando?'),
-              React.createElement('div', { className: 'user-grid' },
-                Object.values(USERS).map(user => 
-                  React.createElement('button', {
-                    key: user.id,
-                    className: `user-btn ${selectedUser === user.id ? 'selected ' + user.color : ''}`,
-                    onClick: () => { setSelectedUser(user.id); setError(''); }
-                  },
-                    React.createElement('span', { className: 'emoji' }, user.emoji),
-                    React.createElement('span', { className: 'name' }, user.name),
-                    React.createElement('span', { className: 'profile' }, user.profile)
-                  )
-                )
-              )
-            )
-          ),
-          
-          selectedUser && React.createElement(GlassCard, null,
-            React.createElement('div', { className: 'p-5' },
-              React.createElement('label', { className: 'form-label' }, 'Senha'),
-              React.createElement('div', { style: { position: 'relative' } },
-                React.createElement('input', {
-                  type: showPassword ? 'text' : 'password',
-                  value: password,
-                  onChange: (e) => { setPassword(e.target.value); setError(''); },
-                  onKeyDown: (e) => e.key === 'Enter' && handleLogin(),
-                  placeholder: 'Digite sua senha...',
-                  className: 'input',
-                  style: { paddingRight: '50px' }
-                }),
-                React.createElement('button', {
-                  onClick: () => setShowPassword(!showPassword),
-                  style: { 
-                    position: 'absolute', 
-                    right: '12px', 
-                    top: '50%', 
-                    transform: 'translateY(-50%)', 
-                    background: 'none', 
-                    border: 'none', 
-                    color: 'rgba(255,255,255,0.4)', 
-                    cursor: 'pointer' 
-                  }
-                }, showPassword ? Icons['eye-off']({ width: 18, height: 18 }) : Icons.eye({ width: 18, height: 18 }))
-              ),
-              error && React.createElement('p', { className: 'text-red text-sm mt-3' }, '⚠️ ' + error),
-              React.createElement('button', {
-                className: `btn mt-4 ${USERS[selectedUser]?.color === 'kelinha' ? 'btn-gleici' : 'btn-primary'}`,
-                onClick: handleLogin,
-                disabled: isLoading
-              }, isLoading ? 'Entrando...' : React.createElement(React.Fragment, null, Icons['book-open']({ width: 16, height: 16 }), ' Entrar'))
-            )
-          ),
-          
-          React.createElement('p', { className: 'text-center text-white-40 text-sm mt-6' },
-            'Senha padrão: ', 
-            React.createElement('code', { 
-              style: { 
-                background: 'rgba(255,255,255,0.1)', 
-                padding: '4px 8px', 
-                borderRadius: '6px' 
-              } 
-            }, 'estudo123')
-          )
-        )
-      );
-    };
-
-    // ============================================
-    // COMPONENTE: SESSÃO ITEM (LISTA)
-    // ============================================
-    const SessionItem = ({ session, userColor, onEdit, onDelete }) => {
-      const difficultyIcons = {
-        facil: '✅',
-        medio: '⚡',
-        dificil: '🔥'
-      };
-      
-      const totalMinutes = (session.h || 0) * 60 + (session.m || 0);
-      
-      return React.createElement('div', { className: 'session-item' },
-        React.createElement('div', { className: `icon ${session.diff}` },
-          difficultyIcons[session.diff]
-        ),
-        React.createElement('div', { className: 'content' },
-          React.createElement('div', { className: 'subject' }, session.subject),
-          React.createElement('div', { className: 'meta' },
-            React.createElement('span', null, '📅 ', formatDate(session.date)),
-            React.createElement('span', null, '⏱️ ', formatDuration(totalMinutes)),
-            session.qT > 0 && React.createElement('span', null, 
-              '📝 ', session.qC, '/', session.qT, ' acertos'
-            )
-          )
-        ),
-        React.createElement('div', { className: 'actions' },
-          React.createElement('button', {
-            className: 'action-btn',
-            onClick: () => onEdit(session),
-            title: 'Editar sessão'
-          }, Icons.edit({ width: 16, height: 16 })),
-          React.createElement('button', {
-            className: 'action-btn delete',
-            onClick: () => onDelete(session),
-            title: 'Excluir sessão'
-          }, Icons['trash-2']({ width: 16, height: 16 }))
-        )
-      );
-    };
-    
-    // ============================================
-    // COMPONENTE: ADD/EDIT SESSION SCREEN
-    // ============================================
-    const SessionForm = ({ 
-      userId, 
-      existingSessions, 
-      editingSession = null,
-      onSave, 
-      onCancel,
-      addToast 
-    }) => {
-      const user = USERS[userId];
-      const isEditing = !!editingSession;
-      
-      const [subject, setSubject] = useState(editingSession?.subject || '');
-      const [body, setBody] = useState(editingSession?.body || '');
-      const [hours, setHours] = useState(editingSession?.h || 0);
-      const [minutes, setMinutes] = useState(editingSession?.m || 0);
-      const [difficulty, setDifficulty] = useState(editingSession?.diff || 'facil');
-      const [questionsTotal, setQuestionsTotal] = useState(editingSession?.qT || 0);
-      const [questionsCorrect, setQuestionsCorrect] = useState(editingSession?.qC || 0);
-      const [observations, setObservations] = useState(editingSession?.obs || '');
-      const [timerRunning, setTimerRunning] = useState(false);
-      const [timerSeconds, setTimerSeconds] = useState(0);
-      const [showConfetti, setShowConfetti] = useState(false);
-      const [isSaving, setIsSaving] = useState(false);
-      
-      const timerRef = useRef(null);
-      
-      const uniqueSubjects = [...new Set(existingSessions.map(s => s.subject))];
-      
-      useEffect(() => {
-        if (timerRunning) {
-          timerRef.current = setInterval(() => setTimerSeconds(prev => prev + 1), 1000);
-        } else if (timerRef.current) {
-          clearInterval(timerRef.current);
-        }
-        return () => clearInterval(timerRef.current);
-      }, [timerRunning]);
-      
-      useEffect(() => {
-        if (timerSeconds > 0) {
-          setHours(Math.floor(timerSeconds / 3600));
-          setMinutes(Math.floor((timerSeconds % 3600) / 60));
-        }
-      }, [timerSeconds]);
-      
-      const handleSave = async () => {
-        if (!subject.trim()) {
-          addToast('Informe a matéria estudada', 'error');
-          return;
-        }
-        if (questionsCorrect > questionsTotal) {
-          addToast('Acertos não podem ser maiores que o total', 'error');
-          return;
-        }
-        
-        setIsSaving(true);
-        
-        const session = {
-          id: editingSession?.id || generateId(),
-          subject: subject.trim(),
-          body: body.trim(),
-          h: hours,
-          m: minutes,
-          obs: observations.trim(),
-          diff: difficulty,
-          date: editingSession?.date || new Date().toISOString().slice(0, 10),
-          dayLabel: editingSession?.dayLabel || new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }),
-          qDone: questionsTotal > 0,
-          qC: questionsCorrect,
-          qT: questionsTotal
-        };
-        
-        await new Promise(r => setTimeout(r, 400));
-        onSave(session);
-        
-        if (questionsTotal > 0 && questionsCorrect === questionsTotal) {
-          setShowConfetti(true);
-          setTimeout(() => setShowConfetti(false), 3000);
-        }
-        
-        addToast(
-          isEditing ? 'Sessão atualizada com sucesso! ✏️' : 'Sessão salva com sucesso! 🎉',
-          'success'
-        );
-        
-        setIsSaving(false);
-      };
-      
-      const accuracy = questionsTotal > 0 
-        ? Math.round((questionsCorrect / questionsTotal) * 100) 
-        : 0;
-      
-      return React.createElement('div', null,
-        React.createElement('div', { className: 'mb-6' },
-          React.createElement('h2', { className: 'text-2xl font-bold mb-1' }, 
-            isEditing ? 'Editar Sessão' : 'Nova Sessão'
+ Sessão'
           ),
           React.createElement('p', { className: 'text-white-60' }, 
             isEditing ? 'Atualize os dados da sessão' : 'Registre o que você estudou'
@@ -3427,7 +704,7 @@
           
           React.createElement('div', { className: 'study-plan-countdown' },
             React.createElement('p', { className: 'study-plan-countdown-value' }, daysUntilExam),
-            React.createElement('p', { className: 'study-plan-countdown-label' }, 'dias até a prova (09/11)')
+            React.createElement('p', { className: 'study-plan-countdown-label' }, 'dias até a prova (09/11/2026)')
           ),
           
           recommendations.map((rec, i) => 
@@ -3596,6 +873,142 @@
     };
     
     // ============================================
+    // COMPONENTE: RELATÓRIO DO PARCEIRO
+    // ============================================
+    const PartnerReport = ({ userId, partnerSessions, partnerData, partnerOnlineStatus, addToast }) => {
+      const user = USERS[userId];
+      const partner = USERS[user.partner];
+      
+      const partnerStats = useMemo(() => {
+        const totalSessions = partnerSessions.length;
+        const totalMinutes = partnerSessions.reduce((acc, s) => acc + (s.h || 0) * 60 + (s.m || 0), 0);
+        const totalHours = (totalMinutes / 60).toFixed(1);
+        const totalQuestions = partnerSessions.reduce((acc, s) => acc + (s.qT || 0), 0);
+        const correctQuestions = partnerSessions.reduce((acc, s) => acc + (s.qC || 0), 0);
+        const accuracy = totalQuestions > 0 ? Math.round((correctQuestions / totalQuestions) * 100) : 0;
+        
+        return {
+          totalSessions,
+          totalHours,
+          totalQuestions,
+          accuracy
+        };
+      }, [partnerSessions]);
+      
+      const partnerLevel = LEVELS.find(l => l.level === partnerData.level) || LEVELS[0];
+      const previewBadges = partnerData.unlockedBadges.slice(0, 5);
+      const hasMoreBadges = partnerData.unlockedBadges.length > 5;
+      
+      const getLastSeenText = () => {
+        if (!partnerOnlineStatus.lastSeen) return 'Nunca';
+        const lastSeen = new Date(partnerOnlineStatus.lastSeen);
+        const now = new Date();
+        const diffMinutes = Math.floor((now - lastSeen) / (1000 * 60));
+        
+        if (diffMinutes < 1) return 'Agora mesmo';
+        if (diffMinutes < 60) return `${diffMinutes}min atrás`;
+        if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)}h atrás`;
+        return `${Math.floor(diffMinutes / 1440)}d atrás`;
+      };
+      
+      return React.createElement('div', { className: 'partner-report-card' },
+        React.createElement('div', { className: 'partner-report-header' },
+          React.createElement('div', { 
+            className: 'partner-report-avatar',
+            style: { background: `linear-gradient(135deg, ${partner.themeColor}, ${partner.themeColor}80)` }
+          }, 
+            partner.emoji,
+            partnerOnlineStatus.isOnline && React.createElement('div', {
+              style: {
+                position: 'absolute',
+                bottom: '-2px',
+                right: '-2px',
+                width: '16px',
+                height: '16px',
+                borderRadius: '50%',
+                background: '#22c55e',
+                border: '2px solid #0a0a0f'
+              }
+            })
+          ),
+          React.createElement('div', { className: 'partner-report-info' },
+            React.createElement('div', { className: 'flex items-center gap-2' },
+              React.createElement('p', { className: 'partner-report-name' }, partner.name),
+              React.createElement('span', { 
+                className: `online-status ${partnerOnlineStatus.isOnline ? 'online' : 'offline'}` 
+              },
+                React.createElement('span', { className: 'dot' }),
+                partnerOnlineStatus.isOnline ? 'Online' : `Visto ${getLastSeenText()}`
+              )
+            ),
+            React.createElement('p', { className: 'partner-report-level' }, 
+              `${partnerLevel.emoji} ${partnerLevel.name} • Nível ${partnerData.level}`
+            )
+          )
+        ),
+        
+        React.createElement('div', { className: 'partner-stats-grid' },
+          React.createElement('div', { className: 'partner-stat' },
+            React.createElement('p', { className: 'partner-stat-value' }, partnerStats.totalHours),
+            React.createElement('p', { className: 'partner-stat-label' }, 'Horas')
+          ),
+          React.createElement('div', { className: 'partner-stat' },
+            React.createElement('p', { className: 'partner-stat-value' }, partnerStats.totalSessions),
+            React.createElement('p', { className: 'partner-stat-label' }, 'Sessões')
+          ),
+          React.createElement('div', { className: 'partner-stat' },
+            React.createElement('p', { className: 'partner-stat-value' }, partnerStats.totalQuestions),
+            React.createElement('p', { className: 'partner-stat-label' }, 'Questões')
+          ),
+          React.createElement('div', { className: 'partner-stat' },
+            React.createElement('p', { className: 'partner-stat-value' }, `${partnerStats.accuracy}%`),
+            React.createElement('p', { className: 'partner-stat-label' }, 'Acerto')
+          )
+        ),
+        
+        React.createElement('div', { className: 'flex items-center justify-between mb-2' },
+          React.createElement('p', { className: 'text-sm font-semibold' }, '🏆 Conquistas'),
+          React.createElement('p', { className: 'text-xs text-white-60' }, 
+            `${partnerData.unlockedBadges.length} badges`
+          )
+        ),
+        
+        previewBadges.length > 0 ? React.createElement('div', { className: 'partner-badges-preview' },
+          previewBadges.map(badgeId => {
+            const badge = BADGES[badgeId];
+            return badge ? React.createElement('div', {
+              key: badgeId,
+              className: 'partner-badge-item',
+              title: badge.name
+            }, badge.emoji) : null;
+          }),
+          hasMoreBadges && React.createElement('div', { className: 'partner-badge-more' },
+            `+${partnerData.unlockedBadges.length - 5}`
+          )
+        ) : React.createElement('p', { className: 'text-xs text-white-40' }, 
+          'Nenhuma conquista ainda'
+        ),
+        
+        React.createElement('div', { className: 'mt-4 pt-4', style: { borderTop: '1px solid rgba(255,255,255,0.1)' } },
+          React.createElement('div', { className: 'flex items-center justify-between' },
+            React.createElement('div', null,
+              React.createElement('p', { className: 'text-xs text-white-60' }, 'XP Total'),
+              React.createElement('p', { className: 'text-lg font-bold text-yellow' }, 
+                partnerData.xp.toLocaleString()
+              )
+            ),
+            React.createElement(ProgressRing, {
+              value: partnerData.xp - partnerLevel.minXP,
+              max: (LEVELS.find(l => l.level === partnerLevel.level + 1)?.minXP || partnerLevel.minXP + 1000) - partnerLevel.minXP,
+              size: 60,
+              color: 'pink'
+            }, `${partnerLevel.level}`)
+          )
+        )
+      );
+    };
+    
+    // ============================================
     // COMPONENTE: DASHBOARD
     // ============================================
     const Dashboard = ({ 
@@ -3606,6 +1019,8 @@
       level,
       streak,
       unlockedBadges,
+      partnerData,
+      partnerOnlineStatus,
       onAddSession,
       addToast 
     }) => {
@@ -3638,93 +1053,106 @@
       const currentLevel = LEVELS.find(l => l.level === level) || LEVELS[0];
       const daysUntilExam = getDaysUntilExam();
       
-      return React.createElement('div', null,
-        React.createElement('div', { className: `hero-card ${user.color}` },
-          React.createElement('p', { className: 'text-white-80 mb-1' }, `Olá, ${user.name}! 💕`),
-          React.createElement('h2', { className: 'text-3xl font-bold mb-2' }, 
-            currentLevel.emoji, ' ', currentLevel.name
-          ),
-          React.createElement('p', { className: 'text-white-70 mb-3' }, 
-            `Nível ${level} • ${xp.toLocaleString()} XP`
-          ),
-          React.createElement('div', { className: 'flex gap-2 flex-wrap' },
-            React.createElement('span', { className: 'tag tag-primary' }, 
-              '🔥 ', streak, ' dias de streak'
+      return React.createElement('div', { className: 'dashboard-grid' },
+        React.createElement('div', null,
+          React.createElement('div', { className: `hero-card ${user.color}` },
+            React.createElement('p', { className: 'text-white-80 mb-1' }, `Olá, ${user.name}! 💕`),
+            React.createElement('h2', { className: 'text-3xl font-bold mb-2' }, 
+              currentLevel.emoji, ' ', currentLevel.name
             ),
-            stats.studiedToday && React.createElement('span', { className: 'tag tag-green' }, 
-              '✅ Estudou hoje'
+            React.createElement('p', { className: 'text-white-70 mb-3' }, 
+              `Nível ${level} • ${xp.toLocaleString()} XP`
             ),
-            React.createElement('span', { className: 'tag' }, 
-              '📅 ', daysUntilExam, ' dias para prova'
-            )
-          )
-        ),
-        
-        React.createElement('div', { className: 'stats-grid mb-4' },
-          React.createElement(GlassCard, { className: 'stat-card' },
-            React.createElement('p', { className: 'stat-value text-violet' }, stats.totalHours),
-            React.createElement('p', { className: 'stat-label' }, 'Horas Totais')
-          ),
-          React.createElement(GlassCard, { className: 'stat-card' },
-            React.createElement('p', { className: 'stat-value text-pink' }, stats.totalSessions),
-            React.createElement('p', { className: 'stat-label' }, 'Sessões')
-          ),
-          React.createElement(GlassCard, { className: 'stat-card' },
-            React.createElement('p', { className: 'stat-value text-green' }, stats.totalQuestions),
-            React.createElement('p', { className: 'stat-label' }, 'Questões')
-          ),
-          React.createElement(GlassCard, { className: 'stat-card' },
-            React.createElement('p', { className: 'stat-value text-yellow' }, `${stats.accuracy}%`),
-            React.createElement('p', { className: 'stat-label' }, 'Acerto Médio')
-          )
-        ),
-        
-        React.createElement(GlassCard, { className: 'mb-4' },
-          React.createElement('div', { className: 'p-5' },
-            React.createElement('div', { className: 'flex items-center justify-between mb-4' },
-              React.createElement('div', null,
-                React.createElement('h3', { className: 'text-lg font-semibold' }, '🏆 Duelo do Casal'),
-                React.createElement('p', { className: 'text-sm text-white-60' }, 'Quem estuda mais?')
+            React.createElement('div', { className: 'flex gap-2 flex-wrap' },
+              React.createElement('span', { className: 'tag tag-primary' }, 
+                '🔥 ', streak, ' dias de streak'
               ),
-              React.createElement('span', { className: 'tag tag-gold' }, 'Ao vivo')
-            ),
-            
-            React.createElement('div', { className: 'flex items-center gap-4 mb-4' },
-              React.createElement('div', { className: 'text-center flex-1' },
-                React.createElement('div', { 
-                  className: 'w-12 h-12 rounded-xl flex items-center justify-center text-2xl mx-auto mb-2',
-                  style: { background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }
-                }, user.emoji),
-                React.createElement('p', { className: 'font-semibold' }, user.name),
-                React.createElement('p', { className: 'text-violet font-bold' }, `${stats.totalHours}h`)
+              stats.studiedToday && React.createElement('span', { className: 'tag tag-green' }, 
+                '✅ Estudou hoje'
               ),
-              React.createElement('div', { className: 'text-2xl font-bold text-white-40' }, 'VS'),
-              React.createElement('div', { className: 'text-center flex-1' },
-                React.createElement('div', { 
-                  className: 'w-12 h-12 rounded-xl flex items-center justify-center text-2xl mx-auto mb-2',
-                  style: { background: 'linear-gradient(135deg, #ec4899, #db2777)' }
-                }, partner.emoji),
-                React.createElement('p', { className: 'font-semibold' }, partner.name),
-                React.createElement('p', { className: 'text-pink font-bold' }, `${stats.partnerTotalHours}h`)
+              React.createElement('span', { className: 'tag' }, 
+                '📅 ', daysUntilExam, ' dias para prova'
               )
-            ),
-            
-            React.createElement('div', { className: 'progress-bar', style: { height: '12px' } },
-              React.createElement('div', { 
-                className: 'progress-bar-fill',
-                style: { 
-                  width: `${Math.min((parseFloat(stats.totalHours) / (parseFloat(stats.totalHours) + parseFloat(stats.partnerTotalHours))) * 100, 100)}%`,
-                  background: 'linear-gradient(90deg, #8b5cf6, #ec4899)'
-                }
-              })
             )
-          )
+          ),
+          
+          React.createElement('div', { className: 'stats-grid mb-4' },
+            React.createElement(GlassCard, { className: 'stat-card' },
+              React.createElement('p', { className: 'stat-value text-violet' }, stats.totalHours),
+              React.createElement('p', { className: 'stat-label' }, 'Horas Totais')
+            ),
+            React.createElement(GlassCard, { className: 'stat-card' },
+              React.createElement('p', { className: 'stat-value text-pink' }, stats.totalSessions),
+              React.createElement('p', { className: 'stat-label' }, 'Sessões')
+            ),
+            React.createElement(GlassCard, { className: 'stat-card' },
+              React.createElement('p', { className: 'stat-value text-green' }, stats.totalQuestions),
+              React.createElement('p', { className: 'stat-label' }, 'Questões')
+            ),
+            React.createElement(GlassCard, { className: 'stat-card' },
+              React.createElement('p', { className: 'stat-value text-yellow' }, `${stats.accuracy}%`),
+              React.createElement('p', { className: 'stat-label' }, 'Acerto Médio')
+            )
+          ),
+          
+          React.createElement(GlassCard, { className: 'mb-4' },
+            React.createElement('div', { className: 'p-5' },
+              React.createElement('div', { className: 'flex items-center justify-between mb-4' },
+                React.createElement('div', null,
+                  React.createElement('h3', { className: 'text-lg font-semibold' }, '🏆 Duelo do Casal'),
+                  React.createElement('p', { className: 'text-sm text-white-60' }, 'Quem estuda mais?')
+                ),
+                React.createElement('span', { className: 'tag tag-gold' }, 'Ao vivo')
+              ),
+              
+              React.createElement('div', { className: 'flex items-center gap-4 mb-4' },
+                React.createElement('div', { className: 'text-center flex-1' },
+                  React.createElement('div', { 
+                    className: 'w-12 h-12 rounded-xl flex items-center justify-center text-2xl mx-auto mb-2',
+                    style: { background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }
+                  }, user.emoji),
+                  React.createElement('p', { className: 'font-semibold' }, user.name),
+                  React.createElement('p', { className: 'text-violet font-bold' }, `${stats.totalHours}h`)
+                ),
+                React.createElement('div', { className: 'text-2xl font-bold text-white-40' }, 'VS'),
+                React.createElement('div', { className: 'text-center flex-1' },
+                  React.createElement('div', { 
+                    className: 'w-12 h-12 rounded-xl flex items-center justify-center text-2xl mx-auto mb-2',
+                    style: { background: 'linear-gradient(135deg, #ec4899, #db2777)' }
+                  }, partner.emoji),
+                  React.createElement('p', { className: 'font-semibold' }, partner.name),
+                  React.createElement('p', { className: 'text-pink font-bold' }, `${stats.partnerTotalHours}h`)
+                )
+              ),
+              
+              React.createElement('div', { className: 'progress-bar', style: { height: '12px' } },
+                React.createElement('div', { 
+                  className: 'progress-bar-fill',
+                  style: { 
+                    width: `${Math.min((parseFloat(stats.totalHours) / (parseFloat(stats.totalHours) + parseFloat(stats.partnerTotalHours))) * 100, 100)}%`,
+                    background: 'linear-gradient(90deg, #8b5cf6, #ec4899)'
+                  }
+                })
+              )
+            )
+          ),
+          
+          React.createElement('button', {
+            className: `btn ${user.color === 'kelinha' ? 'btn-gleici' : 'btn-primary'} mb-4`,
+            onClick: onAddSession
+          }, React.createElement(React.Fragment, null, Icons.plus({ width: 18, height: 18 }), ' Nova Sessão de Estudo'))
         ),
         
-        React.createElement('button', {
-          className: `btn ${user.color === 'kelinha' ? 'btn-gleici' : 'btn-primary'} mb-4`,
-          onClick: onAddSession
-        }, React.createElement(React.Fragment, null, Icons.plus({ width: 18, height: 18 }), ' Nova Sessão de Estudo'))
+        // Coluna lateral com relatório do parceiro
+        React.createElement('div', null,
+          React.createElement(PartnerReport, {
+            userId,
+            partnerSessions,
+            partnerData,
+            partnerOnlineStatus,
+            addToast
+          })
+        )
       );
     };
     
@@ -3736,6 +1164,12 @@
       const [currentScreen, setCurrentScreen] = useState('dashboard');
       const [toasts, setToasts] = useState([]);
       const [editingSession, setEditingSession] = useState(null);
+      
+      // Estado para status online do parceiro
+      const [partnerOnlineStatus, setPartnerOnlineStatus] = useState({
+        isOnline: false,
+        lastSeen: null
+      });
       
       // Dados persistidos
       const [sessions, setSessions] = useState(() => {
@@ -3759,6 +1193,101 @@
       useEffect(() => {
         localStorage.setItem('manaKelinha_userData', JSON.stringify(userData));
       }, [userData]);
+      
+      // SISTEMA DE STATUS ONLINE/OFFLINE
+      useEffect(() => {
+        if (!currentUser) return;
+        
+        const user = USERS[currentUser];
+        const partnerId = user.partner;
+        
+        // Função para atualizar status do usuário atual
+        const updateOnlineStatus = () => {
+          const status = {
+            userId: currentUser,
+            isOnline: true,
+            lastSeen: new Date().toISOString(),
+            timestamp: Date.now()
+          };
+          localStorage.setItem('manaKelinha_onlineStatus', JSON.stringify(status));
+        };
+        
+        // Função para verificar status do parceiro
+        const checkPartnerStatus = () => {
+          const saved = localStorage.getItem('manaKelinha_onlineStatus');
+          if (saved) {
+            const status = JSON.parse(saved);
+            // Só considera online se foi atualizado nos últimos 30 segundos
+            const isOnline = status.userId === partnerId && 
+                            (Date.now() - status.timestamp) < 30000;
+            
+            setPartnerOnlineStatus(prev => {
+              // Notifica quando parceiro fica online
+              if (isOnline && !prev.isOnline && status.userId === partnerId) {
+                addToast(`${USERS[partnerId].name} está online! 💕`, 'online');
+              }
+              return {
+                isOnline,
+                lastSeen: status.lastSeen
+              };
+            });
+          }
+        };
+        
+        // Atualiza status a cada 10 segundos
+        updateOnlineStatus();
+        const updateInterval = setInterval(updateOnlineStatus, 10000);
+        
+        // Verifica status do parceiro a cada 5 segundos
+        checkPartnerStatus();
+        const checkInterval = setInterval(checkPartnerStatus, 5000);
+        
+        // Listener para mudanças no localStorage (outras abas)
+        const handleStorageChange = (e) => {
+          if (e.key === 'manaKelinha_onlineStatus') {
+            checkPartnerStatus();
+          }
+          // Detecta quando parceiro desbloqueia badges
+          if (e.key === 'manaKelinha_userData') {
+            const newData = JSON.parse(e.newValue);
+            const oldData = JSON.parse(e.oldValue || '{}');
+            if (newData[partnerId]?.unlockedBadges?.length > oldData[partnerId]?.unlockedBadges?.length) {
+              const newBadges = newData[partnerId].unlockedBadges.filter(
+                b => !oldData[partnerId]?.unlockedBadges?.includes(b)
+              );
+              newBadges.forEach(badgeId => {
+                const badge = BADGES[badgeId];
+                if (badge) {
+                  addToast(`🏆 ${USERS[partnerId].name} desbloqueou: ${badge.name}!`, 'badge');
+                }
+              });
+            }
+          }
+        };
+        
+        window.addEventListener('storage', handleStorageChange);
+        
+        // Marca como offline ao sair
+        const handleBeforeUnload = () => {
+          const status = {
+            userId: currentUser,
+            isOnline: false,
+            lastSeen: new Date().toISOString(),
+            timestamp: Date.now()
+          };
+          localStorage.setItem('manaKelinha_onlineStatus', JSON.stringify(status));
+        };
+        
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        
+        return () => {
+          clearInterval(updateInterval);
+          clearInterval(checkInterval);
+          window.removeEventListener('storage', handleStorageChange);
+          window.removeEventListener('beforeunload', handleBeforeUnload);
+          handleBeforeUnload();
+        };
+      }, [currentUser]);
       
       const addToast = (message, type = 'info', xp = 0) => {
         const id = Date.now();
@@ -3890,6 +1419,16 @@
       };
       
       const handleLogout = () => {
+        // Marca como offline ao sair
+        if (currentUser) {
+          const status = {
+            userId: currentUser,
+            isOnline: false,
+            lastSeen: new Date().toISOString(),
+            timestamp: Date.now()
+          };
+          localStorage.setItem('manaKelinha_onlineStatus', JSON.stringify(status));
+        }
         setCurrentUser(null);
         setCurrentScreen('dashboard');
         setEditingSession(null);
@@ -3904,6 +1443,7 @@
       const userSessions = sessions[currentUser] || [];
       const partnerSessions = sessions[user.partner] || [];
       const { xp, level, streak, unlockedBadges } = userData[currentUser];
+      const partnerData = userData[user.partner];
       
       // Toast container
       const toastContainer = React.createElement('div', { className: 'toast-container' },
@@ -3951,14 +1491,16 @@
       
       // Top bar
       const topBar = React.createElement('header', { className: 'top-bar' },
-        React.createElement('div', { className: 'logo text-gradient' }, 'Mana e Kelinha 💕'),
-        React.createElement('div', { className: 'actions' },
-          React.createElement('button', {
-            className: `user-chip ${user.color}`,
-            onClick: handleLogout
-          },
-            React.createElement('span', null, user.emoji),
-            React.createElement('span', null, user.name)
+        React.createElement('div', { className: 'top-bar-inner' },
+          React.createElement('div', { className: 'logo text-gradient' }, 'Mana e Kelinha 💕'),
+          React.createElement('div', { className: 'actions' },
+            React.createElement('button', {
+              className: `user-chip ${user.color}`,
+              onClick: handleLogout
+            },
+              React.createElement('span', null, user.emoji),
+              React.createElement('span', null, user.name)
+            )
           )
         )
       );
@@ -3975,6 +1517,8 @@
             level,
             streak,
             unlockedBadges,
+            partnerData,
+            partnerOnlineStatus,
             onAddSession: () => {
               setEditingSession(null);
               setCurrentScreen('session');
@@ -4043,6 +1587,8 @@
             level,
             streak,
             unlockedBadges,
+            partnerData,
+            partnerOnlineStatus,
             onAddSession: () => setCurrentScreen('session'),
             addToast
           });
