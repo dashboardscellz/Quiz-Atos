@@ -6076,18 +6076,28 @@
         const icons = { success: '✅', error: '❌', info: 'ℹ️', xp: '✨', badge: '🏆', warning: '⚠️' };
         const id = Date.now() + Math.random();
         const notif = { id, message, type, xp, icon: icons[type] || 'ℹ️', time: new Date(), unread: true };
-        setNotifications(prev => [notif, ...prev].slice(0, 50));
+        setNotifications(prev => {
+          // Remove notificações com mais de 24h
+          const cutoff = Date.now() - 86400000;
+          let updated = [notif, ...prev.filter(n => new Date(n.time).getTime() > cutoff)];
+          // Se passar de 100, mantém apenas as 20 mais recentes (apaga as 80 mais antigas)
+          if (updated.length > 100) updated = updated.slice(0, 20);
+          return updated;
+        });
         setNotifUnread(prev => prev + 1);
       };
 
+      // Auto-purga notificações com mais de 24h a cada minuto
+      useEffect(() => {
+        const interval = setInterval(() => {
+          const cutoff = Date.now() - 86400000;
+          setNotifications(prev => prev.filter(n => new Date(n.time).getTime() > cutoff));
+        }, 60000);
+        return () => clearInterval(interval);
+      }, []);
+
       const addToast = (message, type = 'info', xp = 0) => {
-        // Erros e avisos aparecem inline; conquistas vão para o painel
-        if (type === 'error' || type === 'warning') {
-          const id = Date.now();
-          setToasts(prev => [...prev, { id, message, type, xp }]);
-        } else {
-          addNotification(message, type, xp);
-        }
+        addNotification(message, type, xp);
       };
 
       const removeToast = (id) => {
