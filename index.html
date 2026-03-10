@@ -921,7 +921,7 @@
       gap: 8px;
       margin-bottom: 16px;
       overflow-x: auto;
-      padding-bottom: 4px;
+      padding-bottom: 8px;
       scrollbar-width: none;
     }
     .filter-bar::-webkit-scrollbar { display: none; }
@@ -1187,35 +1187,127 @@
       margin-top: 8px;
     }
     .xp-bar {
-      height: 12px;
-      background: var(--white-10);
-      border-radius: 6px;
+      height: 18px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 10px;
+      overflow: visible;
+      position: relative;
+    }
+    .xp-bar-track {
+      height: 100%;
+      border-radius: 10px;
       overflow: hidden;
       position: relative;
     }
     .xp-bar-fill {
       height: 100%;
-      border-radius: 6px;
+      border-radius: 10px;
       background: linear-gradient(90deg, var(--violet), var(--pink));
-      transition: width 1s ease-out;
+      transition: width 1.4s cubic-bezier(0.22, 1, 0.36, 1);
       position: relative;
     }
     .xp-bar-fill::after {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.35) 50%, transparent 100%);
       animation: shimmer 2s infinite;
+      border-radius: 10px;
+    }
+    .xp-bar-glow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 0 12px 4px rgba(139,92,246,0.7), 0 0 4px 2px white;
+      transition: left 1.4s cubic-bezier(0.22, 1, 0.36, 1);
+      pointer-events: none;
+      z-index: 2;
     }
     .xp-bar-labels {
       display: flex;
       justify-content: space-between;
-      margin-top: 6px;
+      margin-top: 8px;
       font-size: 11px;
       color: var(--white-40);
+    }
+    .xp-bar-pct {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--violet);
+    }
+
+    /* Trilha de níveis */
+    .level-trail {
+      position: relative;
+      padding: 20px 0 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .level-trail::-webkit-scrollbar { display: none; }
+    .level-trail-track {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      min-width: max-content;
+      padding: 0 12px;
+    }
+    .level-trail-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+    .level-trail-node-dot {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      border: 2px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.05);
+      transition: all 0.3s;
+      cursor: default;
+    }
+    .level-trail-node.done .level-trail-node-dot {
+      background: linear-gradient(135deg, var(--violet), var(--pink));
+      border-color: var(--violet);
+      box-shadow: 0 0 12px rgba(139,92,246,0.5);
+    }
+    .level-trail-node.current .level-trail-node-dot {
+      background: linear-gradient(135deg, #eab308, #ca8a04);
+      border-color: #eab308;
+      box-shadow: 0 0 16px rgba(234,179,8,0.6);
+      animation: pulse 2s ease-in-out infinite;
+      width: 44px;
+      height: 44px;
+      font-size: 20px;
+    }
+    .level-trail-label {
+      font-size: 9px;
+      color: rgba(255,255,255,0.3);
+      margin-top: 5px;
+      text-align: center;
+    }
+    .level-trail-node.done .level-trail-label,
+    .level-trail-node.current .level-trail-label {
+      color: rgba(255,255,255,0.7);
+    }
+    .level-trail-line {
+      height: 3px;
+      width: 28px;
+      background: rgba(255,255,255,0.08);
+      flex-shrink: 0;
+      margin-bottom: 20px;
+    }
+    .level-trail-line.done {
+      background: linear-gradient(90deg, var(--violet), var(--pink));
     }
     
     .xp-source-grid {
@@ -1818,10 +1910,11 @@
       }
       
       .nav-sidebar {
-        display: flex;
+        display: none;
         flex-direction: column;
         width: 280px;
-        min-height: 100vh;
+        height: 100vh;
+        overflow: hidden;
         background: linear-gradient(180deg, rgba(10,10,15,0.98) 0%, rgba(10,10,15,0.95) 100%);
         backdrop-filter: blur(20px);
         border-right: 1px solid var(--border);
@@ -1830,6 +1923,16 @@
         left: 0;
         top: 0;
         z-index: 100;
+      }
+      .app.logged-in .nav-sidebar {
+        display: flex;
+      }
+      .app.logged-in .top-bar {
+        left: 280px;
+        width: calc(100% - 280px);
+      }
+      .app.logged-in .content {
+        margin-left: 280px;
       }
       .nav-sidebar .logo {
         font-size: 28px;
@@ -1840,7 +1943,12 @@
       .nav-sidebar .nav-items {
         flex-direction: column;
         gap: 8px;
+        flex: 1;
+        overflow-y: auto;
+        scrollbar-width: none;
+        min-height: 0;
       }
+      .nav-sidebar .nav-items::-webkit-scrollbar { display: none; }
       .nav-sidebar .nav-item {
         flex-direction: row;
         justify-content: flex-start;
@@ -1873,13 +1981,6 @@
       
       .nav-bottom { display: none; }
       
-      .top-bar { 
-        left: 0; 
-        width: 100%;
-        max-width: none;
-        transform: none;
-      }
-      
       .top-bar-inner {
         max-width: 1400px;
         margin: 0 auto;
@@ -1889,6 +1990,8 @@
         max-width: 1400px;
         padding: 100px 40px 40px;
       }
+      
+
       
       .stats-grid { grid-template-columns: repeat(4, 1fr); }
       .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
@@ -2080,33 +2183,85 @@
     // ============================================
     // DATA LIMITE DA PROVA
     // ============================================
-    const EXAM_DATE = new Date('2026-11-09T23:59:59');
+    const EXAM_DATE_ENEM = new Date('2026-11-09T23:59:59'); // ENEM 2026
+    const EXAM_DATE_OAB  = new Date('2026-10-11T23:59:59'); // OAB XLI — outubro 2026 (1ª fase)
+    const EXAM_DATE = EXAM_DATE_ENEM; // fallback global
     
     // ============================================
     // SISTEMA DE NÍVEIS E XP
     // ============================================
     const LEVELS = [
-      { level: 1, name: 'Estudante Curioso', minXP: 0, maxXP: 500, emoji: '📚', color: '#8b5cf6' },
-      { level: 2, name: 'Aprendiz Dedicado', minXP: 500, maxXP: 1200, emoji: '📖', color: '#7c3aed' },
-      { level: 3, name: 'Discípulo Esforçado', minXP: 1200, maxXP: 2200, emoji: '✏️', color: '#a855f7' },
-      { level: 4, name: 'Conhecedor Ativo', minXP: 2200, maxXP: 3500, emoji: '🎯', color: '#9333ea' },
-      { level: 5, name: 'Estudante Avançado', minXP: 3500, maxXP: 5000, emoji: '🚀', color: '#8b5cf6' },
-      { level: 6, name: 'Especialista em Formação', minXP: 5000, maxXP: 6800, emoji: '🔬', color: '#7c3aed' },
-      { level: 7, name: 'Mestre do Conhecimento', minXP: 6800, maxXP: 9000, emoji: '🎓', color: '#a855f7' },
-      { level: 8, name: 'Sábio Aprendiz', minXP: 9000, maxXP: 11500, emoji: '🦉', color: '#9333ea' },
-      { level: 9, name: 'Guru dos Estudos', minXP: 11500, maxXP: 14500, emoji: '👑', color: '#fbbf24' },
-      { level: 10, name: 'Lenda Acadêmica', minXP: 14500, maxXP: 18000, emoji: '🏆', color: '#f59e0b' },
-      { level: 11, name: 'Mestre Supremo', minXP: 18000, maxXP: 22000, emoji: '💎', color: '#d946ef' },
-      { level: 12, name: 'Deus do Conhecimento', minXP: 22000, maxXP: 27000, emoji: '🔱', color: '#8b5cf6' },
-      { level: 13, name: 'Titã da Sabedoria', minXP: 27000, maxXP: 33000, emoji: '⚡', color: '#eab308' },
-      { level: 14, name: 'Imortal Acadêmico', minXP: 33000, maxXP: 40000, emoji: '🌟', color: '#f97316' },
-      { level: 15, name: 'Entidade do Saber', minXP: 40000, maxXP: Infinity, emoji: '👁️', color: '#ec4899' }
+      // Fase 1: Início da Jornada (1–8) — primeiros 30 dias
+      { level: 1,  name: 'Estudante Curioso',       minXP: 0,       maxXP: 400,     emoji: '📚', color: '#94a3b8' },
+      { level: 2,  name: 'Aprendiz Dedicado',        minXP: 400,     maxXP: 900,     emoji: '📖', color: '#8b5cf6' },
+      { level: 3,  name: 'Discípulo Esforçado',      minXP: 900,     maxXP: 1600,    emoji: '✏️', color: '#7c3aed' },
+      { level: 4,  name: 'Conhecedor Ativo',          minXP: 1600,    maxXP: 2500,    emoji: '🎯', color: '#a855f7' },
+      { level: 5,  name: 'Estudante Avançado',        minXP: 2500,    maxXP: 3600,    emoji: '🚀', color: '#9333ea' },
+      { level: 6,  name: 'Leitor Assíduo',            minXP: 3600,    maxXP: 5000,    emoji: '📕', color: '#7c3aed' },
+      { level: 7,  name: 'Mente Afiada',              minXP: 5000,    maxXP: 6700,    emoji: '🧠', color: '#8b5cf6' },
+      { level: 8,  name: 'Explorador do Saber',       minXP: 6700,    maxXP: 8700,    emoji: '🔭', color: '#a855f7' },
+
+      // Fase 2: Construindo Base (9–16) — dias 31–80
+      { level: 9,  name: 'Especialista em Formação', minXP: 8700,    maxXP: 11000,   emoji: '🔬', color: '#0ea5e9' },
+      { level: 10, name: 'Analista Determinado',      minXP: 11000,   maxXP: 13600,   emoji: '📊', color: '#0284c7' },
+      { level: 11, name: 'Pesquisador Focado',        minXP: 13600,   maxXP: 16500,   emoji: '🔍', color: '#0369a1' },
+      { level: 12, name: 'Estudioso Persistente',     minXP: 16500,   maxXP: 19800,   emoji: '📐', color: '#075985' },
+      { level: 13, name: 'Técnico do Conhecimento',   minXP: 19800,   maxXP: 23400,   emoji: '⚙️', color: '#0c4a6e' },
+      { level: 14, name: 'Mestre em Treinamento',     minXP: 23400,   maxXP: 27400,   emoji: '🎓', color: '#22c55e' },
+      { level: 15, name: 'Estrategista Acadêmico',    minXP: 27400,   maxXP: 31800,   emoji: '♟️', color: '#16a34a' },
+      { level: 16, name: 'Sábio Aprendiz',            minXP: 31800,   maxXP: 36600,   emoji: '🦉', color: '#15803d' },
+
+      // Fase 3: Crescendo (17–24) — dias 81–130
+      { level: 17, name: 'Acadêmico Avançado',        minXP: 36600,   maxXP: 41800,   emoji: '🏫', color: '#f59e0b' },
+      { level: 18, name: 'Mente Brilhante',           minXP: 41800,   maxXP: 47400,   emoji: '💡', color: '#d97706' },
+      { level: 19, name: 'Guardião do Conhecimento',  minXP: 47400,   maxXP: 53400,   emoji: '🛡️', color: '#b45309' },
+      { level: 20, name: 'Mestre do Conhecimento',    minXP: 53400,   maxXP: 59800,   emoji: '🎖️', color: '#92400e' },
+      { level: 21, name: 'Líder Intelectual',         minXP: 59800,   maxXP: 66600,   emoji: '👨‍🏫', color: '#f97316' },
+      { level: 22, name: 'Arquiteto do Saber',        minXP: 66600,   maxXP: 73800,   emoji: '🏛️', color: '#ea580c' },
+      { level: 23, name: 'Veterano Acadêmico',        minXP: 73800,   maxXP: 81400,   emoji: '🎗️', color: '#c2410c' },
+      { level: 24, name: 'Professor em Ascensão',     minXP: 81400,   maxXP: 89400,   emoji: '📜', color: '#9a3412' },
+
+      // Fase 4: Elite (25–32) — dias 131–175
+      { level: 25, name: 'Elite Acadêmica',           minXP: 89400,   maxXP: 98200,   emoji: '⭐', color: '#ec4899' },
+      { level: 26, name: 'Campeão dos Estudos',       minXP: 98200,   maxXP: 107400,  emoji: '🏅', color: '#db2777' },
+      { level: 27, name: 'Guru dos Estudos',          minXP: 107400,  maxXP: 117000,  emoji: '🧘', color: '#be185d' },
+      { level: 28, name: 'Sábio Iluminado',           minXP: 117000,  maxXP: 127000,  emoji: '🌙', color: '#9d174d' },
+      { level: 29, name: 'Mestre Supremo',            minXP: 127000,  maxXP: 137400,  emoji: '💎', color: '#831843' },
+      { level: 30, name: 'Lenda Acadêmica',           minXP: 137400,  maxXP: 148200,  emoji: '🏆', color: '#f59e0b' },
+      { level: 31, name: 'Campeão Invicto',           minXP: 148200,  maxXP: 159400,  emoji: '🥇', color: '#eab308' },
+      { level: 32, name: 'Portador da Sabedoria',     minXP: 159400,  maxXP: 171000,  emoji: '📿', color: '#ca8a04' },
+
+      // Fase 5: Lenda (33–40) — dias 176–215
+      { level: 33, name: 'Titã da Sabedoria',         minXP: 171000,  maxXP: 183000,  emoji: '⚡', color: '#ef4444' },
+      { level: 34, name: 'Imortal Acadêmico',         minXP: 183000,  maxXP: 195400,  emoji: '🌟', color: '#dc2626' },
+      { level: 35, name: 'Senhor do Conhecimento',    minXP: 195400,  maxXP: 208200,  emoji: '👁️', color: '#b91c1c' },
+      { level: 36, name: 'Fenômeno Acadêmico',        minXP: 208200,  maxXP: 221400,  emoji: '🌀', color: '#991b1b' },
+      { level: 37, name: 'Iluminado pelos Livros',    minXP: 221400,  maxXP: 235000,  emoji: '✨', color: '#7f1d1d' },
+      { level: 38, name: 'Deus do Conhecimento',      minXP: 235000,  maxXP: 249000,  emoji: '🔱', color: '#d946ef' },
+      { level: 39, name: 'Transcendente',             minXP: 249000,  maxXP: 263400,  emoji: '🌌', color: '#c026d3' },
+      { level: 40, name: 'Ascendido',                 minXP: 263400,  maxXP: 278200,  emoji: '🦋', color: '#a21caf' },
+
+      // Fase 6: Supremo — Reta Final (41–50) — dias 216–246
+      { level: 41, name: 'Supremo Acadêmico',         minXP: 278200,  maxXP: 293400,  emoji: '🌠', color: '#8b5cf6' },
+      { level: 42, name: 'Conquistador Supremo',      minXP: 293400,  maxXP: 309000,  emoji: '🗡️', color: '#7c3aed' },
+      { level: 43, name: 'Entidade do Saber',         minXP: 309000,  maxXP: 325000,  emoji: '⚗️', color: '#6d28d9' },
+      { level: 44, name: 'Oráculo Vivo',              minXP: 325000,  maxXP: 341400,  emoji: '🔮', color: '#5b21b6' },
+      { level: 45, name: 'Guardião da Sabedoria',     minXP: 341400,  maxXP: 358200,  emoji: '🛡️', color: '#4c1d95' },
+      { level: 46, name: 'Arquivar de Conhecimento',  minXP: 358200,  maxXP: 375400,  emoji: '📦', color: '#ec4899' },
+      { level: 47, name: 'Mito Acadêmico',            minXP: 375400,  maxXP: 393000,  emoji: '🧬', color: '#be185d' },
+      { level: 48, name: 'Fenômeno Imortal',          minXP: 393000,  maxXP: 411000,  emoji: '💫', color: '#9d174d' },
+      { level: 49, name: 'Semideus dos Estudos',      minXP: 411000,  maxXP: 429400,  emoji: '⚜️', color: '#f59e0b' },
+      { level: 50, name: '🎓 APROVADO — PROVA 2026',   minXP: 429400,  maxXP: Infinity, emoji: '👑', color: '#eab308' }
     ];
     
     // ============================================
     // SISTEMA DE BADGES (50+ BADGES)
     // ============================================
     const BADGES = {
+      // ============================================
+      // BADGES PERMANENTES (nunca resetam)
+      // ============================================
+
       // BADGES DE MARCO INICIAL
       primeira_sessao: {
         id: 'primeira_sessao',
@@ -2493,7 +2648,7 @@
         xpReward: 400
       },
       
-      // BADGES DE DUO/CASAL
+      // BADGES DE DUO/CASAL (permanentes)
       ambos_estudaram: {
         id: 'ambos_estudaram',
         name: 'Dia de Casal',
@@ -2535,12 +2690,621 @@
         category: 'final',
         condition: (stats) => stats.totalBadges >= 30,
         xpReward: 5000
+      },
+
+      // ============================================
+      // +60 BADGES NOVOS
+      // ============================================
+
+      // MARCOS AVANÇADOS
+      trezentas_sessoes: {
+        id: 'trezentas_sessoes', name: 'Incrível', description: 'Complete 300 sessões de estudo',
+        emoji: '🌟', rarity: 'platina', category: 'marcos',
+        condition: (s) => s.totalSessions >= 300, xpReward: 1500
+      },
+      quinhentas_sessoes: {
+        id: 'quinhentas_sessoes', name: 'Lenda das Sessões', description: 'Complete 500 sessões',
+        emoji: '🦅', rarity: 'especial', category: 'marcos',
+        condition: (s) => s.totalSessions >= 500, xpReward: 3000
+      },
+      mil_sessoes: {
+        id: 'mil_sessoes', name: 'Milênio de Estudos', description: 'Complete 1000 sessões',
+        emoji: '🌌', rarity: 'especial', category: 'marcos',
+        condition: (s) => s.totalSessions >= 1000, xpReward: 10000
+      },
+      cinco_sessoes: {
+        id: 'cinco_sessoes', name: 'Aquecendo Motores', description: 'Complete 5 sessões de estudo',
+        emoji: '🔰', rarity: 'bronze', category: 'marcos',
+        condition: (s) => s.totalSessions >= 5, xpReward: 75
+      },
+      vinte_cinco_sessoes: {
+        id: 'vinte_cinco_sessoes', name: 'Quarto de Cem', description: 'Complete 25 sessões',
+        emoji: '🎯', rarity: 'bronze', category: 'marcos',
+        condition: (s) => s.totalSessions >= 25, xpReward: 150
+      },
+
+      // TEMPO DE ESTUDO AVANÇADO
+      quatrocentas_horas: {
+        id: 'quatrocentas_horas', name: 'Quarteto de Centenas', description: 'Estude 400 horas no total',
+        emoji: '🏔️', rarity: 'platina', category: 'tempo',
+        condition: (s) => s.totalMinutes >= 24000, xpReward: 2000
+      },
+      quinhentas_horas: {
+        id: 'quinhentas_horas', name: 'Meio Milênio de Horas', description: 'Estude 500 horas no total',
+        emoji: '🚀', rarity: 'especial', category: 'tempo',
+        condition: (s) => s.totalMinutes >= 30000, xpReward: 4000
+      },
+      vinte_horas: {
+        id: 'vinte_horas', name: 'Primeiro Marco', description: 'Estude 20 horas no total',
+        emoji: '🌤️', rarity: 'bronze', category: 'tempo',
+        condition: (s) => s.totalMinutes >= 1200, xpReward: 100
+      },
+      cinquenta_horas: {
+        id: 'cinquenta_horas', name: 'Meio Centenário', description: 'Estude 50 horas no total',
+        emoji: '⚡', rarity: 'prata', category: 'tempo',
+        condition: (s) => s.totalMinutes >= 3000, xpReward: 300
+      },
+      cento_cinquenta_horas: {
+        id: 'cento_cinquenta_horas', name: 'Ferreiro do Tempo', description: 'Estude 150 horas no total',
+        emoji: '⚒️', rarity: 'ouro', category: 'tempo',
+        condition: (s) => s.totalMinutes >= 9000, xpReward: 700
+      },
+      sessao_longa: {
+        id: 'sessao_longa', name: 'Ultra Foco', description: 'Complete uma sessão de 4+ horas',
+        emoji: '🧠', rarity: 'ouro', category: 'tempo',
+        condition: (s) => s.longestSession >= 240, xpReward: 400
+      },
+      sessao_gigante: {
+        id: 'sessao_gigante', name: 'Maratona Total', description: 'Complete uma sessão de 6+ horas',
+        emoji: '🌊', rarity: 'platina', category: 'tempo',
+        condition: (s) => s.longestSession >= 360, xpReward: 800
+      },
+
+      // STREAK AVANÇADO
+      streak_mes: {
+        id: 'streak_mes', name: 'Mês Completo', description: 'Mantenha 30 dias de streak',
+        emoji: '📅', rarity: 'platina', category: 'streak',
+        condition: (s) => s.streak >= 30, xpReward: 1200
+      },
+      streak_dois_meses: {
+        id: 'streak_dois_meses', name: 'Bimestre Perfeito', description: 'Mantenha 60 dias de streak',
+        emoji: '🔥', rarity: 'especial', category: 'streak',
+        condition: (s) => s.streak >= 60, xpReward: 2500
+      },
+      streak_cem: {
+        id: 'streak_cem', name: 'Centenário de Fogo', description: 'Mantenha 100 dias de streak',
+        emoji: '🌋', rarity: 'especial', category: 'streak',
+        condition: (s) => s.streak >= 100, xpReward: 5000
+      },
+      streak_dois: {
+        id: 'streak_dois', name: 'Faísca', description: 'Mantenha 2 dias de streak',
+        emoji: '✨', rarity: 'bronze', category: 'streak',
+        condition: (s) => s.streak >= 2, xpReward: 30
+      },
+      streak_cinco: {
+        id: 'streak_cinco', name: 'Cinco em Cinco', description: 'Mantenha 5 dias de streak',
+        emoji: '🌡️', rarity: 'bronze', category: 'streak',
+        condition: (s) => s.streak >= 5, xpReward: 80
+      },
+      streak_dez: {
+        id: 'streak_dez', name: 'Dez Dias de Foco', description: 'Mantenha 10 dias de streak',
+        emoji: '💥', rarity: 'prata', category: 'streak',
+        condition: (s) => s.streak >= 10, xpReward: 200
+      },
+
+      // PERFORMANCE AVANÇADA
+      cem_questoes: {
+        id: 'cem_questoes', name: 'Caçador de Questões', description: 'Resolva 100 questões no total',
+        emoji: '🎪', rarity: 'bronze', category: 'performance',
+        condition: (s) => s.totalQuestions >= 100, xpReward: 150
+      },
+      quinhentas_questoes: {
+        id: 'quinhentas_questoes', name: 'Meio Milhar', description: 'Resolva 500 questões no total',
+        emoji: '📊', rarity: 'prata', category: 'performance',
+        condition: (s) => s.totalQuestions >= 500, xpReward: 400
+      },
+      mil_questoes: {
+        id: 'mil_questoes', name: 'Milhar de Questões', description: 'Resolva 1000 questões no total',
+        emoji: '💎', rarity: 'ouro', category: 'performance',
+        condition: (s) => s.totalQuestions >= 1000, xpReward: 800
+      },
+      cinco_mil_questoes: {
+        id: 'cinco_mil_questoes', name: 'Banco de Questões Vivo', description: 'Resolva 5000 questões',
+        emoji: '🧬', rarity: 'platina', category: 'performance',
+        condition: (s) => s.totalQuestions >= 5000, xpReward: 3000
+      },
+      acerto_noventa: {
+        id: 'acerto_noventa', name: 'Quase Perfeito', description: 'Tenha 90%+ de acerto numa sessão',
+        emoji: '🎖️', rarity: 'ouro', category: 'performance',
+        condition: (s) => s.bestAccuracy >= 90, xpReward: 500
+      },
+      acerto_cem: {
+        id: 'acerto_cem', name: 'Gabarito Total', description: 'Acerte 100% numa sessão',
+        emoji: '💯', rarity: 'platina', category: 'performance',
+        condition: (s) => s.bestAccuracy >= 100, xpReward: 1000
+      },
+      acerto_setenta: {
+        id: 'acerto_setenta', name: 'Acima da Média', description: 'Tenha 70%+ de acerto numa sessão',
+        emoji: '📈', rarity: 'prata', category: 'performance',
+        condition: (s) => s.bestAccuracy >= 70, xpReward: 200
+      },
+
+      // MATÉRIAS
+      cinco_materias: {
+        id: 'cinco_materias', name: 'Multidisciplinar', description: 'Estude 5 matérias diferentes',
+        emoji: '🗂️', rarity: 'prata', category: 'materias',
+        condition: (s) => s.uniqueSubjects >= 5, xpReward: 200
+      },
+      dez_materias: {
+        id: 'dez_materias', name: 'Generalista', description: 'Estude 10 matérias diferentes',
+        emoji: '📚', rarity: 'ouro', category: 'materias',
+        condition: (s) => s.uniqueSubjects >= 10, xpReward: 500
+      },
+      quinze_materias: {
+        id: 'quinze_materias', name: 'Enciclopédia Viva', description: 'Estude 15 matérias diferentes',
+        emoji: '🌍', rarity: 'platina', category: 'materias',
+        condition: (s) => s.uniqueSubjects >= 15, xpReward: 1000
+      },
+      tres_materias: {
+        id: 'tres_materias', name: 'Triatleta do Saber', description: 'Estude 3 matérias diferentes',
+        emoji: '🎭', rarity: 'bronze', category: 'materias',
+        condition: (s) => s.uniqueSubjects >= 3, xpReward: 100
+      },
+
+      // DIFICULDADE
+      dez_faceis: {
+        id: 'dez_faceis', name: 'Aquecimento Completo', description: 'Complete 10 sessões fáceis',
+        emoji: '🌱', rarity: 'bronze', category: 'dificuldade',
+        condition: (s) => s.easySessions >= 10, xpReward: 80
+      },
+      cinquenta_faceis: {
+        id: 'cinquenta_faceis', name: 'Base Sólida', description: 'Complete 50 sessões fáceis',
+        emoji: '🏗️', rarity: 'prata', category: 'dificuldade',
+        condition: (s) => s.easySessions >= 50, xpReward: 250
+      },
+      vinte_medios: {
+        id: 'vinte_medios', name: 'Zona de Conforto Superada', description: 'Complete 20 sessões médias',
+        emoji: '⚖️', rarity: 'prata', category: 'dificuldade',
+        condition: (s) => s.mediumSessions >= 20, xpReward: 200
+      },
+      cem_medios: {
+        id: 'cem_medios', name: 'Equilibrista', description: 'Complete 100 sessões médias',
+        emoji: '🎪', rarity: 'ouro', category: 'dificuldade',
+        condition: (s) => s.mediumSessions >= 100, xpReward: 600
+      },
+      dez_dificeis: {
+        id: 'dez_dificeis', name: 'Guerreiro Iniciante', description: 'Complete 10 sessões difíceis',
+        emoji: '🛡️', rarity: 'prata', category: 'dificuldade',
+        condition: (s) => s.hardSessions >= 10, xpReward: 300
+      },
+      cinquenta_dificeis: {
+        id: 'cinquenta_dificeis', name: 'Veterano da Batalha', description: 'Complete 50 sessões difíceis',
+        emoji: '⚔️', rarity: 'ouro', category: 'dificuldade',
+        condition: (s) => s.hardSessions >= 50, xpReward: 800
+      },
+      cem_dificeis: {
+        id: 'cem_dificeis', name: 'Invencível', description: 'Complete 100 sessões difíceis',
+        emoji: '🗡️', rarity: 'platina', category: 'dificuldade',
+        condition: (s) => s.hardSessions >= 100, xpReward: 2000
+      },
+
+      // CONSISTÊNCIA
+      trinta_sessoes_mes: {
+        id: 'trinta_sessoes_mes', name: 'Mês Produtivo', description: 'Faça 30 sessões de estudo',
+        emoji: '📆', rarity: 'prata', category: 'consistencia',
+        condition: (s) => s.totalSessions >= 30, xpReward: 200
+      },
+      sessoes_flash: {
+        id: 'sessoes_flash', name: 'Micro-estudante', description: 'Faça 10 sessões de 15-25 min',
+        emoji: '⚡', rarity: 'bronze', category: 'consistencia',
+        condition: (s) => s.shortSessions >= 10, xpReward: 100
+      },
+      sessoes_flash_50: {
+        id: 'sessoes_flash_50', name: 'Flash Master', description: 'Faça 50 sessões de 15-25 min',
+        emoji: '🌪️', rarity: 'prata', category: 'consistencia',
+        condition: (s) => s.shortSessions >= 50, xpReward: 350
+      },
+      sessoes_flash_100: {
+        id: 'sessoes_flash_100', name: 'Velocista do Saber', description: 'Faça 100 sessões de 15-25 min',
+        emoji: '🏎️', rarity: 'ouro', category: 'consistencia',
+        condition: (s) => s.shortSessions >= 100, xpReward: 700
+      },
+      duzentas_horas_consistencia: {
+        id: 'duzentas_horas_consistencia', name: 'Duzentas Horas', description: 'Estude 200 horas no total',
+        emoji: '🌠', rarity: 'ouro', category: 'consistencia',
+        condition: (s) => s.totalMinutes >= 12000, xpReward: 1000
+      },
+
+      // ESPECIAIS
+      primeira_badge: {
+        id: 'primeira_badge', name: 'Colecionador Iniciante', description: 'Desbloqueie sua primeira badge',
+        emoji: '🎁', rarity: 'bronze', category: 'especial',
+        condition: (s) => s.totalBadges >= 1, xpReward: 50
+      },
+      cinco_badges: {
+        id: 'cinco_badges', name: 'Coleção Crescendo', description: 'Desbloqueie 5 badges',
+        emoji: '🎀', rarity: 'bronze', category: 'especial',
+        condition: (s) => s.totalBadges >= 5, xpReward: 100
+      },
+      dez_badges: {
+        id: 'dez_badges', name: 'Museu Pessoal', description: 'Desbloqueie 10 badges',
+        emoji: '🏛️', rarity: 'prata', category: 'especial',
+        condition: (s) => s.totalBadges >= 10, xpReward: 200
+      },
+      vinte_badges: {
+        id: 'vinte_badges', name: 'Galeria de Conquistas', description: 'Desbloqueie 20 badges',
+        emoji: '🖼️', rarity: 'ouro', category: 'especial',
+        condition: (s) => s.totalBadges >= 20, xpReward: 500
+      },
+      quarenta_badges: {
+        id: 'quarenta_badges', name: 'Tesouro de Medalhas', description: 'Desbloqueie 40 badges',
+        emoji: '💰', rarity: 'platina', category: 'especial',
+        condition: (s) => s.totalBadges >= 40, xpReward: 1500
+      },
+      sessenta_badges: {
+        id: 'sessenta_badges', name: 'Lenda das Conquistas', description: 'Desbloqueie 60 badges',
+        emoji: '🌟', rarity: 'especial', category: 'especial',
+        condition: (s) => s.totalBadges >= 60, xpReward: 5000
+      },
+
+      // DUO / CASAL
+      cinco_dias_casal: {
+        id: 'cinco_dias_casal', name: 'Semana do Casal', description: 'Ambos estudam por 5 dias seguidos',
+        emoji: '💑', rarity: 'prata', category: 'duo',
+        condition: (s) => s.bothStudiedSameDay && s.streak >= 5, xpReward: 300
+      },
+      tres_duelos: {
+        id: 'tres_duelos', name: 'Gladiador do Casal', description: 'Vença 3 duelos semanais',
+        emoji: '🥊', rarity: 'ouro', category: 'duo',
+        condition: (s) => s.duelsWon >= 3, xpReward: 600
+      },
+      dez_duelos: {
+        id: 'dez_duelos', name: 'Campeão Invicto', description: 'Vença 10 duelos semanais',
+        emoji: '🏆', rarity: 'platina', category: 'duo',
+        condition: (s) => s.duelsWon >= 10, xpReward: 2000
+      },
+      parceiro_online: {
+        id: 'parceiro_online', name: 'Estudando Junto', description: 'Seu parceiro está online enquanto você estuda',
+        emoji: '🤝', rarity: 'bronze', category: 'duo',
+        condition: (s) => s.bothStudiedSameDay, xpReward: 100
+      },
+
+      // FINAL / CONQUISTAS SUPREMAS
+      oitocentas_horas: {
+        id: 'oitocentas_horas', name: 'Mestre do Tempo', description: 'Estude 800 horas no total',
+        emoji: '⏳', rarity: 'especial', category: 'final',
+        condition: (s) => s.totalMinutes >= 48000, xpReward: 8000
+      },
+      mil_horas: {
+        id: 'mil_horas', name: 'Mil Horas de Glória', description: 'Estude 1000 horas no total',
+        emoji: '🌅', rarity: 'especial', category: 'final',
+        condition: (s) => s.totalMinutes >= 60000, xpReward: 15000
+      },
+      aprovado: {
+        id: 'aprovado', name: '🎓 APROVADO!', description: 'Chegou ao fim da jornada — parabéns pela dedicação!',
+        emoji: '🎓', rarity: 'especial', category: 'final',
+        condition: (s) => s.totalMinutes >= 6000 && s.totalSessions >= 200, xpReward: 99999
+      }
+    };
+
+    // ============================================
+    // BADGES SEMANAIS (resetam toda semana,
+    // mas o contador de conquistas é mantido)
+    // ============================================
+    const WEEKLY_BADGES = {
+      semana_mais_horas: {
+        id: 'semana_mais_horas',
+        name: 'Rei das Horas',
+        description: 'Estudou mais horas esta semana',
+        emoji: '⏱️',
+        rarity: 'ouro',
+        category: 'semanal',
+        xpReward: 400,
+        icon: '⏱️'
+      },
+      semana_mais_sessoes: {
+        id: 'semana_mais_sessoes',
+        name: 'Mestre da Consistência',
+        description: 'Fez mais sessões esta semana',
+        emoji: '📚',
+        rarity: 'prata',
+        category: 'semanal',
+        xpReward: 300,
+        icon: '📚'
+      },
+      semana_mais_questoes: {
+        id: 'semana_mais_questoes',
+        name: 'Máquina de Questões',
+        description: 'Resolveu mais questões esta semana',
+        emoji: '📝',
+        rarity: 'prata',
+        category: 'semanal',
+        xpReward: 300,
+        icon: '📝'
+      },
+      semana_melhor_acerto: {
+        id: 'semana_melhor_acerto',
+        name: 'Precisão Cirúrgica',
+        description: 'Teve melhor acerto médio esta semana',
+        emoji: '🎯',
+        rarity: 'ouro',
+        category: 'semanal',
+        xpReward: 350,
+        icon: '🎯'
+      },
+      semana_campeao_geral: {
+        id: 'semana_campeao_geral',
+        name: '👑 Campeão da Semana',
+        description: 'Maior pontuação geral da semana',
+        emoji: '🏆',
+        rarity: 'platina',
+        category: 'semanal',
+        xpReward: 600,
+        icon: '🏆'
+      },
+
+      // ============================================
+      // +50 BADGES SEMANAIS NOVOS
+      // ============================================
+
+      // HORAS
+      semana_5h: {
+        id: 'semana_5h', name: 'Semana Produtiva', description: 'Estudou 5+ horas nesta semana',
+        emoji: '🌤️', rarity: 'bronze', category: 'semanal', xpReward: 150, icon: '⏱️'
+      },
+      semana_10h: {
+        id: 'semana_10h', name: 'Semana Intensa', description: 'Estudou 10+ horas nesta semana',
+        emoji: '🔥', rarity: 'prata', category: 'semanal', xpReward: 300, icon: '⏱️'
+      },
+      semana_20h: {
+        id: 'semana_20h', name: 'Semana Monstruosa', description: 'Estudou 20+ horas nesta semana',
+        emoji: '💪', rarity: 'ouro', category: 'semanal', xpReward: 600, icon: '⏱️'
+      },
+      semana_30h: {
+        id: 'semana_30h', name: 'Semana Épica', description: 'Estudou 30+ horas nesta semana',
+        emoji: '🌋', rarity: 'platina', category: 'semanal', xpReward: 1200, icon: '⏱️'
+      },
+      semana_40h: {
+        id: 'semana_40h', name: 'Semana Lendária', description: 'Estudou 40+ horas nesta semana',
+        emoji: '🚀', rarity: 'especial', category: 'semanal', xpReward: 2000, icon: '⏱️'
+      },
+
+      // SESSÕES
+      semana_3_sessoes: {
+        id: 'semana_3_sessoes', name: 'Trio da Semana', description: 'Completou 3+ sessões nesta semana',
+        emoji: '📗', rarity: 'bronze', category: 'semanal', xpReward: 100, icon: '📚'
+      },
+      semana_7_sessoes: {
+        id: 'semana_7_sessoes', name: 'Uma por Dia', description: 'Completou 7+ sessões nesta semana',
+        emoji: '📘', rarity: 'prata', category: 'semanal', xpReward: 250, icon: '📚'
+      },
+      semana_10_sessoes: {
+        id: 'semana_10_sessoes', name: 'Dezena Semanal', description: 'Completou 10+ sessões nesta semana',
+        emoji: '📙', rarity: 'ouro', category: 'semanal', xpReward: 500, icon: '📚'
+      },
+      semana_15_sessoes: {
+        id: 'semana_15_sessoes', name: 'Quinzena Dedicada', description: 'Completou 15+ sessões nesta semana',
+        emoji: '📕', rarity: 'platina', category: 'semanal', xpReward: 900, icon: '📚'
+      },
+      semana_20_sessoes: {
+        id: 'semana_20_sessoes', name: 'Vinte Vezes Focado', description: 'Completou 20+ sessões nesta semana',
+        emoji: '🏅', rarity: 'especial', category: 'semanal', xpReward: 1500, icon: '📚'
+      },
+
+      // QUESTÕES
+      semana_50_questoes: {
+        id: 'semana_50_questoes', name: 'Caça Questões', description: 'Resolveu 50+ questões nesta semana',
+        emoji: '🎯', rarity: 'bronze', category: 'semanal', xpReward: 120, icon: '📝'
+      },
+      semana_100_questoes: {
+        id: 'semana_100_questoes', name: 'Centena Semanal', description: 'Resolveu 100+ questões nesta semana',
+        emoji: '💯', rarity: 'prata', category: 'semanal', xpReward: 300, icon: '📝'
+      },
+      semana_200_questoes: {
+        id: 'semana_200_questoes', name: 'Duzentas na Semana', description: 'Resolveu 200+ questões nesta semana',
+        emoji: '🧠', rarity: 'ouro', category: 'semanal', xpReward: 600, icon: '📝'
+      },
+      semana_500_questoes: {
+        id: 'semana_500_questoes', name: 'Fábrica de Respostas', description: 'Resolveu 500+ questões nesta semana',
+        emoji: '⚙️', rarity: 'platina', category: 'semanal', xpReward: 1500, icon: '📝'
+      },
+      semana_1000_questoes: {
+        id: 'semana_1000_questoes', name: 'Milhar Semanal', description: 'Resolveu 1000+ questões nesta semana',
+        emoji: '🌌', rarity: 'especial', category: 'semanal', xpReward: 3000, icon: '📝'
+      },
+
+      // ACERTO
+      semana_acerto_60: {
+        id: 'semana_acerto_60', name: 'Aprovado na Semana', description: 'Média de 60%+ de acerto nesta semana',
+        emoji: '✅', rarity: 'bronze', category: 'semanal', xpReward: 150, icon: '🎯'
+      },
+      semana_acerto_75: {
+        id: 'semana_acerto_75', name: 'Atirador Certeiro', description: 'Média de 75%+ de acerto nesta semana',
+        emoji: '🏹', rarity: 'prata', category: 'semanal', xpReward: 350, icon: '🎯'
+      },
+      semana_acerto_85: {
+        id: 'semana_acerto_85', name: 'Precisão de Elite', description: 'Média de 85%+ de acerto nesta semana',
+        emoji: '🎖️', rarity: 'ouro', category: 'semanal', xpReward: 700, icon: '🎯'
+      },
+      semana_acerto_95: {
+        id: 'semana_acerto_95', name: 'Quase Infalível', description: 'Média de 95%+ de acerto nesta semana',
+        emoji: '💎', rarity: 'platina', category: 'semanal', xpReward: 1400, icon: '🎯'
+      },
+      semana_acerto_100: {
+        id: 'semana_acerto_100', name: 'Semana Perfeita', description: 'Média de 100% de acerto nesta semana',
+        emoji: '🌟', rarity: 'especial', category: 'semanal', xpReward: 2500, icon: '🎯'
+      },
+
+      // DIFICULDADE
+      semana_dificil_5: {
+        id: 'semana_dificil_5', name: 'Corajoso da Semana', description: 'Completou 5+ sessões difíceis nesta semana',
+        emoji: '🗡️', rarity: 'prata', category: 'semanal', xpReward: 250, icon: '💪'
+      },
+      semana_dificil_10: {
+        id: 'semana_dificil_10', name: 'Guerreiro Semanal', description: 'Completou 10+ sessões difíceis nesta semana',
+        emoji: '⚔️', rarity: 'ouro', category: 'semanal', xpReward: 600, icon: '💪'
+      },
+      semana_dificil_20: {
+        id: 'semana_dificil_20', name: 'Berserk da Semana', description: 'Completou 20+ sessões difíceis nesta semana',
+        emoji: '🔱', rarity: 'platina', category: 'semanal', xpReward: 1200, icon: '💪'
+      },
+      semana_facil_10: {
+        id: 'semana_facil_10', name: 'Aquecimento Semanal', description: 'Completou 10 sessões fáceis nesta semana',
+        emoji: '🌿', rarity: 'bronze', category: 'semanal', xpReward: 100, icon: '💪'
+      },
+      semana_variado: {
+        id: 'semana_variado', name: 'Eclético da Semana', description: 'Sessões de todas as dificuldades nesta semana',
+        emoji: '🎨', rarity: 'prata', category: 'semanal', xpReward: 300, icon: '💪'
+      },
+
+      // MATÉRIAS
+      semana_2_materias: {
+        id: 'semana_2_materias', name: 'Dupla da Semana', description: 'Estudou 2+ matérias diferentes nesta semana',
+        emoji: '📂', rarity: 'bronze', category: 'semanal', xpReward: 100, icon: '📚'
+      },
+      semana_3_materias: {
+        id: 'semana_3_materias', name: 'Tripla da Semana', description: 'Estudou 3+ matérias diferentes nesta semana',
+        emoji: '🗂️', rarity: 'prata', category: 'semanal', xpReward: 250, icon: '📚'
+      },
+      semana_5_materias: {
+        id: 'semana_5_materias', name: 'Multidisciplinar da Semana', description: 'Estudou 5+ matérias nesta semana',
+        emoji: '🌍', rarity: 'ouro', category: 'semanal', xpReward: 500, icon: '📚'
+      },
+
+      // REGULARIDADE SEMANAL
+      semana_todo_dia: {
+        id: 'semana_todo_dia', name: 'Sem Faltas', description: 'Estudou todos os 7 dias da semana',
+        emoji: '🗓️', rarity: 'ouro', category: 'semanal', xpReward: 700, icon: '📅'
+      },
+      semana_5_dias: {
+        id: 'semana_5_dias', name: 'Dia de Folga Merecido', description: 'Estudou 5+ dias da semana',
+        emoji: '📆', rarity: 'prata', category: 'semanal', xpReward: 300, icon: '📅'
+      },
+      semana_inicio_forte: {
+        id: 'semana_inicio_forte', name: 'Segunda-Feira Poderosa', description: 'Estudou na segunda-feira',
+        emoji: '💫', rarity: 'bronze', category: 'semanal', xpReward: 80, icon: '📅'
+      },
+      semana_fim_forte: {
+        id: 'semana_fim_forte', name: 'Fim de Semana Produtivo', description: 'Estudou no sábado E no domingo',
+        emoji: '🏖️', rarity: 'prata', category: 'semanal', xpReward: 250, icon: '📅'
+      },
+
+      // CONQUISTAS ESPECIAIS SEMANAIS
+      semana_mais_pontos_ever: {
+        id: 'semana_mais_pontos_ever', name: 'Recorde Pessoal', description: 'Sua melhor semana de pontuação',
+        emoji: '📈', rarity: 'platina', category: 'semanal', xpReward: 1000, icon: '🏆'
+      },
+      semana_sessao_longa: {
+        id: 'semana_sessao_longa', name: 'Maratonista Semanal', description: 'Fez uma sessão de 3+ horas nesta semana',
+        emoji: '🏃', rarity: 'ouro', category: 'semanal', xpReward: 500, icon: '⏱️'
+      },
+      semana_100_certas: {
+        id: 'semana_100_certas', name: 'Centenário de Acertos', description: '100+ respostas certas nesta semana',
+        emoji: '🎊', rarity: 'prata', category: 'semanal', xpReward: 400, icon: '🎯'
+      },
+      semana_zero_faltas: {
+        id: 'semana_zero_faltas', name: 'Incansável', description: 'Estudou todos os dias sem exceção',
+        emoji: '🛡️', rarity: 'ouro', category: 'semanal', xpReward: 800, icon: '📅'
+      },
+      semana_mais_rapido: {
+        id: 'semana_mais_rapido', name: 'Velocista da Semana', description: 'Mais sessões em menos tempo',
+        emoji: '⚡', rarity: 'prata', category: 'semanal', xpReward: 300, icon: '⏱️'
+      },
+
+      // DUELO / CASAL
+      semana_virada: {
+        id: 'semana_virada', name: 'A Grande Virada', description: 'Estava perdendo e virou o jogo na semana',
+        emoji: '🔄', rarity: 'platina', category: 'semanal', xpReward: 900, icon: '⚔️'
+      },
+      semana_dominio: {
+        id: 'semana_dominio', name: 'Domínio Total', description: 'Venceu em todas as categorias da semana',
+        emoji: '👑', rarity: 'especial', category: 'semanal', xpReward: 2000, icon: '🏆'
+      },
+      semana_par: {
+        id: 'semana_par', name: 'Empate Honroso', description: 'Semana terminou empatada — respeito!',
+        emoji: '🤝', rarity: 'prata', category: 'semanal', xpReward: 200, icon: '💕'
+      },
+      semana_ambos_10h: {
+        id: 'semana_ambos_10h', name: 'Casal Dedicado', description: 'Ambos estudaram 10h+ nesta semana',
+        emoji: '💑', rarity: 'ouro', category: 'semanal', xpReward: 600, icon: '💕'
+      },
+      semana_ambos_20h: {
+        id: 'semana_ambos_20h', name: 'Super Casal', description: 'Ambos estudaram 20h+ nesta semana',
+        emoji: '💞', rarity: 'platina', category: 'semanal', xpReward: 1500, icon: '💕'
+      },
+
+      // TEMÁTICAS
+      semana_noturna: {
+        id: 'semana_noturna', name: 'Coruja da Semana', description: 'Estudou de madrugada esta semana',
+        emoji: '🦉', rarity: 'prata', category: 'semanal', xpReward: 250, icon: '🌙'
+      },
+      semana_madrugadora: {
+        id: 'semana_madrugadora', name: 'Passarinho da Manhã', description: 'Estudou antes das 7h esta semana',
+        emoji: '🌅', rarity: 'prata', category: 'semanal', xpReward: 250, icon: '☀️'
+      },
+      semana_foco_total: {
+        id: 'semana_foco_total', name: 'Foco Total', description: 'Mais de 2h em uma única sessão nesta semana',
+        emoji: '🧘', rarity: 'prata', category: 'semanal', xpReward: 300, icon: '⏱️'
+      },
+      semana_micro_mestre: {
+        id: 'semana_micro_mestre', name: 'Micro Mestre', description: '5+ sessões curtas (15-25min) nesta semana',
+        emoji: '⚡', rarity: 'bronze', category: 'semanal', xpReward: 150, icon: '📚'
+      },
+      semana_diversificada: {
+        id: 'semana_diversificada', name: 'Semana Diversificada', description: 'Sessões fáceis, médias e difíceis na mesma semana',
+        emoji: '🌈', rarity: 'ouro', category: 'semanal', xpReward: 450, icon: '💪'
       }
     };
     
     // ============================================
-    // DESAFIOS SEMANAIS
+    // SISTEMA DE CAMPEONATO SEMANAL
     // ============================================
+    
+    // Calcula o número da semana atual (ISO) — reinicia toda segunda-feira
+    const getWeekKey = () => {
+      const now = new Date();
+      const startOfYear = new Date(now.getFullYear(), 0, 1);
+      const dayOfYear = Math.floor((now - startOfYear) / 86400000);
+      const weekNum = Math.ceil((dayOfYear + startOfYear.getDay() + 1) / 7);
+      return `${now.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+    };
+
+    // Retorna segunda-feira e domingo da semana atual
+    const getWeekRange = () => {
+      const now = new Date();
+      const day = now.getDay(); // 0=dom, 1=seg...
+      const diffToMonday = (day === 0 ? -6 : 1 - day);
+      const monday = new Date(now);
+      monday.setDate(now.getDate() + diffToMonday);
+      monday.setHours(0, 0, 0, 0);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      sunday.setHours(23, 59, 59, 999);
+      return { monday, sunday };
+    };
+
+    // Filtra sessões da semana atual
+    const getWeeklySessions = (sessions) => {
+      const { monday, sunday } = getWeekRange();
+      return sessions.filter(s => {
+        const d = new Date(s.date || s.createdAt || 0);
+        return d >= monday && d <= sunday;
+      });
+    };
+
+    // Calcula stats semanais de um usuário
+    const calcWeeklyStats = (sessions) => {
+      const weekly = getWeeklySessions(sessions);
+      const hours = weekly.reduce((acc, s) => acc + (s.h || 0) + (s.m || 0) / 60, 0);
+      const sessionCount = weekly.length;
+      const questions = weekly.reduce((acc, s) => acc + (s.qT || 0), 0);
+      const correctAnswers = weekly.reduce((acc, s) => acc + (s.qC || 0), 0);
+      const accuracy = questions > 0 ? (correctAnswers / questions) * 100 : 0;
+      const score = Math.round(hours * 40 + sessionCount * 10 + questions * 0.5 + accuracy * 2);
+      return { hours: parseFloat(hours.toFixed(1)), sessionCount, questions, accuracy: parseFloat(accuracy.toFixed(1)), score };
+    };
+
+    // Desafios semanais
     const WEEKLY_CHALLENGES = [
       {
         id: 'mais_horas',
@@ -2660,6 +3424,271 @@
     // ============================================
     // DADOS DOS USUÁRIOS
     // ============================================
+
+    // ============================================
+    // MATÉRIAS FIXAS POR PROVA
+    // ============================================
+    // ============================================
+    // VERSÍCULOS BÍBLICOS DIÁRIOS (200 versículos)
+    // ============================================
+    const VERSICULOS = [
+      { texto: 'Porque sou eu que conheço os planos que tenho para vocês, planos de fazê-los prosperar e não de causar dano, planos de dar a vocês esperança e um futuro.', ref: 'Jeremias 29:11' },
+      { texto: 'Tudo posso naquele que me fortalece.', ref: 'Filipenses 4:13' },
+      { texto: 'O Senhor é o meu pastor; nada me faltará.', ref: 'Salmos 23:1' },
+      { texto: 'Confia no Senhor de todo o teu coração e não te apoies na tua própria prudência.', ref: 'Provérbios 3:5' },
+      { texto: 'Não temas, porque eu sou contigo; não te assombres, porque eu sou o teu Deus; eu te fortaleço, e te ajudo.', ref: 'Isaías 41:10' },
+      { texto: 'Bem-aventurados os que têm fome e sede de justiça, porque serão fartos.', ref: 'Mateus 5:6' },
+      { texto: 'O início da sabedoria é o temor do Senhor.', ref: 'Provérbios 9:10' },
+      { texto: 'Mas os que esperam no Senhor renovarão as suas forças, subirão com asas como águias.', ref: 'Isaías 40:31' },
+      { texto: 'Seja forte e corajoso. Não se apavore nem desanime, pois o Senhor, o seu Deus, estará com você por onde você andar.', ref: 'Josué 1:9' },
+      { texto: 'O amor é paciente, o amor é bondoso... suporta tudo, crê em tudo, espera tudo, persevera em tudo.', ref: '1 Coríntios 13:4,7' },
+      { texto: 'Busca primeiro o reino de Deus e a sua justiça, e todas estas coisas vos serão acrescentadas.', ref: 'Mateus 6:33' },
+      { texto: 'O Senhor é a minha luz e a minha salvação; a quem temerei?', ref: 'Salmos 27:1' },
+      { texto: 'Alegrai-vos sempre no Senhor; outra vez digo: alegrai-vos.', ref: 'Filipenses 4:4' },
+      { texto: 'Deus é o nosso refúgio e força, socorro bem presente na angústia.', ref: 'Salmos 46:1' },
+      { texto: 'Pois Deus não nos deu espírito de covardia, mas de poder, de amor e de equilíbrio.', ref: '2 Timóteo 1:7' },
+      { texto: 'Porque Deus tanto amou o mundo que deu o seu Filho Unigênito.', ref: 'João 3:16' },
+      { texto: 'Entrega o teu caminho ao Senhor; confia nele, e ele tudo fará.', ref: 'Salmos 37:5' },
+      { texto: 'E tudo o que fizerdes, fazei-o de coração, como ao Senhor.', ref: 'Colossenses 3:23' },
+      { texto: 'Ainda que eu andasse pelo vale da sombra da morte, não temeria mal algum, porque tu estás comigo.', ref: 'Salmos 23:4' },
+      { texto: 'Quem acha uma esposa acha uma coisa boa e obtém o favor do Senhor.', ref: 'Provérbios 18:22' },
+      { texto: 'Espera no Senhor, anima-te, e ele fortalecerá o teu coração.', ref: 'Salmos 27:14' },
+      { texto: 'O coração alegre é um bom remédio, mas o espírito abatido seca os ossos.', ref: 'Provérbios 17:22' },
+      { texto: 'Não se turbe o vosso coração; credes em Deus, crede também em mim.', ref: 'João 14:1' },
+      { texto: 'Posso, pois, chegar confiante ao trono da graça, para receber misericórdia.', ref: 'Hebreus 4:16' },
+      { texto: 'Tudo tem o seu tempo determinado, e há tempo para todo propósito debaixo do céu.', ref: 'Eclesiastes 3:1' },
+      { texto: 'A fé é a certeza daquilo que esperamos e a prova das coisas que não vemos.', ref: 'Hebreus 11:1' },
+      { texto: 'Porque as minhas cogitações não são as vossas cogitações, nem os vossos caminhos os meus caminhos, diz o Senhor.', ref: 'Isaías 55:8' },
+      { texto: 'Portanto, não vos inquieteis com o dia de amanhã; o amanhã cuidará de si mesmo.', ref: 'Mateus 6:34' },
+      { texto: 'Mas sede fortes e não desfaleçam as vossas mãos, porque há recompensa para o vosso trabalho.', ref: '2 Crônicas 15:7' },
+      { texto: 'Instrui o menino no caminho em que deve andar, e quando envelhecer não se desviará dele.', ref: 'Provérbios 22:6' },
+      { texto: 'Porque eu sei que o meu Redentor vive.', ref: 'Jó 19:25' },
+      { texto: 'A palavra do Senhor é lâmpada para os meus pés e luz para o meu caminho.', ref: 'Salmos 119:105' },
+      { texto: 'Louvai o Senhor, porque ele é bom; porque a sua misericórdia dura para sempre.', ref: 'Salmos 136:1' },
+      { texto: 'Cria em mim, ó Deus, um coração puro e renova dentro de mim um espírito firme.', ref: 'Salmos 51:10' },
+      { texto: 'Não me envergonho do evangelho, pois ele é o poder de Deus para a salvação de todo aquele que crê.', ref: 'Romanos 1:16' },
+      { texto: 'A paz de Deus, que excede todo o entendimento, guardará os vossos corações e os vossos pensamentos.', ref: 'Filipenses 4:7' },
+      { texto: 'Se algum de vós tem falta de sabedoria, peça-a a Deus, que a todos dá liberalmente.', ref: 'Tiago 1:5' },
+      { texto: 'O Senhor está perto de todos os que o invocam, de todos os que o invocam em verdade.', ref: 'Salmos 145:18' },
+      { texto: 'Aguarda o Senhor e guarda o seu caminho, e ele te exaltará para possuíres a terra.', ref: 'Salmos 37:34' },
+      { texto: 'E conhecereis a verdade, e a verdade vos libertará.', ref: 'João 8:32' },
+      { texto: 'Sê fiel até à morte e dar-te-ei a coroa da vida.', ref: 'Apocalipse 2:10' },
+      { texto: 'Bem-aventurado o homem que acha sabedoria, e o homem que adquire conhecimento.', ref: 'Provérbios 3:13' },
+      { texto: 'Porque a salvação vem do Senhor; seja a tua bênção sobre o teu povo.', ref: 'Salmos 3:8' },
+      { texto: 'Alegra-te na tua juventude e anda nos caminhos do teu coração.', ref: 'Eclesiastes 11:9' },
+      { texto: 'Nada façais por contenda ou por vanglória, mas por humildade; cada um considere os outros superiores a si mesmo.', ref: 'Filipenses 2:3' },
+      { texto: 'Respondeu Jesus: Eu sou o caminho, a verdade e a vida.', ref: 'João 14:6' },
+      { texto: 'Dando sempre graças por tudo a Deus Pai, em nome de nosso Senhor Jesus Cristo.', ref: 'Efésios 5:20' },
+      { texto: 'Todas as coisas cooperam para o bem daqueles que amam a Deus.', ref: 'Romanos 8:28' },
+      { texto: 'Não te deixes vencer pelo mal, mas vence o mal com o bem.', ref: 'Romanos 12:21' },
+      { texto: 'O temor do Senhor é o princípio da ciência; os loucos desprezam a sabedoria e a instrução.', ref: 'Provérbios 1:7' },
+      { texto: 'Porque qual é o homem que deseja a vida e quer ver dias bons? Guarda a tua língua do mal.', ref: 'Salmos 34:12-13' },
+      { texto: 'Faze o bem e não faças o mal, porque teu é o Senhor.', ref: 'Miqueias 6:8' },
+      { texto: 'Antes de te formar no ventre materno, eu te conheci; antes de nasceres, eu te separei.', ref: 'Jeremias 1:5' },
+      { texto: 'Porque para Deus nada é impossível.', ref: 'Lucas 1:37' },
+      { texto: 'Deleita-te também no Senhor, e ele te concederá os desejos do teu coração.', ref: 'Salmos 37:4' },
+      { texto: 'Sede fortes e corajosos. Não temais nem vos espanteis diante deles.', ref: 'Deuteronômio 31:6' },
+      { texto: 'Senhor, tu me sondas e me conheces. Tu sabes quando me assento e quando me levanto.', ref: 'Salmos 139:1-2' },
+      { texto: 'O Senhor abençoe você e o guarde; o Senhor faça o seu rosto resplandecer sobre você.', ref: 'Números 6:24-25' },
+      { texto: 'Porque os seus pensamentos sobre vós são pensamentos de paz e não de mal.', ref: 'Jeremias 29:11b' },
+      { texto: 'Quem persevera até o fim será salvo.', ref: 'Mateus 24:13' },
+      { texto: 'Mas eu e a minha casa serviremos ao Senhor.', ref: 'Josué 24:15' },
+      { texto: 'E tudo o que pedirdes em meu nome, eu o farei, para que o Pai seja glorificado no Filho.', ref: 'João 14:13' },
+      { texto: 'Sê perseverante no que aprendeste e de que te convenceste.', ref: '2 Timóteo 3:14' },
+      { texto: 'Porque a palavra de Deus é viva, eficaz e mais cortante do que qualquer espada de dois gumes.', ref: 'Hebreus 4:12' },
+      { texto: 'Não vos conformeis com este século, mas transformai-vos pela renovação da vossa mente.', ref: 'Romanos 12:2' },
+      { texto: 'Posso, pois, chegar confiante ao trono da graça para receber socorro no momento oportuno.', ref: 'Hebreus 4:16' },
+      { texto: 'Sede sempre alegres. Orai sem cessar. Em tudo dai graças.', ref: '1 Tessalonicenses 5:16-18' },
+      { texto: 'Pois Deus não enviou o seu Filho ao mundo para condenar o mundo, mas para salvá-lo.', ref: 'João 3:17' },
+      { texto: 'O Senhor é bom para os que nele esperam, para a alma que o busca.', ref: 'Lamentações 3:25' },
+      { texto: 'Com efeito, somos feitura dele, criados em Cristo Jesus para as boas obras.', ref: 'Efésios 2:10' },
+      { texto: 'Todo escritura divinamente inspirada é proveitosa para ensinar, para repreender, para corrigir.', ref: '2 Timóteo 3:16' },
+      { texto: 'Qual é o homem que teme ao Senhor? A esse ele ensinará o caminho que deve escolher.', ref: 'Salmos 25:12' },
+      { texto: 'Não me importo com nada disso, nem considero a minha vida de algum valor para mim mesmo.', ref: 'Atos 20:24' },
+      { texto: 'Que a graça do Senhor Jesus Cristo, o amor de Deus e a comunhão do Espírito Santo sejam com todos vós.', ref: '2 Coríntios 13:14' },
+      { texto: 'Pois tu, Senhor, és bom e pronto para perdoar, e grande em misericórdia para com todos.', ref: 'Salmos 86:5' },
+      { texto: 'Portanto, também nós, pois temos a rodear-nos tão grande nuvem de testemunhas, corramos com perseverança a carreira que nos está proposta.', ref: 'Hebreus 12:1' },
+      { texto: 'Deus é espírito, e importa que os que o adoram o adorem em espírito e em verdade.', ref: 'João 4:24' },
+      { texto: 'Sabemos que, quando ele aparecer, seremos semelhantes a ele, porque o veremos como ele é.', ref: '1 João 3:2' },
+      { texto: 'Bendize, ó minha alma, ao Senhor, e tudo o que há em mim bendiga o seu santo nome.', ref: 'Salmos 103:1' },
+      { texto: 'Novo mandamento vos dou: Que vos ameis uns aos outros; assim como eu vos amei.', ref: 'João 13:34' },
+      { texto: 'O dom gracioso de Deus é a vida eterna em Cristo Jesus, nosso Senhor.', ref: 'Romanos 6:23' },
+      { texto: 'Mas agora que fostes libertados do pecado e tornados servos de Deus, tendes o vosso fruto.', ref: 'Romanos 6:22' },
+      { texto: 'E havendo chegado ao lugar, disse-lhes: Orai para que não entreis em tentação.', ref: 'Lucas 22:40' },
+      { texto: 'Guardai o meu mandamento: amai-vos uns aos outros, como eu vos amei.', ref: 'João 15:12' },
+      { texto: 'Porque a misericórdia do Senhor é desde a eternidade até a eternidade sobre os que o temem.', ref: 'Salmos 103:17' },
+      { texto: 'Bem-aventurado o povo que conhece o som alegre; andará, ó Senhor, à luz do teu rosto.', ref: 'Salmos 89:15' },
+      { texto: 'A carta mata, mas o Espírito vivifica.', ref: '2 Coríntios 3:6' },
+      { texto: 'Porque eu vivo e vós vivereis também.', ref: 'João 14:19' },
+      { texto: 'Em Deus somente, repousa a minha alma; dele vem a minha salvação.', ref: 'Salmos 62:1' },
+      { texto: 'O amor não faz mal ao próximo. De sorte que o amor é a perfeição da lei.', ref: 'Romanos 13:10' },
+      { texto: 'Deus resistência aos soberbos, mas dá graça aos humildes.', ref: 'Tiago 4:6' },
+      { texto: 'Cuidai de vós mesmos; se teu irmão pecar, repreende-o; e se ele se arrepender, perdoa-o.', ref: 'Lucas 17:3' },
+      { texto: 'O fruto do justo é árvore de vida, e o que ganha almas é sábio.', ref: 'Provérbios 11:30' },
+      { texto: 'Porque para isso trabalhamos e somos injuriados; porque esperamos no Deus vivo.', ref: '1 Timóteo 4:10' },
+      { texto: 'Ensina-nos a contar os nossos dias, para que alcancemos coração sábio.', ref: 'Salmos 90:12' },
+      { texto: 'Sede sábios como as serpentes e simples como as pombas.', ref: 'Mateus 10:16' },
+      { texto: 'Tem misericórdia de mim, ó Deus, segundo a tua benignidade; apaga as minhas transgressões.', ref: 'Salmos 51:1' },
+      { texto: 'Eis aqui o que é bom e o que o Senhor pede de ti: que pratiques a justiça, e ames a misericórdia.', ref: 'Miqueias 6:8' },
+      { texto: 'O Senhor te guarde de todo o mal; guarde a tua alma. O Senhor guarde a tua entrada e a tua saída.', ref: 'Salmos 121:7-8' },
+      { texto: 'Honra a teu pai e a tua mãe, para que se prolonguem os teus dias na terra.', ref: 'Êxodo 20:12' },
+      { texto: 'Porque onde estiverem dois ou três reunidos em meu nome, ali estou no meio deles.', ref: 'Mateus 18:20' },
+      { texto: 'Bem-aventurado o homem que suporta a tentação; porque, quando for provado, receberá a coroa da vida.', ref: 'Tiago 1:12' },
+      { texto: 'O temor do Senhor prolonga os dias, mas os anos dos ímpios serão abreviados.', ref: 'Provérbios 10:27' },
+      { texto: 'Melhor é o pouco com o temor do Senhor do que o grande tesouro onde há perturbação.', ref: 'Provérbios 15:16' },
+      { texto: 'Mas eu, com grande misericórdia, te recolherei.', ref: 'Isaías 54:7' },
+      { texto: 'De modo que aquele que pensa estar em pé veja que não caia.', ref: '1 Coríntios 10:12' },
+      { texto: 'O Senhor esteja convosco enquanto estiverdes com ele; e se o buscardes, ele se deixará achar.', ref: '2 Crônicas 15:2' },
+      { texto: 'Não te deixes vencer pelo mal, mas vence o mal com o bem.', ref: 'Romanos 12:21' },
+      { texto: 'Eis que estou convosco todos os dias, até a consumação dos séculos.', ref: 'Mateus 28:20' },
+      { texto: 'Mas, se algum de vós tem falta de sabedoria, peça-a a Deus, que a todos dá liberalmente.', ref: 'Tiago 1:5' },
+      { texto: 'Porque a misericórdia é melhor do que o sacrifício, e o conhecimento de Deus mais do que os holocaustos.', ref: 'Oséias 6:6' },
+      { texto: 'Mas a sabedoria que vem do alto é primeiramente pura, depois pacífica, moderada.', ref: 'Tiago 3:17' },
+      { texto: 'O Senhor é o meu auxílio e o meu escudo; nele o meu coração confia.', ref: 'Salmos 28:7' },
+      { texto: 'Porque não há nada encoberto que não haja de ser descoberto, nem escondido que não haja de ser sabido.', ref: 'Mateus 10:26' },
+      { texto: 'Nunca se aparte da tua boca o livro desta lei; medita nele de dia e de noite.', ref: 'Josué 1:8' },
+      { texto: 'Levantarei os meus olhos para os montes; de onde vem o meu socorro? O meu socorro vem do Senhor.', ref: 'Salmos 121:1-2' },
+      { texto: 'O que cobre as suas transgressões não prosperará; mas o que as confessa e as deixa alcançará misericórdia.', ref: 'Provérbios 28:13' },
+      { texto: 'Porque sou persuadido de que nem a morte, nem a vida... nos poderá separar do amor de Deus.', ref: 'Romanos 8:38-39' },
+      { texto: 'E o efeito da justiça será a paz; e o serviço da justiça, o repouso e a segurança para sempre.', ref: 'Isaías 32:17' },
+      { texto: 'A bondade e a misericórdia certamente me seguirão todos os dias da minha vida.', ref: 'Salmos 23:6' },
+      { texto: 'Todo aquele que invocar o nome do Senhor será salvo.', ref: 'Atos 2:21' },
+      { texto: 'O ferro afia o ferro, assim um homem afia o rosto do seu amigo.', ref: 'Provérbios 27:17' },
+      { texto: 'A oração de fé salvará o enfermo, e o Senhor o levantará.', ref: 'Tiago 5:15' },
+      { texto: 'Porque tu és o meu refúgio, uma torre forte contra o inimigo.', ref: 'Salmos 61:3' },
+      { texto: 'Sede bons uns para com os outros, misericordiosos, perdoando-vos uns aos outros.', ref: 'Efésios 4:32' },
+      { texto: 'O coração do homem discerne o seu caminho, mas o Senhor lhe dirige os passos.', ref: 'Provérbios 16:9' },
+      { texto: 'Peçam, e lhes será dado; busquem, e encontrarão; batam, e a porta lhes será aberta.', ref: 'Mateus 7:7' },
+      { texto: 'Confia no Senhor com todo o coração e não te apoies na tua própria inteligência.', ref: 'Provérbios 3:5' },
+      { texto: 'Porque todo aquele que se exaltar será humilhado, e todo aquele que se humilhar será exaltado.', ref: 'Mateus 23:12' },
+      { texto: 'Quando você atravessar as águas, eu estarei com você; quando atravessar os rios, eles não o submergirão.', ref: 'Isaías 43:2' },
+      { texto: 'Olha para o Senhor e serás iluminado; o teu rosto não se envergonhará.', ref: 'Salmos 34:5' },
+      { texto: 'Lançando sobre ele toda a vossa ansiedade, porque ele tem cuidado de vós.', ref: '1 Pedro 5:7' },
+      { texto: 'Eu vim para que tenham vida e a tenham em abundância.', ref: 'João 10:10' },
+      { texto: 'Porque as suas misericórdias não têm fim. Renovam-se cada manhã. Grande é a tua fidelidade.', ref: 'Lamentações 3:22-23' },
+      { texto: 'Firmaste a terra sobre os seus fundamentos, para que não se mova eternamente.', ref: 'Salmos 104:5' },
+      { texto: 'Porque Deus é o que opera em vós tanto o querer como o realizar.', ref: 'Filipenses 2:13' },
+      { texto: 'Melhor é a sabedoria do que armas de guerra; mas um só pecador destrói muito bem.', ref: 'Eclesiastes 9:18' },
+      { texto: 'Mas tu, Senhor, és um escudo à minha volta; tu és a minha glória, e o que exaltas a minha cabeça.', ref: 'Salmos 3:3' },
+      { texto: 'E a esperança não decepciona, porque o amor de Deus está derramado em nossos corações.', ref: 'Romanos 5:5' },
+      { texto: 'Mas o Senhor é fiel; ele os fortalecerá e os guardará do maligno.', ref: '2 Tessalonicenses 3:3' },
+      { texto: 'Sonda-me, ó Deus, e conhece o meu coração; prova-me e conhece os meus pensamentos.', ref: 'Salmos 139:23' },
+      { texto: 'Aprendi a estar contente em qualquer estado em que me encontre.', ref: 'Filipenses 4:11' },
+      { texto: 'Nenhuma arma forjada contra você prosperará.', ref: 'Isaías 54:17' },
+      { texto: 'O Senhor é compassivo e misericordioso, tardio em irar-se e cheio de amor.', ref: 'Salmos 103:8' },
+      { texto: 'Portanto, se alguém está em Cristo, é nova criatura; as coisas velhas já passaram; eis que se fizeram novas.', ref: '2 Coríntios 5:17' },
+      { texto: 'O fruto do Espírito é: amor, alegria, paz, longanimidade, benignidade, bondade, fidelidade, mansidão, temperança.', ref: 'Gálatas 5:22-23' },
+      { texto: 'O Senhor é justo em todos os seus caminhos, e misericordioso em todas as suas obras.', ref: 'Salmos 145:17' },
+      { texto: 'Porque eu sou o Senhor teu Deus, que te tomo pela tua mão direita e te digo: Não temas, eu te ajudo.', ref: 'Isaías 41:13' },
+      { texto: 'A glória do Senhor há de durar para sempre; o Senhor se alegrará nas suas obras.', ref: 'Salmos 104:31' },
+      { texto: 'Vem a mim, todos os que estais cansados e sobrecarregados, e eu vos aliviarei.', ref: 'Mateus 11:28' },
+      { texto: 'Que o Deus da esperança vos encha de todo o gozo e paz no crer, a fim de que abundeis em esperança.', ref: 'Romanos 15:13' },
+      { texto: 'Porque o Senhor conhece o caminho dos justos, mas o caminho dos ímpios perecerá.', ref: 'Salmos 1:6' },
+      { texto: 'Glorificai a Deus no vosso corpo e no vosso espírito, os quais pertencem a Deus.', ref: '1 Coríntios 6:20' },
+      { texto: 'O nome do Senhor é uma torre forte; o justo corre a ela e está em segurança.', ref: 'Provérbios 18:10' },
+      { texto: 'Não procureis a vossa própria vingança, amados, mas dai lugar à ira, porque está escrito: A mim pertence a vingança.', ref: 'Romanos 12:19' },
+      { texto: 'O Senhor é meu auxílio, e não temerei o que me possa fazer o homem.', ref: 'Hebreus 13:6' },
+      { texto: 'Toda boa dádiva e todo dom perfeito vêm do alto, descendo do Pai das luzes.', ref: 'Tiago 1:17' },
+      { texto: 'Ouve, Israel: O Senhor nosso Deus é o único Senhor. Amarás o Senhor teu Deus de todo o teu coração.', ref: 'Deuteronômio 6:4-5' },
+      { texto: 'E a paz de Deus, que excede todo entendimento, guardará os vossos corações e os vossos pensamentos em Cristo Jesus.', ref: 'Filipenses 4:7' },
+      { texto: 'Guardai o coração com toda diligência, porque dele procedem as saídas da vida.', ref: 'Provérbios 4:23' },
+      { texto: 'O ânimo do homem suportará a sua enfermidade, mas o espírito abatido quem o suportará?', ref: 'Provérbios 18:14' },
+      { texto: 'Nele vivemos, nos movemos e existimos.', ref: 'Atos 17:28' },
+      { texto: 'Bem-aventurado o homem cujos pecados são perdoados e cujos erros são cobertos.', ref: 'Romanos 4:7' },
+      { texto: 'Porque não vos envergonheis do evangelho de Cristo, pois é o poder de Deus para salvação.', ref: 'Romanos 1:16' },
+      { texto: 'Tanto quanto está em vós, tende paz com todos os homens.', ref: 'Romanos 12:18' },
+      { texto: 'Eu sei que o meu Redentor vive, e no fim se levantará sobre o pó.', ref: 'Jó 19:25' },
+      { texto: 'Nunca permita Deus que eu me glorie senão na cruz de nosso Senhor Jesus Cristo.', ref: 'Gálatas 6:14' },
+      { texto: 'Pois o Senhor é bom; a sua misericórdia dura para sempre, e a sua fidelidade por todas as gerações.', ref: 'Salmos 100:5' },
+      { texto: 'Apresentai os vossos corpos como sacrifício vivo, santo e agradável a Deus.', ref: 'Romanos 12:1' },
+      { texto: 'Sede sobrios e vigilantes. O diabo, vosso adversário, anda em derredor, como leão que ruge.', ref: '1 Pedro 5:8' },
+      { texto: 'O meu Deus suprirá todas as vossas necessidades segundo as suas riquezas em glória.', ref: 'Filipenses 4:19' },
+      { texto: 'Escolhe hoje a quem sirvas... quanto a mim e à minha casa, serviremos ao Senhor.', ref: 'Josué 24:15' },
+      { texto: 'Que a palavra de Cristo habite em vós ricamente em toda a sabedoria.', ref: 'Colossenses 3:16' },
+      { texto: 'O amor cobre multidão de pecados.', ref: '1 Pedro 4:8' },
+      { texto: 'Ensinai-me a fazer a tua vontade, porque tu és o meu Deus; o teu bom Espírito me guie a uma terra plana.', ref: 'Salmos 143:10' },
+      { texto: 'Portanto, se Deus assim veste a erva do campo... quanto mais a vós, homens de pequena fé?', ref: 'Mateus 6:30' },
+      { texto: 'Porque tu me formaste os rins, e me teceste no ventre de minha mãe. Graças te dou, porque me fizeste de uma maneira formidável e maravilhosa.', ref: 'Salmos 139:13-14' },
+      { texto: 'Sede imitadores de mim, como também eu de Cristo.', ref: '1 Coríntios 11:1' },
+      { texto: 'A bênção do Senhor enriquece, e não traz consigo tristeza.', ref: 'Provérbios 10:22' },
+      { texto: 'Mas a veredas dos justos é como a luz da alva, que vai aumentando até ser dia perfeito.', ref: 'Provérbios 4:18' },
+      { texto: 'O eterno Deus é o teu refúgio, e por baixo estão os braços eternos.', ref: 'Deuteronômio 33:27' },
+      { texto: 'Que o vosso modo de viver seja sem avareza; contentai-vos com o que tendes.', ref: 'Hebreus 13:5' },
+      { texto: 'Não houve ainda tentação que tomasse vós que não fosse própria dos homens; e Deus é fiel, que não vos deixará tentar.', ref: '1 Coríntios 10:13' },
+      { texto: 'Melhor é um dia nos teus átrios do que mil noutros lugares.', ref: 'Salmos 84:10' },
+      { texto: 'A geração passa, e outra geração vem; mas a terra permanece para sempre.', ref: 'Eclesiastes 1:4' },
+      { texto: 'Porque Cristo é o fim da lei para justiça de todo aquele que crê.', ref: 'Romanos 10:4' },
+      { texto: 'Porque nele foram criadas todas as coisas, tanto nos céus como na terra.', ref: 'Colossenses 1:16' },
+      { texto: 'Bem-aventurados os misericordiosos, porque eles alcançarão misericórdia.', ref: 'Mateus 5:7' },
+      { texto: 'Ele dá força ao cansado e multiplica o vigor do que não tem nenhum.', ref: 'Isaías 40:29' },
+      { texto: 'Assim como o corpo sem o espírito está morto, assim também a fé sem as obras é morta.', ref: 'Tiago 2:26' },
+      { texto: 'E ele disse: Minha graça te basta, porque o meu poder se aperfeiçoa na fraqueza.', ref: '2 Coríntios 12:9' },
+      { texto: 'O Senhor teu Deus está no meio de ti, poderoso para salvar.', ref: 'Sofonias 3:17' },
+      { texto: 'A riqueza não ajudará no dia da ira, mas a justiça livrará da morte.', ref: 'Provérbios 11:4' },
+      { texto: 'Porque pela graça sois salvos, mediante a fé; e isto não vem de vós, é dom de Deus.', ref: 'Efésios 2:8' },
+      { texto: 'Como o pai se compadece dos filhos, assim o Senhor se compadece dos que o temem.', ref: 'Salmos 103:13' },
+      { texto: 'O amor é a plenitude da lei.', ref: 'Romanos 13:10' },
+      { texto: 'Pois não me envergonho do Evangelho; porque é o poder de Deus para a salvação de todo o crente.', ref: 'Romanos 1:16' },
+      { texto: 'Bem-aventurados os limpos de coração, porque eles verão a Deus.', ref: 'Mateus 5:8' },
+      { texto: 'Deixo-vos a paz, a minha paz vos dou; não a dou como o mundo a dá.', ref: 'João 14:27' },
+      { texto: 'Porque a tua misericórdia é melhor do que a vida; os meus lábios te louvarão.', ref: 'Salmos 63:3' },
+      { texto: 'Eis que eu faço novas todas as coisas.', ref: 'Apocalipse 21:5' }
+    ];
+
+    // Versículo do dia baseado na data
+    const getVersiculoDoDia = () => {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), 0, 0);
+      const diff = now - start;
+      const dayOfYear = Math.floor(diff / 86400000);
+      return VERSICULOS[dayOfYear % VERSICULOS.length];
+    };
+
+    const VERSICULO_HOJE = getVersiculoDoDia();
+
+    const SUBJECTS_OAB = [
+      { id: 'constitucional', name: 'Direito Constitucional', emoji: '⚖️' },
+      { id: 'civil', name: 'Direito Civil', emoji: '📜' },
+      { id: 'penal', name: 'Direito Penal', emoji: '🔒' },
+      { id: 'processual_civil', name: 'Direito Processual Civil', emoji: '📋' },
+      { id: 'processual_penal', name: 'Direito Processual Penal', emoji: '🔍' },
+      { id: 'administrativo', name: 'Direito Administrativo', emoji: '🏛️' },
+      { id: 'tributario', name: 'Direito Tributário', emoji: '💰' },
+      { id: 'trabalho', name: 'Direito do Trabalho', emoji: '👷' },
+      { id: 'processual_trabalho', name: 'Direito Processual do Trabalho', emoji: '⚙️' },
+      { id: 'empresarial', name: 'Direito Empresarial', emoji: '🏢' },
+      { id: 'consumidor', name: 'Direito do Consumidor', emoji: '🛒' },
+      { id: 'ambiental', name: 'Direito Ambiental', emoji: '🌿' },
+      { id: 'internacional', name: 'Direito Internacional', emoji: '🌍' },
+      { id: 'previdenciario', name: 'Direito Previdenciário', emoji: '🏥' },
+      { id: 'crianca_adolescente', name: 'ECA', emoji: '👶' },
+      { id: 'estatuto_oab', name: 'Estatuto da OAB e Ética', emoji: '📖' },
+      { id: 'filosofia_direito', name: 'Filosofia do Direito', emoji: '🤔' },
+      { id: 'questoes_oab', name: 'Questões OAB', emoji: '📝' },
+      { id: 'revisao_oab', name: 'Revisão Geral OAB', emoji: '🔄' }
+    ];
+
+    const SUBJECTS_ENEM = [
+      { id: 'matematica', name: 'Matemática', emoji: '📐' },
+      { id: 'portugues', name: 'Língua Portuguesa', emoji: '📝' },
+      { id: 'redacao', name: 'Redação', emoji: '✍️' },
+      { id: 'historia', name: 'História', emoji: '🏺' },
+      { id: 'geografia', name: 'Geografia', emoji: '🌎' },
+      { id: 'biologia', name: 'Biologia', emoji: '🧬' },
+      { id: 'quimica', name: 'Química', emoji: '⚗️' },
+      { id: 'fisica', name: 'Física', emoji: '⚡' },
+      { id: 'filosofia', name: 'Filosofia', emoji: '🤔' },
+      { id: 'sociologia', name: 'Sociologia', emoji: '👥' },
+      { id: 'ingles', name: 'Inglês', emoji: '🇬🇧' },
+      { id: 'espanhol', name: 'Espanhol', emoji: '🇪🇸' },
+      { id: 'artes', name: 'Artes', emoji: '🎨' },
+      { id: 'literatura', name: 'Literatura', emoji: '📚' },
+      { id: 'atualidades', name: 'Atualidades', emoji: '📰' },
+      { id: 'interpretacao', name: 'Interpretação de Texto', emoji: '👁️' },
+      { id: 'questoes_enem', name: 'Questões ENEM', emoji: '📋' },
+      { id: 'revisao_enem', name: 'Revisão Geral ENEM', emoji: '🔄' }
+    ];
+
     const USERS = {
       mana: { 
         id: 'mana', 
@@ -2669,6 +3698,9 @@
         profile: 'OAB · Direito', 
         partner: 'kelinha', 
         exam: 'oab',
+        examLabel: 'OAB XLI',
+        examDate: EXAM_DATE_OAB,
+        examDateStr: '11/10/2026',
         themeColor: '#8b5cf6'
       },
       kelinha: { 
@@ -2679,6 +3711,9 @@
         profile: 'ENEM · Ensino Médio', 
         partner: 'mana', 
         exam: 'enem',
+        examLabel: 'ENEM 2026',
+        examDate: EXAM_DATE_ENEM,
+        examDateStr: '09/11/2026',
         themeColor: '#ec4899'
       }
     };
@@ -2714,11 +3749,12 @@
     
     const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
     
-    // Calcular dias até a prova
-    const getDaysUntilExam = () => {
+    // Calcular dias até a prova (por usuário ou global)
+    const getDaysUntilExam = (userId) => {
       const now = new Date();
-      const diff = EXAM_DATE - now;
-      return Math.ceil(diff / (1000 * 60 * 60 * 24));
+      const date = userId && USERS[userId] ? USERS[userId].examDate : EXAM_DATE;
+      const diff = date - now;
+      return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
     };
     
     // ============================================
@@ -2726,7 +3762,7 @@
     // ============================================
     const Toast = ({ message, type = 'info', xp = 0, onClose }) => {
       useEffect(() => {
-        const timer = setTimeout(onClose, 4000);
+        const timer = setTimeout(onClose, 2500);
         return () => clearTimeout(timer);
       }, [onClose]);
       
@@ -3070,70 +4106,115 @@
         setIsSaving(false);
       };
       
-      const accuracy = questionsTotal > 0 
-        ? Math.round((questionsCorrect / questionsTotal) * 100) 
+      // Subject list based on user's exam
+      const subjectList = user.exam === 'oab' ? SUBJECTS_OAB : SUBJECTS_ENEM;
+      const [subjectSearch, setSubjectSearch] = useState('');
+      const filteredSubjectList = subjectSearch
+        ? subjectList.filter(s => s.name.toLowerCase().includes(subjectSearch.toLowerCase()))
+        : subjectList;
+
+      const accuracy = questionsTotal > 0
+        ? Math.round((questionsCorrect / questionsTotal) * 100)
         : 0;
-      
+
       return React.createElement('div', null,
         React.createElement('div', { className: 'mb-6' },
-          React.createElement('h2', { className: 'text-2xl font-bold mb-1' }, 
+          React.createElement('h2', { className: 'text-2xl font-bold mb-1' },
             isEditing ? 'Editar Sessão' : 'Nova Sessão'
           ),
-          React.createElement('p', { className: 'text-white-60' }, 
+          React.createElement('p', { className: 'text-white-60' },
             isEditing ? 'Atualize os dados da sessão' : 'Registre o que você estudou'
           )
         ),
-        
+
         !isEditing && React.createElement(GlassCard, { className: 'mb-4' },
           React.createElement('div', { className: 'p-5' },
             React.createElement('div', { className: 'flex items-center justify-between mb-4' },
-              React.createElement('h3', { className: 'text-lg font-semibold flex items-center gap-2' }, 
-                Icons.clock({ width: 20, height: 20, style: { color: '#8b5cf6' } }), 
+              React.createElement('h3', { className: 'text-lg font-semibold flex items-center gap-2' },
+                Icons.clock({ width: 20, height: 20, style: { color: '#8b5cf6' } }),
                 'Cronômetro'
               ),
-              React.createElement('span', { 
-                className: `timer-status ${timerRunning ? 'running' : 'paused'}` 
+              React.createElement('span', {
+                className: `timer-status ${timerRunning ? 'running' : 'paused'}`
               }, timerRunning ? '● Rodando' : '○ Pausado')
             ),
-            React.createElement('div', { 
-              className: `timer-display mb-4 ${!timerRunning ? 'paused' : ''}` 
+            React.createElement('div', {
+              className: `timer-display mb-4 ${!timerRunning ? 'paused' : ''}`
             }, formatTime(timerSeconds)),
             React.createElement('div', { className: 'flex gap-3' },
-              React.createElement('button', { 
-                className: `btn flex-1 ${timerRunning ? 'btn-outline' : user.color === 'kelinha' ? 'btn-gleici' : 'btn-primary'}`, 
-                onClick: () => setTimerRunning(!timerRunning) 
-              }, timerRunning 
-                ? React.createElement(React.Fragment, null, Icons.pause({ width: 16, height: 16 }), ' Pausar') 
+              React.createElement('button', {
+                className: `btn flex-1 ${timerRunning ? 'btn-outline' : user.color === 'kelinha' ? 'btn-gleici' : 'btn-primary'}`,
+                onClick: () => setTimerRunning(!timerRunning)
+              }, timerRunning
+                ? React.createElement(React.Fragment, null, Icons.pause({ width: 16, height: 16 }), ' Pausar')
                 : React.createElement(React.Fragment, null, Icons.play({ width: 16, height: 16 }), timerSeconds > 0 ? ' Continuar' : ' Iniciar')
               ),
-              React.createElement('button', { 
-                className: 'btn btn-outline', 
-                style: { width: 'auto', padding: '14px' }, 
-                onClick: () => { 
-                  setTimerRunning(false); 
-                  setTimerSeconds(0); 
-                  setHours(0); 
-                  setMinutes(0); 
-                } 
+              React.createElement('button', {
+                className: 'btn btn-outline',
+                style: { width: 'auto', padding: '14px' },
+                onClick: () => { setTimerRunning(false); setTimerSeconds(0); setHours(0); setMinutes(0); }
               }, Icons['rotate-ccw']({ width: 16, height: 16 }))
             )
           )
         ),
-        
+
         React.createElement(GlassCard, null,
           React.createElement('div', { className: 'p-5 space-y-5' },
+
+            // --- MATÉRIA SELECTOR ---
             React.createElement('div', null,
               React.createElement('label', { className: 'form-label' }, 'Matéria *'),
-              React.createElement('input', { 
-                type: 'text', 
-                value: subject, 
-                onChange: (e) => setSubject(e.target.value), 
-                placeholder: 'Ex: Direito Constitucional, Biologia...', 
-                list: 'subjects-list', 
-                className: 'input' 
+              // Selected badge
+              subject && React.createElement('div', {
+                style: {
+                  display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px',
+                  background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.4)',
+                  borderRadius: '12px', marginBottom: '10px'
+                }
+              },
+                React.createElement('span', { style: { fontSize: '20px' } },
+                  (subjectList.find(s => s.name === subject) || {}).emoji || '📚'
+                ),
+                React.createElement('span', { style: { flex: 1, fontWeight: '600' } }, subject),
+                React.createElement('button', {
+                  onClick: () => setSubject(''),
+                  style: { background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '18px' }
+                }, '×')
+              ),
+              // Search
+              !subject && React.createElement('input', {
+                type: 'text',
+                value: subjectSearch,
+                onChange: (e) => setSubjectSearch(e.target.value),
+                placeholder: `Buscar matéria de ${user.exam === 'oab' ? 'Direito' : 'ENEM'}...`,
+                className: 'input',
+                style: { marginBottom: '10px' }
               }),
-              React.createElement('datalist', { id: 'subjects-list' }, 
-                uniqueSubjects.map(s => React.createElement('option', { key: s, value: s }))
+              // Grid of subjects
+              !subject && React.createElement('div', {
+                style: {
+                  display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px',
+                  maxHeight: '260px', overflowY: 'auto', paddingRight: '4px'
+                }
+              },
+                filteredSubjectList.map(s =>
+                  React.createElement('button', {
+                    key: s.id,
+                    onClick: () => { setSubject(s.name); setSubjectSearch(''); },
+                    style: {
+                      display: 'flex', alignItems: 'center', gap: '8px',
+                      padding: '10px 12px', borderRadius: '12px', border: 'none', cursor: 'pointer',
+                      background: 'rgba(255,255,255,0.05)',
+                      textAlign: 'left', fontSize: '13px', fontWeight: '500', color: 'white',
+                      transition: 'all 0.2s'
+                    },
+                    onMouseEnter: (e) => e.currentTarget.style.background = 'rgba(139,92,246,0.2)',
+                    onMouseLeave: (e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
+                  },
+                    React.createElement('span', { style: { fontSize: '18px', flexShrink: 0 } }, s.emoji),
+                    React.createElement('span', { style: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, s.name)
+                  )
+                )
               )
             ),
             
@@ -3176,23 +4257,6 @@
                   onChange: (e) => setMinutes(parseInt(e.target.value) || 0), 
                   className: 'input' 
                 })
-              )
-            ),
-            
-            React.createElement('div', null,
-              React.createElement('label', { className: 'form-label' }, 'Dificuldade'),
-              React.createElement('div', { className: 'diff-grid' },
-                ['facil', 'medio', 'dificil'].map(d => 
-                  React.createElement('button', { 
-                    key: d, 
-                    type: 'button', 
-                    onClick: () => setDifficulty(d), 
-                    className: `diff-btn ${difficulty === d ? 'active ' + d : ''}` 
-                  },
-                    Icons[d === 'facil' ? 'check-circle' : d === 'medio' ? 'alert-circle' : 'brain']({ width: 18, height: 18 }),
-                    d === 'facil' ? 'Fácil' : d === 'medio' ? 'Médio' : 'Difícil'
-                  )
-                )
               )
             ),
             
@@ -3301,7 +4365,7 @@
     // ============================================
     // COMPONENTE: SISTEMA DE BADGES
     // ============================================
-    const BadgesScreen = ({ userId, sessions, unlockedBadges, addToast }) => {
+    const BadgesScreen = ({ userId, sessions, unlockedBadges, weeklyBadges, weeklyBadgeCounts, addToast }) => {
       const user = USERS[userId];
       
       const stats = useMemo(() => {
@@ -3346,6 +4410,10 @@
         };
       }, [sessions, unlockedBadges]);
       
+      const [activeTab, setActiveTab] = React.useState('permanentes');
+      const safeWeeklyBadges = weeklyBadges || [];
+      const safeCounts = weeklyBadgeCounts || {};
+
       const badgesByCategory = {
         marcos: Object.values(BADGES).filter(b => b.category === 'marcos'),
         tempo: Object.values(BADGES).filter(b => b.category === 'tempo'),
@@ -3358,71 +4426,149 @@
         duo: Object.values(BADGES).filter(b => b.category === 'duo'),
         final: Object.values(BADGES).filter(b => b.category === 'final')
       };
-      
       const categoryNames = {
-        marcos: '🏁 Marcos Iniciais',
-        tempo: '⏱️ Tempo de Estudo',
-        streak: '🔥 Streaks',
-        performance: '📊 Performance',
-        materias: '📚 Matérias',
-        dificuldade: '💪 Dificuldade',
-        especial: '✨ Especiais',
-        consistencia: '📅 Consistência',
-        duo: '💕 Casal',
-        final: '👑 Finais'
+        marcos: '🏁 Marcos Iniciais', tempo: '⏱️ Tempo de Estudo', streak: '🔥 Streaks',
+        performance: '📊 Performance', materias: '📚 Matérias', dificuldade: '💪 Dificuldade',
+        especial: '✨ Especiais', consistencia: '📅 Consistência', duo: '💕 Casal', final: '👑 Finais'
       };
-      
+
+      const rarityColor = { bronze: '#cd7f32', prata: '#aaa', ouro: '#eab308', platina: '#a78bfa', especial: '#ec4899' };
+
       return React.createElement('div', null,
-        React.createElement('div', { className: 'mb-6' },
+        // Header
+        React.createElement('div', { className: 'mb-4' },
           React.createElement('h2', { className: 'text-2xl font-bold mb-1' }, 'Conquistas'),
-          React.createElement('p', { className: 'text-white-60' }, 
-            `${unlockedBadges.length} de ${Object.keys(BADGES).length} badges desbloqueados`
+          React.createElement('p', { className: 'text-white-60' },
+            `${unlockedBadges.length} permanentes • ${safeWeeklyBadges.length} semanais ativos`
           )
         ),
-        
-        React.createElement(GlassCard, { className: 'mb-4' },
-          React.createElement('div', { className: 'p-5' },
-            React.createElement('div', { className: 'flex items-center justify-between' },
-              React.createElement('div', null,
-                React.createElement('p', { className: 'text-sm text-white-60' }, 'Progresso Total'),
-                React.createElement('p', { className: 'text-3xl font-bold text-gradient' }, 
-                  `${Math.round((unlockedBadges.length / Object.keys(BADGES).length) * 100)}%`
+
+        // Tabs
+        React.createElement('div', { className: 'filter-bar' },
+          React.createElement('button', {
+            className: `filter-btn ${activeTab === 'permanentes' ? 'active' : ''}`,
+            onClick: () => setActiveTab('permanentes')
+          }, '🏅 Permanentes'),
+          React.createElement('button', {
+            className: `filter-btn ${activeTab === 'semanais' ? 'active' : ''}`,
+            onClick: () => setActiveTab('semanais')
+          }, '🔄 Semanais')
+        ),
+
+        // ---- ABA PERMANENTES ----
+        activeTab === 'permanentes' && React.createElement('div', null,
+          React.createElement(GlassCard, { className: 'mb-4' },
+            React.createElement('div', { className: 'p-5' },
+              React.createElement('div', { className: 'flex items-center justify-between' },
+                React.createElement('div', null,
+                  React.createElement('p', { className: 'text-sm text-white-60' }, 'Progresso Total'),
+                  React.createElement('p', { className: 'text-3xl font-bold text-gradient' },
+                    `${Math.round((unlockedBadges.length / Object.keys(BADGES).length) * 100)}%`
+                  ),
+                  React.createElement('p', { style: { fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '4px' } },
+                    `${unlockedBadges.length} de ${Object.keys(BADGES).length} badges`
+                  )
+                ),
+                React.createElement(ProgressRing, { value: unlockedBadges.length, max: Object.keys(BADGES).length, size: 80, color: 'yellow' },
+                  `${unlockedBadges.length}`
+                )
+              )
+            )
+          ),
+          Object.entries(badgesByCategory).map(([category, badges]) =>
+            React.createElement('div', { key: category, className: 'badge-category' },
+              React.createElement('h3', { className: 'badge-category-title' }, categoryNames[category]),
+              React.createElement('div', { className: 'badge-grid' },
+                badges.map(badge => {
+                  const isUnlocked = unlockedBadges.includes(badge.id);
+                  return React.createElement('div', {
+                    key: badge.id,
+                    className: `badge-item ${!isUnlocked ? 'locked' : ''}`
+                  },
+                    React.createElement('span', { className: `badge-rarity ${badge.rarity}` }),
+                    React.createElement('span', { className: 'badge-icon' }, badge.emoji),
+                    React.createElement('p', { className: 'badge-name' }, badge.name),
+                    React.createElement('p', { className: 'badge-desc' }, badge.description),
+                    isUnlocked && React.createElement('span', { className: 'tag tag-gold mt-2', style: { fontSize: '10px' } },
+                      `+${badge.xpReward} XP`
+                    )
+                  );
+                })
+              )
+            )
+          )
+        ),
+
+        // ---- ABA SEMANAIS ----
+        activeTab === 'semanais' && React.createElement('div', null,
+          // Aviso de reset
+          React.createElement('div', {
+            style: {
+              background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.3)',
+              borderRadius: '14px', padding: '14px 16px', marginBottom: '16px',
+              fontSize: '13px', color: 'rgba(255,255,255,0.7)'
+            }
+          },
+            React.createElement('p', { style: { fontWeight: '700', color: '#eab308', marginBottom: '4px' } }, '🔄 Badges Semanais'),
+            React.createElement('p', null, 'Estes títulos são disputados toda semana. Ao registrar o campeão, os badges são resetados — mas seu contador de conquistas é mantido para sempre!')
+          ),
+
+          // Cards dos badges semanais
+          Object.values(WEEKLY_BADGES).map(badge => {
+            const isActive = safeWeeklyBadges.includes(badge.id);
+            const count = safeCounts[badge.id] || 0;
+            return React.createElement('div', {
+              key: badge.id,
+              style: {
+                background: isActive
+                  ? `linear-gradient(135deg, rgba(${badge.rarity === 'platina' ? '167,139,250' : '234,179,8'},0.18) 0%, rgba(139,92,246,0.1) 100%)`
+                  : 'rgba(255,255,255,0.03)',
+                border: `2px solid ${isActive ? (badge.rarity === 'platina' ? 'rgba(167,139,250,0.5)' : 'rgba(234,179,8,0.4)') : 'rgba(255,255,255,0.08)'}`,
+                borderRadius: '18px', padding: '18px', marginBottom: '12px',
+                display: 'flex', alignItems: 'center', gap: '16px',
+                opacity: isActive ? 1 : 0.55
+              }
+            },
+              // Emoji
+              React.createElement('div', {
+                style: {
+                  width: '56px', height: '56px', borderRadius: '16px', fontSize: '28px', flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: isActive
+                    ? `linear-gradient(135deg, ${badge.rarity === 'platina' ? '#a78bfa, #7c3aed' : '#eab308, #ca8a04'})`
+                    : 'rgba(255,255,255,0.06)',
+                  boxShadow: isActive ? `0 4px 20px rgba(${badge.rarity === 'platina' ? '167,139,250' : '234,179,8'},0.4)` : 'none'
+                }
+              }, badge.emoji),
+              // Info
+              React.createElement('div', { style: { flex: 1 } },
+                React.createElement('p', { style: { fontWeight: '700', fontSize: '15px' } }, badge.name),
+                React.createElement('p', { style: { fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '2px' } }, badge.description),
+                React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' } },
+                  isActive && React.createElement('span', {
+                    style: { fontSize: '10px', padding: '3px 10px', borderRadius: '20px', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e', fontWeight: '700' }
+                  }, '✓ Você tem este título!'),
+                  !isActive && React.createElement('span', {
+                    style: { fontSize: '10px', color: 'rgba(255,255,255,0.3)' }
+                  }, 'Não conquistado esta semana')
                 )
               ),
-              React.createElement(ProgressRing, {
-                value: unlockedBadges.length,
-                max: Object.keys(BADGES).length,
-                size: 80,
-                color: 'yellow'
-              }, `${unlockedBadges.length}`)
-            )
-          )
-        ),
-        
-        Object.entries(badgesByCategory).map(([category, badges]) => 
-          React.createElement('div', { key: category, className: 'badge-category' },
-            React.createElement('h3', { className: 'badge-category-title' }, 
-              categoryNames[category]
-            ),
-            React.createElement('div', { className: 'badge-grid' },
-              badges.map(badge => {
-                const isUnlocked = unlockedBadges.includes(badge.id);
-                return React.createElement('div', {
-                  key: badge.id,
-                  className: `badge-item ${!isUnlocked ? 'locked' : ''}`
+              // Contador de conquistas (permanente)
+              React.createElement('div', { style: { textAlign: 'center', flexShrink: 0 } },
+                React.createElement('div', {
+                  style: {
+                    width: '48px', height: '48px', borderRadius: '14px', display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center',
+                    background: count > 0 ? 'rgba(139,92,246,0.2)' : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${count > 0 ? 'rgba(139,92,246,0.4)' : 'rgba(255,255,255,0.08)'}`
+                  }
                 },
-                  React.createElement('span', { className: `badge-rarity ${badge.rarity}` }),
-                  React.createElement('span', { className: 'badge-icon' }, badge.emoji),
-                  React.createElement('p', { className: 'badge-name' }, badge.name),
-                  React.createElement('p', { className: 'badge-desc' }, badge.description),
-                  isUnlocked && React.createElement('span', { 
-                    className: 'tag tag-gold mt-2',
-                    style: { fontSize: '10px' }
-                  }, `+${badge.xpReward} XP`)
-                );
-              })
-            )
-          )
+                  React.createElement('span', { style: { fontSize: '20px', fontWeight: '900', color: count > 0 ? '#a78bfa' : 'rgba(255,255,255,0.2)', lineHeight: 1 } }, count),
+                  React.createElement('span', { style: { fontSize: '8px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' } }, count === 1 ? 'vez' : 'vezes')
+                )
+              )
+            );
+          })
         )
       );
     };
@@ -3432,95 +4578,221 @@
     // ============================================
     const LevelScreen = ({ userId, xp, addToast }) => {
       const user = USERS[userId];
-      
+      const daysUntilExam = getDaysUntilExam(userId);
+      const [animPct, setAnimPct] = React.useState(0);
+      const [showXP, setShowXP] = React.useState(0);
+
       const currentLevel = useMemo(() => {
         return LEVELS.find(l => xp >= l.minXP && xp < l.maxXP) || LEVELS[LEVELS.length - 1];
       }, [xp]);
-      
+
       const nextLevel = useMemo(() => {
         return LEVELS.find(l => l.level === currentLevel.level + 1);
       }, [currentLevel]);
-      
+
+      // Personaliza nome do nível 50 por usuário
+      const levelName = currentLevel.level === 50
+        ? `🎓 APROVADO — ${user.examLabel}`
+        : currentLevel.name;
+
       const xpInLevel = xp - currentLevel.minXP;
-      const xpNeeded = nextLevel ? nextLevel.minXP - currentLevel.minXP : 0;
-      const xpProgress = nextLevel ? (xpInLevel / xpNeeded) * 100 : 100;
-      
+      const xpNeeded = nextLevel ? nextLevel.minXP - currentLevel.minXP : 1;
+      const xpProgress = nextLevel ? Math.min((xpInLevel / xpNeeded) * 100, 100) : 100;
+
+      // Anima a barra e o contador de XP na entrada
+      useEffect(() => {
+        const t1 = setTimeout(() => setAnimPct(xpProgress), 120);
+        let start = 0;
+        const step = xp / 60;
+        const t2 = setInterval(() => {
+          start = Math.min(start + step, xp);
+          setShowXP(Math.floor(start));
+          if (start >= xp) clearInterval(t2);
+        }, 16);
+        return () => { clearTimeout(t1); clearInterval(t2); };
+      }, [xp, xpProgress]);
+
       const xpSources = [
         { name: 'Sessões', icon: '📚', xp: Math.floor(xp * 0.3) },
         { name: 'Questões', icon: '📝', xp: Math.floor(xp * 0.25) },
         { name: 'Streaks', icon: '🔥', xp: Math.floor(xp * 0.2) },
         { name: 'Badges', icon: '🏆', xp: Math.floor(xp * 0.25) }
       ];
-      
+
       return React.createElement('div', null,
+
         React.createElement('div', { className: 'mb-6' },
           React.createElement('h2', { className: 'text-2xl font-bold mb-1' }, 'Nível & XP'),
           React.createElement('p', { className: 'text-white-60' }, 'Acompanhe sua evolução')
         ),
-        
+
+        // ---- CARD PRINCIPAL COM BARRA DE XP ----
         React.createElement('div', { className: 'level-card' },
+
           React.createElement('div', { className: 'level-header' },
             React.createElement('div', { className: 'level-info' },
               React.createElement('div', { className: 'level-badge' }, currentLevel.emoji),
               React.createElement('div', null,
-                React.createElement('p', { className: 'level-title' }, currentLevel.name),
+                React.createElement('p', { className: 'level-title' }, levelName),
                 React.createElement('p', { className: 'level-subtitle' }, `Nível ${currentLevel.level}`)
               )
             ),
             React.createElement('div', { className: 'level-xp' },
-              React.createElement('p', { className: 'level-xp-value' }, xp.toLocaleString()),
+              React.createElement('p', { className: 'level-xp-value' }, showXP.toLocaleString('pt-BR')),
               React.createElement('p', { className: 'level-xp-label' }, 'XP Total')
             )
           ),
-          
+
+          // Barra animada com bolinha deslizante
           React.createElement('div', { className: 'xp-bar-container' },
+            React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '8px' } },
+              React.createElement('span', { style: { fontSize: '12px', color: 'rgba(255,255,255,0.5)' } },
+                nextLevel ? `Nível ${currentLevel.level} → ${currentLevel.level + 1}` : 'Nível Máximo'
+              ),
+              React.createElement('span', { className: 'xp-bar-pct' }, `${Math.round(animPct)}%`)
+            ),
             React.createElement('div', { className: 'xp-bar' },
-              React.createElement('div', { 
-                className: 'xp-bar-fill',
-                style: { width: `${xpProgress}%` }
+              React.createElement('div', { className: 'xp-bar-track' },
+                React.createElement('div', {
+                  className: 'xp-bar-fill',
+                  style: { width: `${animPct}%` }
+                })
+              ),
+              // Bolinha deslizante
+              animPct > 2 && React.createElement('div', {
+                className: 'xp-bar-glow',
+                style: { left: `calc(${animPct}% - 10px)` }
               })
             ),
             React.createElement('div', { className: 'xp-bar-labels' },
-              React.createElement('span', null, `${xpInLevel.toLocaleString()} XP`),
-              React.createElement('span', null, nextLevel 
-                ? `Faltam ${(nextLevel.minXP - xp).toLocaleString()} XP para ${nextLevel.name}`
-                : 'Nível Máximo! 🎉'
+              React.createElement('span', null, `${xpInLevel.toLocaleString('pt-BR')} XP neste nível`),
+              React.createElement('span', null, nextLevel
+                ? `Faltam ${(nextLevel.minXP - xp).toLocaleString('pt-BR')} XP`
+                : '🎉 Máximo!'
               )
             )
           )
         ),
-        
+
+        // ---- TRILHA DE NÍVEIS ----
+        React.createElement('div', { className: 'mb-4' },
+          React.createElement('h3', { className: 'text-lg font-semibold mb-3' }, '🗺️ Trilha de Níveis'),
+          React.createElement(GlassCard, null,
+            React.createElement('div', { className: 'level-trail' },
+              React.createElement('div', { className: 'level-trail-track' },
+                LEVELS.map((lvl, i) => {
+                  const isDone = xp >= lvl.maxXP;
+                  const isCurrent = xp >= lvl.minXP && xp < lvl.maxXP;
+                  return React.createElement(React.Fragment, { key: lvl.level },
+                    i > 0 && React.createElement('div', {
+                      className: `level-trail-line ${xp >= lvl.minXP ? 'done' : ''}`
+                    }),
+                    React.createElement('div', {
+                      className: `level-trail-node ${isDone ? 'done' : ''} ${isCurrent ? 'current' : ''}`
+                    },
+                      React.createElement('div', { className: 'level-trail-node-dot' }, lvl.emoji),
+                      React.createElement('span', { className: 'level-trail-label' }, `Nv${lvl.level}`)
+                    )
+                  );
+                })
+              )
+            )
+          )
+        ),
+
+        // ---- PRÓXIMO NÍVEL ----
         nextLevel && React.createElement(GlassCard, { className: 'mb-4' },
           React.createElement('div', { className: 'p-5' },
             React.createElement('div', { className: 'flex items-center gap-4' },
-              React.createElement('div', { 
+              React.createElement('div', {
                 className: 'streak-icon',
-                style: { 
-                  background: `linear-gradient(135deg, ${nextLevel.color}, ${currentLevel.color})`,
-                  width: '48px',
-                  height: '48px',
-                  fontSize: '24px'
-                }
+                style: { background: `linear-gradient(135deg, ${nextLevel.color}, ${currentLevel.color})`, width: '48px', height: '48px', fontSize: '24px' }
               }, nextLevel.emoji),
-              React.createElement('div', null,
+              React.createElement('div', { style: { flex: 1 } },
                 React.createElement('p', { className: 'text-sm text-white-60' }, 'Próximo Nível'),
-                React.createElement('p', { className: 'text-lg font-semibold' }, nextLevel.name)
+                React.createElement('p', { className: 'text-lg font-semibold' }, nextLevel.name),
+                React.createElement('div', { style: { marginTop: '8px', background: 'rgba(255,255,255,0.07)', borderRadius: '8px', height: '6px', overflow: 'hidden' } },
+                  React.createElement('div', {
+                    style: {
+                      height: '100%',
+                      width: `${animPct}%`,
+                      background: `linear-gradient(90deg, ${nextLevel.color}, ${currentLevel.color})`,
+                      borderRadius: '8px',
+                      transition: 'width 1.4s cubic-bezier(0.22,1,0.36,1)'
+                    }
+                  })
+                )
+              ),
+              React.createElement('div', { style: { textAlign: 'right' } },
+                React.createElement('p', { style: { fontSize: '18px', fontWeight: '800', color: '#eab308' } },
+                  (nextLevel.minXP - xp).toLocaleString('pt-BR')
+                ),
+                React.createElement('p', { style: { fontSize: '10px', color: 'rgba(255,255,255,0.4)' } }, 'XP faltando')
               )
             )
           )
         ),
-        
-        React.createElement('h3', { className: 'text-lg font-semibold mb-3' }, 'Fontes de XP'),
+
+        // ---- FONTES DE XP ----
+        // ---- COUNTDOWN DA PROVA ----
+        React.createElement('div', {
+          style: {
+            background: `linear-gradient(135deg, rgba(${user.exam === 'oab' ? '139,92,246' : '236,72,153'},0.15) 0%, rgba(${user.exam === 'oab' ? '124,58,237' : '219,39,119'},0.08) 100%)`,
+            border: `1px solid rgba(${user.exam === 'oab' ? '139,92,246' : '236,72,153'},0.35)`,
+            borderRadius: '20px', padding: '20px', marginBottom: '16px',
+            display: 'flex', alignItems: 'center', gap: '20px'
+          }
+        },
+          React.createElement('div', {
+            style: {
+              width: '64px', height: '64px', borderRadius: '16px', flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px',
+              background: `linear-gradient(135deg, ${user.exam === 'oab' ? '#8b5cf6, #6d28d9' : '#ec4899, #be185d'})`,
+              boxShadow: `0 8px 24px rgba(${user.exam === 'oab' ? '139,92,246' : '236,72,153'},0.4)`
+            }
+          }, user.exam === 'oab' ? '⚖️' : '📝'),
+          React.createElement('div', { style: { flex: 1 } },
+            React.createElement('p', { style: { fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'rgba(255,255,255,0.45)', marginBottom: '4px' } },
+              `Contagem regressiva · ${user.examLabel}`
+            ),
+            React.createElement('p', { style: { fontSize: '32px', fontWeight: '900', lineHeight: 1, color: user.exam === 'oab' ? '#a78bfa' : '#f9a8d4' } },
+              daysUntilExam
+            ),
+            React.createElement('p', { style: { fontSize: '13px', color: 'rgba(255,255,255,0.5)', marginTop: '4px' } },
+              `dias até ${user.exam === 'oab' ? '11/10/2026' : '09/11/2026'} · ${Math.round(daysUntilExam / 7)} semanas`
+            )
+          ),
+          React.createElement('div', { style: { textAlign: 'right', flexShrink: 0 } },
+            React.createElement('p', { style: { fontSize: '11px', color: 'rgba(255,255,255,0.4)' } }, 'Nível alvo'),
+            React.createElement('p', { style: { fontSize: '28px', fontWeight: '900', color: '#eab308' } }, '50'),
+            React.createElement('p', { style: { fontSize: '9px', color: 'rgba(255,255,255,0.3)' } }, 'APROVADO')
+          )
+        ),
+
+        React.createElement('h3', { className: 'text-lg font-semibold mb-3' }, '⚡ Fontes de XP'),
         React.createElement('div', { className: 'xp-source-grid' },
-          xpSources.map((source, i) => 
+          xpSources.map((source, i) =>
             React.createElement('div', { key: i, className: 'xp-source-item' },
               React.createElement('div', { className: 'xp-source-icon' }, source.icon),
-              React.createElement('p', { className: 'xp-source-name' }, source.name),
-              React.createElement('p', { className: 'xp-source-value' }, `+${source.xp.toLocaleString()} XP`)
+              React.createElement('div', { style: { flex: 1 } },
+                React.createElement('p', { className: 'xp-source-name' }, source.name),
+                React.createElement('div', { style: { marginTop: '6px', background: 'rgba(255,255,255,0.07)', borderRadius: '4px', height: '4px', overflow: 'hidden' } },
+                  React.createElement('div', {
+                    style: {
+                      height: '100%',
+                      width: `${xp > 0 ? (source.xp / xp) * 100 : 0}%`,
+                      background: 'linear-gradient(90deg, var(--violet), var(--pink))',
+                      borderRadius: '4px'
+                    }
+                  })
+                )
+              ),
+              React.createElement('p', { className: 'xp-source-value' }, `+${source.xp.toLocaleString('pt-BR')} XP`)
             )
           )
         ),
-        
+
+        // ---- COMO GANHAR XP ----
         React.createElement('div', { className: 'mt-6' },
           React.createElement('h3', { className: 'text-lg font-semibold mb-3' }, 'Como Ganhar XP'),
           React.createElement(GlassCard, null,
@@ -3558,148 +4830,406 @@
     // ============================================
     // COMPONENTE: LEADERBOARD E DESAFIOS
     // ============================================
-    const ChallengesScreen = ({ userId, sessions, partnerSessions, addToast }) => {
+    const ChallengesScreen = ({ userId, sessions, partnerSessions, userData, addToast }) => {
       const user = USERS[userId];
       const partner = USERS[user.partner];
-      
-      const userStats = useMemo(() => ({
-        totalHours: sessions.reduce((acc, s) => acc + (s.h || 0) + (s.m || 0) / 60, 0),
-        totalSessions: sessions.length,
-        totalQuestions: sessions.reduce((acc, s) => acc + (s.qT || 0), 0),
-        avgAccuracy: sessions.filter(s => s.qT > 0).length > 0
-          ? sessions.filter(s => s.qT > 0).reduce((acc, s) => acc + (s.qC / s.qT) * 100, 0) / sessions.filter(s => s.qT > 0).length
-          : 0
-      }), [sessions]);
-      
-      const partnerStats = useMemo(() => ({
-        totalHours: partnerSessions.reduce((acc, s) => acc + (s.h || 0) + (s.m || 0) / 60, 0),
-        totalSessions: partnerSessions.length,
-        totalQuestions: partnerSessions.reduce((acc, s) => acc + (s.qT || 0), 0),
-        avgAccuracy: partnerSessions.filter(s => s.qT > 0).length > 0
-          ? partnerSessions.filter(s => s.qT > 0).reduce((acc, s) => acc + (s.qC / s.qT) * 100, 0) / partnerSessions.filter(s => s.qT > 0).length
-          : 0
-      }), [partnerSessions]);
-      
-      const rankings = [
-        { 
-          name: user.name, 
-          emoji: user.emoji, 
-          score: Math.round(userStats.totalHours * 10), 
-          stats: `${userStats.totalSessions} sessões`,
-          isUser: true 
-        },
-        { 
-          name: partner.name, 
-          emoji: partner.emoji, 
-          score: Math.round(partnerStats.totalHours * 10), 
-          stats: `${partnerStats.totalSessions} sessões`,
-          isUser: false 
+      const weekKey = getWeekKey();
+      const { monday, sunday } = getWeekRange();
+
+      // Stats semanais em tempo real
+      const myWeekly = useMemo(() => calcWeeklyStats(sessions), [sessions]);
+      const partnerWeekly = useMemo(() => calcWeeklyStats(partnerSessions), [partnerSessions]);
+
+      // Quem está ganhando esta semana
+      const iAmLeading = myWeekly.score >= partnerWeekly.score;
+      const myPct = myWeekly.score + partnerWeekly.score > 0
+        ? Math.round((myWeekly.score / (myWeekly.score + partnerWeekly.score)) * 100)
+        : 50;
+
+      // Histórico de campeões salvo no localStorage (e Firebase se disponível)
+      const [champions, setChampions] = React.useState(() => {
+        try {
+          return JSON.parse(localStorage.getItem('manaKelinha_champions') || '[]');
+        } catch { return []; }
+      });
+
+      // Número de títulos de cada um
+      const myTitles = champions.filter(c => c.winner === userId).length;
+      const partnerTitles = champions.filter(c => c.winner === user.partner).length;
+
+      // Verifica se já foi registrado o campeão desta semana
+      const thisWeekChamp = champions.find(c => c.week === weekKey);
+
+      // Registrar campeão da semana (chamado manualmente ou automático na virada)
+      const crownChampion = () => {
+        if (thisWeekChamp) { addToast('Campeão desta semana já foi registrado!', 'info'); return; }
+        if (myWeekly.score === 0 && partnerWeekly.score === 0) { addToast('Nenhum estudo registrado esta semana ainda!', 'error'); return; }
+        const winner = myWeekly.score >= partnerWeekly.score ? userId : user.partner;
+        const me = userId;
+        const pt = user.partner;
+        const mW = myWeekly;
+        const pW = partnerWeekly;
+        // Helper: award badge to whoever meets threshold, or to the higher value
+        const higher = (a, b) => a >= b ? me : pt;
+        const meetsMe = (val, threshold) => mW[val] >= threshold ? me : (pW[val] >= threshold ? pt : null);
+        const meetsPt = (val, threshold) => pW[val] >= threshold ? pt : (mW[val] >= threshold ? me : null);
+        const both = (myVal, ptVal, threshold) => {
+          const myMeets = myVal >= threshold;
+          const ptMeets = ptVal >= threshold;
+          if (myMeets && ptMeets) return 'both';
+          if (myMeets) return me;
+          if (ptMeets) return pt;
+          return null;
+        };
+
+        const badgeWinners = {};
+
+        // Comparativos (quem tem mais)
+        badgeWinners.semana_mais_horas = higher(mW.hours, pW.hours);
+        badgeWinners.semana_mais_sessoes = higher(mW.sessionCount, pW.sessionCount);
+        badgeWinners.semana_mais_questoes = higher(mW.questions, pW.questions);
+        badgeWinners.semana_melhor_acerto = higher(mW.accuracy, pW.accuracy);
+        badgeWinners.semana_campeao_geral = winner;
+
+        // Thresholds de horas — quem alcançou
+        [5,10,20,30,40].forEach((h, i) => {
+          const key = ['semana_5h','semana_10h','semana_20h','semana_30h','semana_40h'][i];
+          const r = both(mW.hours, pW.hours, h);
+          if (r) badgeWinners[key] = r;
+        });
+
+        // Thresholds de sessões
+        [[3,'semana_3_sessoes'],[7,'semana_7_sessoes'],[10,'semana_10_sessoes'],[15,'semana_15_sessoes'],[20,'semana_20_sessoes']].forEach(([n,k]) => {
+          const r = both(mW.sessionCount, pW.sessionCount, n);
+          if (r) badgeWinners[k] = r;
+        });
+
+        // Thresholds de questões
+        [[50,'semana_50_questoes'],[100,'semana_100_questoes'],[200,'semana_200_questoes'],[500,'semana_500_questoes'],[1000,'semana_1000_questoes']].forEach(([n,k]) => {
+          const r = both(mW.questions, pW.questions, n);
+          if (r) badgeWinners[k] = r;
+        });
+
+        // Thresholds de acerto
+        [[60,'semana_acerto_60'],[75,'semana_acerto_75'],[85,'semana_acerto_85'],[95,'semana_acerto_95'],[100,'semana_acerto_100']].forEach(([n,k]) => {
+          const r = both(mW.accuracy, pW.accuracy, n);
+          if (r) badgeWinners[k] = r;
+        });
+
+        // 100 respostas certas
+        const myCorrect = getWeeklySessions(sessions[me] || []).reduce((a,s) => a + (s.qC||0), 0);
+        const ptCorrect = getWeeklySessions(sessions[pt] || []).reduce((a,s) => a + (s.qC||0), 0);
+        const rCorrect = both(myCorrect, ptCorrect, 100);
+        if (rCorrect) badgeWinners.semana_100_certas = rCorrect;
+
+        // Sessão longa (3h+)
+        const myLong = Math.max(0, ...getWeeklySessions(sessions[me]||[]).map(s=>(s.h||0)*60+(s.m||0)));
+        const ptLong = Math.max(0, ...getWeeklySessions(sessions[pt]||[]).map(s=>(s.h||0)*60+(s.m||0)));
+        if (myLong >= 180 && ptLong >= 180) { badgeWinners.semana_sessao_longa = 'both'; }
+        else if (myLong >= 180) badgeWinners.semana_sessao_longa = me;
+        else if (ptLong >= 180) badgeWinners.semana_sessao_longa = pt;
+
+        // Sessão foco total (2h+)
+        if (myLong >= 120 && ptLong >= 120) { badgeWinners.semana_foco_total = 'both'; }
+        else if (myLong >= 120) badgeWinners.semana_foco_total = me;
+        else if (ptLong >= 120) badgeWinners.semana_foco_total = pt;
+
+        // Sessões micro
+        const myMicro = getWeeklySessions(sessions[me]||[]).filter(s => { const m=(s.h||0)*60+(s.m||0); return m>=15&&m<=25; }).length;
+        const ptMicro = getWeeklySessions(sessions[pt]||[]).filter(s => { const m=(s.h||0)*60+(s.m||0); return m>=15&&m<=25; }).length;
+        const rMicro = both(myMicro, ptMicro, 5);
+        if (rMicro) badgeWinners.semana_micro_mestre = rMicro;
+
+        // Matérias diferentes na semana
+        const mySubj = new Set(getWeeklySessions(sessions[me]||[]).map(s=>s.subject)).size;
+        const ptSubj = new Set(getWeeklySessions(sessions[pt]||[]).map(s=>s.subject)).size;
+        [[2,'semana_2_materias'],[3,'semana_3_materias'],[5,'semana_5_materias']].forEach(([n,k]) => {
+          const r = both(mySubj, ptSubj, n);
+          if (r) badgeWinners[k] = r;
+        });
+
+        // Dificuldades semanais
+        const myHard = getWeeklySessions(sessions[me]||[]).filter(s=>s.diff==='dificil').length;
+        const ptHard = getWeeklySessions(sessions[pt]||[]).filter(s=>s.diff==='dificil').length;
+        const myMedium = getWeeklySessions(sessions[me]||[]).filter(s=>s.diff==='medio').length;
+        const ptMedium = getWeeklySessions(sessions[pt]||[]).filter(s=>s.diff==='medio').length;
+        const myEasy = getWeeklySessions(sessions[me]||[]).filter(s=>s.diff==='facil').length;
+        const ptEasy = getWeeklySessions(sessions[pt]||[]).filter(s=>s.diff==='facil').length;
+        [[5,'semana_dificil_5'],[10,'semana_dificil_10'],[20,'semana_dificil_20']].forEach(([n,k]) => {
+          const r = both(myHard, ptHard, n);
+          if (r) badgeWinners[k] = r;
+        });
+        if (myEasy >= 10 && ptEasy >= 10) badgeWinners.semana_facil_10 = 'both';
+        else if (myEasy >= 10) badgeWinners.semana_facil_10 = me;
+        else if (ptEasy >= 10) badgeWinners.semana_facil_10 = pt;
+
+        // Semana variada (todos os tipos)
+        if (myHard>0&&myMedium>0&&myEasy>0 && ptHard>0&&ptMedium>0&&ptEasy>0) badgeWinners.semana_variado = 'both';
+        else if (myHard>0&&myMedium>0&&myEasy>0) badgeWinners.semana_variado = me;
+        else if (ptHard>0&&ptMedium>0&&ptEasy>0) badgeWinners.semana_variado = pt;
+
+        // Diversificada (todos os tipos)
+        badgeWinners.semana_diversificada = badgeWinners.semana_variado;
+
+        // Domínio total (ganhou em tudo)
+        const myWins = [mW.hours >= pW.hours, mW.sessionCount >= pW.sessionCount, mW.questions >= pW.questions, mW.accuracy >= pW.accuracy].filter(Boolean).length;
+        const ptWins = [pW.hours >= mW.hours, pW.sessionCount >= mW.sessionCount, pW.questions >= mW.questions, pW.accuracy >= mW.accuracy].filter(Boolean).length;
+        if (myWins === 4) badgeWinners.semana_dominio = me;
+        else if (ptWins === 4) badgeWinners.semana_dominio = pt;
+
+        // Empate honroso
+        if (Math.abs(mW.score - pW.score) < 10) badgeWinners.semana_par = 'both';
+
+        // Casal dedicado
+        if (mW.hours >= 10 && pW.hours >= 10) badgeWinners.semana_ambos_10h = 'both';
+        if (mW.hours >= 20 && pW.hours >= 20) badgeWinners.semana_ambos_20h = 'both';
+
+        // Sem faltas (7 dias) — aproximado pelos dias únicos estudados
+        const myDays = new Set(getWeeklySessions(sessions[me]||[]).map(s => (s.date||s.createdAt||'').slice(0,10))).size;
+        const ptDays = new Set(getWeeklySessions(sessions[pt]||[]).map(s => (s.date||s.createdAt||'').slice(0,10))).size;
+        if (myDays >= 7 && ptDays >= 7) { badgeWinners.semana_todo_dia = 'both'; badgeWinners.semana_zero_faltas = 'both'; }
+        else if (myDays >= 7) { badgeWinners.semana_todo_dia = me; badgeWinners.semana_zero_faltas = me; }
+        else if (ptDays >= 7) { badgeWinners.semana_todo_dia = pt; badgeWinners.semana_zero_faltas = pt; }
+        const r5dias = both(myDays, ptDays, 5);
+        if (r5dias) badgeWinners.semana_5_dias = r5dias;
+        const newChamp = {
+          week: weekKey,
+          weekLabel: `${monday.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} – ${sunday.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}`,
+          winner,
+          winnerEmoji: USERS[winner].emoji,
+          winnerName: USERS[winner].name,
+          myScore: myWeekly.score,
+          partnerScore: partnerWeekly.score,
+          myHours: myWeekly.hours,
+          partnerHours: partnerWeekly.hours,
+          badges: badgeWinners,
+          crowned: new Date().toISOString()
+        };
+        const updated = [newChamp, ...champions].slice(0, 52);
+        setChampions(updated);
+        localStorage.setItem('manaKelinha_champions', JSON.stringify(updated));
+        if (window.firebaseReady && window.db) {
+          window.db.collection('data').doc('champions').set({ list: updated });
         }
-      ].sort((a, b) => b.score - a.score);
-      
-      const currentChallenge = WEEKLY_CHALLENGES[0];
-      const userWinning = rankings[0].isUser;
-      
+        addToast(`👑 ${USERS[winner].name} é o Campeão da Semana!`, 'success');
+        // App escuta este evento para atualizar weeklyBadges e contadores
+        window.dispatchEvent(new CustomEvent('weeklyBadgesAwarded', { detail: { champ: newChamp, weekKey } }));
+      };
+
+      // Dias restantes na semana
+      const now = new Date();
+      const daysLeft = Math.ceil((sunday - now) / 86400000);
+      const hoursLeft = Math.ceil((sunday - now) / 3600000);
+      const timeLabel = daysLeft > 1 ? `${daysLeft} dias` : daysLeft === 1 ? 'Menos de 1 dia' : `${hoursLeft}h`;
+
+      // Streak de vitórias consecutivas
+      let myStreak = 0;
+      for (const c of champions) {
+        if (c.winner === userId) myStreak++;
+        else break;
+      }
+      let partnerStreak = 0;
+      for (const c of champions) {
+        if (c.winner === user.partner) partnerStreak++;
+        else break;
+      }
+
       return React.createElement('div', null,
+
+        // ---- CABEÇALHO ----
         React.createElement('div', { className: 'mb-6' },
-          React.createElement('h2', { className: 'text-2xl font-bold mb-1' }, 'Desafios'),
-          React.createElement('p', { className: 'text-white-60' }, 'Compita e evolua juntos!')
+          React.createElement('h2', { className: 'text-2xl font-bold mb-1' }, '🏆 Campeonato Semanal'),
+          React.createElement('p', { className: 'text-white-60' }, 'Defenda seu título toda semana!')
         ),
-        
-        React.createElement('div', { className: 'leaderboard-card' },
-          React.createElement('div', { className: 'leaderboard-header' },
-            React.createElement('div', null,
-              React.createElement('h3', { className: 'leaderboard-title' }, '🏆 Ranking do Casal')
-            ),
-            React.createElement('span', { className: 'leaderboard-period' }, 'Sempre atualizado')
+
+        // ---- CINTURÃO / TÍTULO ATUAL ----
+        React.createElement('div', {
+          style: {
+            background: 'linear-gradient(135deg, rgba(234,179,8,0.18) 0%, rgba(139,92,246,0.12) 100%)',
+            border: '2px solid rgba(234,179,8,0.4)',
+            borderRadius: '20px',
+            padding: '20px',
+            marginBottom: '16px',
+            textAlign: 'center'
+          }
+        },
+          React.createElement('p', { style: { fontSize: '11px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '6px' } }, '👑 Campeão Atual'),
+          thisWeekChamp
+            ? React.createElement('div', null,
+                React.createElement('div', { style: { fontSize: '52px', marginBottom: '4px' } }, USERS[thisWeekChamp.winner].emoji),
+                React.createElement('p', { style: { fontSize: '22px', fontWeight: '800', color: '#eab308' } }, USERS[thisWeekChamp.winner].name),
+                React.createElement('p', { style: { fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '4px' } }, `Semana ${thisWeekChamp.weekLabel}`),
+                React.createElement('span', { className: 'tag tag-gold', style: { marginTop: '10px', display: 'inline-block' } }, '🏅 Título defendido com sucesso!')
+              )
+            : React.createElement('div', null,
+                React.createElement('div', { style: { fontSize: '52px', marginBottom: '4px' } }, '❓'),
+                React.createElement('p', { style: { fontSize: '18px', fontWeight: '700', color: 'rgba(255,255,255,0.7)' } }, 'Título em disputa!'),
+                React.createElement('p', { style: { fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '4px' } }, `Encerra em ${timeLabel}`)
+              )
+        ),
+
+        // ---- DUELO DA SEMANA EM TEMPO REAL ----
+        React.createElement('div', {
+          style: {
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '20px',
+            padding: '20px',
+            marginBottom: '16px'
+          }
+        },
+          React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' } },
+            React.createElement('h3', { className: 'text-lg font-semibold' }, '⚔️ Duelo da Semana'),
+            React.createElement('span', {
+              style: {
+                fontSize: '11px', padding: '3px 10px', borderRadius: '20px',
+                background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e'
+              }
+            }, '● Ao vivo')
           ),
-          
-          rankings.map((rank, i) => 
-            React.createElement('div', { 
-              key: rank.name, 
-              className: 'leaderboard-item',
-              style: rank.isUser ? { border: '1px solid rgba(139,92,246,0.3)' } : {}
-            },
-              React.createElement('div', { 
-                className: `leaderboard-rank ${i === 0 ? 'gold' : 'silver'}` 
-              }, i + 1),
-              React.createElement('div', { 
-                className: 'leaderboard-avatar',
-                style: { 
-                  background: rank.isUser 
-                    ? 'linear-gradient(135deg, #8b5cf6, #7c3aed)' 
-                    : 'linear-gradient(135deg, #ec4899, #db2777)' 
+
+          // Players
+          React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' } },
+            // EU
+            React.createElement('div', { style: { flex: 1, textAlign: 'center' } },
+              React.createElement('div', {
+                style: {
+                  width: '52px', height: '52px', borderRadius: '14px', fontSize: '26px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px',
+                  background: iAmLeading ? 'linear-gradient(135deg, #eab308, #ca8a04)' : 'rgba(139,92,246,0.3)',
+                  border: iAmLeading ? '2px solid #eab308' : '2px solid rgba(139,92,246,0.4)'
                 }
-              }, rank.emoji),
-              React.createElement('div', { className: 'leaderboard-info' },
-                React.createElement('p', { className: 'leaderboard-name' }, 
-                  rank.name,
-                  rank.isUser && React.createElement('span', { className: 'tag tag-primary ml-2', style: { fontSize: '9px' } }, 'Você')
+              }, iAmLeading ? '👑' : user.emoji),
+              React.createElement('p', { style: { fontWeight: '700', fontSize: '15px' } }, user.name),
+              React.createElement('p', { style: { color: '#8b5cf6', fontWeight: '800', fontSize: '20px', margin: '2px 0' } }, myWeekly.score),
+              React.createElement('p', { style: { fontSize: '11px', color: 'rgba(255,255,255,0.4)' } }, 'pontos'),
+              React.createElement('div', { style: { fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginTop: '6px' } },
+                React.createElement('div', null, `⏱️ ${myWeekly.hours}h`),
+                React.createElement('div', null, `📚 ${myWeekly.sessionCount} sessões`),
+                React.createElement('div', null, `📝 ${myWeekly.questions} questões`)
+              )
+            ),
+            // VS
+            React.createElement('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' } },
+              React.createElement('div', { style: { fontSize: '18px', fontWeight: '900', color: 'rgba(255,255,255,0.3)' } }, 'VS'),
+              React.createElement('div', { style: { fontSize: '10px', color: 'rgba(255,255,255,0.25)', textAlign: 'center' } }, `${timeLabel}\nrestantes`)
+            ),
+            // PARCEIRO
+            React.createElement('div', { style: { flex: 1, textAlign: 'center' } },
+              React.createElement('div', {
+                style: {
+                  width: '52px', height: '52px', borderRadius: '14px', fontSize: '26px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px',
+                  background: !iAmLeading ? 'linear-gradient(135deg, #eab308, #ca8a04)' : 'rgba(236,72,153,0.3)',
+                  border: !iAmLeading ? '2px solid #eab308' : '2px solid rgba(236,72,153,0.4)'
+                }
+              }, !iAmLeading ? '👑' : partner.emoji),
+              React.createElement('p', { style: { fontWeight: '700', fontSize: '15px' } }, partner.name),
+              React.createElement('p', { style: { color: '#ec4899', fontWeight: '800', fontSize: '20px', margin: '2px 0' } }, partnerWeekly.score),
+              React.createElement('p', { style: { fontSize: '11px', color: 'rgba(255,255,255,0.4)' } }, 'pontos'),
+              React.createElement('div', { style: { fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginTop: '6px' } },
+                React.createElement('div', null, `⏱️ ${partnerWeekly.hours}h`),
+                React.createElement('div', null, `📚 ${partnerWeekly.sessionCount} sessões`),
+                React.createElement('div', null, `📝 ${partnerWeekly.questions} questões`)
+              )
+            )
+          ),
+
+          // Barra de progresso do duelo
+          React.createElement('div', { style: { background: 'rgba(255,255,255,0.08)', borderRadius: '10px', height: '10px', overflow: 'hidden', position: 'relative' } },
+            React.createElement('div', {
+              style: {
+                height: '100%', width: `${myPct}%`,
+                background: 'linear-gradient(90deg, #8b5cf6, #ec4899)',
+                borderRadius: '10px', transition: 'width 0.8s ease'
+              }
+            })
+          ),
+          React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', marginTop: '6px' } },
+            React.createElement('span', { style: { fontSize: '11px', color: 'rgba(255,255,255,0.4)' } }, `${user.name}: ${myPct}%`),
+            React.createElement('span', { style: { fontSize: '11px', color: 'rgba(255,255,255,0.4)' } }, `${partner.name}: ${100 - myPct}%`)
+          ),
+
+          // Como é calculada a pontuação
+          React.createElement('div', { style: { marginTop: '12px', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', fontSize: '11px', color: 'rgba(255,255,255,0.35)' } },
+            '📊 Pontuação: horas × 40 + sessões × 10 + questões × 0.5 + acerto × 2'
+          )
+        ),
+
+        // ---- REGISTRAR CAMPEÃO ----
+        !thisWeekChamp && React.createElement('button', {
+          onClick: crownChampion,
+          style: {
+            width: '100%', padding: '14px', borderRadius: '14px', border: 'none', cursor: 'pointer', marginBottom: '16px',
+            background: 'linear-gradient(135deg, #eab308, #ca8a04)',
+            color: '#000', fontWeight: '800', fontSize: '15px'
+          }
+        }, '👑 Registrar Campeão desta Semana'),
+
+        // ---- PLACAR DE TÍTULOS ----
+        React.createElement('div', {
+          style: {
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '20px', padding: '20px', marginBottom: '16px'
+          }
+        },
+          React.createElement('h3', { className: 'text-lg font-semibold mb-4' }, '🥇 Placar de Títulos'),
+          React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' } },
+            [
+              { id: userId, name: user.name, emoji: user.emoji, titles: myTitles, streak: myStreak, color: '#8b5cf6' },
+              { id: user.partner, name: partner.name, emoji: partner.emoji, titles: partnerTitles, streak: partnerStreak, color: '#ec4899' }
+            ].map(p =>
+              React.createElement('div', {
+                key: p.id,
+                style: {
+                  textAlign: 'center', padding: '16px', borderRadius: '16px',
+                  background: `rgba(${p.color === '#8b5cf6' ? '139,92,246' : '236,72,153'},0.1)`,
+                  border: `1px solid ${p.color}40`
+                }
+              },
+                React.createElement('div', { style: { fontSize: '36px', marginBottom: '6px' } }, p.emoji),
+                React.createElement('p', { style: { fontWeight: '700' } }, p.name),
+                React.createElement('p', { style: { fontSize: '32px', fontWeight: '900', color: p.color } }, p.titles),
+                React.createElement('p', { style: { fontSize: '11px', color: 'rgba(255,255,255,0.4)' } }, p.titles === 1 ? 'título' : 'títulos'),
+                p.streak >= 2 && React.createElement('div', { style: { marginTop: '8px', fontSize: '11px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(234,179,8,0.15)', color: '#eab308', display: 'inline-block' } },
+                  `🔥 ${p.streak}x seguidos`
+                )
+              )
+            )
+          )
+        ),
+
+        // ---- HISTÓRICO DE CAMPEÕES ----
+        champions.length > 0 && React.createElement('div', {
+          style: {
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '20px', padding: '20px'
+          }
+        },
+          React.createElement('h3', { className: 'text-lg font-semibold mb-4' }, '📜 Histórico de Campeões'),
+          champions.map((c, i) =>
+            React.createElement('div', {
+              key: c.week,
+              style: {
+                display: 'flex', alignItems: 'center', gap: '12px', padding: '12px',
+                borderRadius: '14px', marginBottom: '8px',
+                background: i === 0 ? 'rgba(234,179,8,0.1)' : 'rgba(255,255,255,0.03)',
+                border: i === 0 ? '1px solid rgba(234,179,8,0.3)' : '1px solid rgba(255,255,255,0.06)'
+              }
+            },
+              React.createElement('div', { style: { fontSize: '28px' } }, c.winnerEmoji),
+              React.createElement('div', { style: { flex: 1 } },
+                React.createElement('p', { style: { fontWeight: '700', fontSize: '14px' } },
+                  c.winnerName,
+                  i === 0 && React.createElement('span', { style: { marginLeft: '6px', fontSize: '10px', color: '#eab308' } }, '← mais recente')
                 ),
-                React.createElement('p', { className: 'leaderboard-stats' }, rank.stats)
+                React.createElement('p', { style: { fontSize: '11px', color: 'rgba(255,255,255,0.4)' } }, `Semana ${c.weekLabel}`)
               ),
-              React.createElement('div', { className: 'leaderboard-score' },
-                React.createElement('p', { className: 'leaderboard-score-value' }, rank.score),
-                React.createElement('p', { className: 'leaderboard-score-label' }, 'pontos')
-              )
-            )
-          )
-        ),
-        
-        React.createElement('h3', { className: 'text-lg font-semibold mb-3' }, 'Desafio Ativo'),
-        React.createElement('div', { className: `challenge-card ${userWinning ? 'active' : ''}` },
-          React.createElement('div', { className: 'challenge-header' },
-            React.createElement('div', { className: 'challenge-icon' }, currentChallenge.emoji),
-            React.createElement('div', { className: 'challenge-info' },
-              React.createElement('p', { className: 'challenge-title' }, currentChallenge.title),
-              React.createElement('p', { className: 'challenge-desc' }, currentChallenge.description)
-            )
-          ),
-          
-          React.createElement('div', { className: 'challenge-reward' },
-            React.createElement('div', { className: 'challenge-reward-item' },
-              '✨', `+${currentChallenge.reward.xp} XP`
-            ),
-            React.createElement('div', { className: 'challenge-reward-item' },
-              '🏆', currentChallenge.reward.badge
-            )
-          ),
-          
-          React.createElement('div', { className: 'challenge-progress' },
-            React.createElement('div', { className: 'challenge-progress-bar' },
-              React.createElement('div', { 
-                className: 'challenge-progress-fill',
-                style: { width: `${userWinning ? 100 : 50}%` }
-              })
-            ),
-            React.createElement('p', { className: 'challenge-progress-text' }, 
-              userWinning 
-                ? '🎉 Você está na frente!' 
-                : '💪 Continue estudando para ultrapassar!'
-            )
-          ),
-          
-          React.createElement('span', { className: `challenge-status ${userWinning ? 'completed' : 'active'}` },
-            userWinning ? 'Ganhando!' : 'Em andamento'
-          )
-        ),
-        
-        React.createElement('h3', { className: 'text-lg font-semibold mb-3 mt-6' }, 'Próximos Desafios'),
-        WEEKLY_CHALLENGES.slice(1, 4).map((challenge, i) => 
-          React.createElement('div', { key: challenge.id, className: 'challenge-card' },
-            React.createElement('div', { className: 'challenge-header' },
-              React.createElement('div', { className: 'challenge-icon' }, challenge.emoji),
-              React.createElement('div', { className: 'challenge-info' },
-                React.createElement('p', { className: 'challenge-title' }, challenge.title),
-                React.createElement('p', { className: 'challenge-desc' }, challenge.description)
-              )
-            ),
-            React.createElement('div', { className: 'challenge-reward' },
-              React.createElement('div', { className: 'challenge-reward-item' },
-                '✨', `+${challenge.reward.xp} XP`
-              ),
-              React.createElement('div', { className: 'challenge-reward-item' },
-                '🏆', challenge.reward.badge
+              React.createElement('div', { style: { textAlign: 'right' } },
+                React.createElement('p', { style: { fontSize: '16px', fontWeight: '800', color: '#eab308' } }, c.myScore > c.partnerScore && c.winner === userId ? c.myScore : c.partnerScore),
+                React.createElement('p', { style: { fontSize: '10px', color: 'rgba(255,255,255,0.35)' } }, 'vs ' + (c.myScore > c.partnerScore && c.winner === userId ? c.partnerScore : c.myScore))
               )
             )
           )
@@ -3712,7 +5242,7 @@
     // ============================================
     const StudyPlanScreen = ({ userId, sessions, addToast }) => {
       const user = USERS[userId];
-      const daysUntilExam = getDaysUntilExam();
+      const daysUntilExam = getDaysUntilExam(userId);
       
       const subjectStats = useMemo(() => {
         const stats = {};
@@ -3747,7 +5277,7 @@
         {
           type: 'tip',
           title: '💡 Dica da IA',
-          text: `Faltam ${daysUntilExam} dias para a prova. Estude pelo menos 3 horas por dia para garantir uma boa preparação!`
+          text: `Faltam ${daysUntilExam} dias para ${user.examLabel}. Estude pelo menos 3 horas por dia para garantir uma boa preparação!`
         },
         strongestSubject && {
           type: 'success',
@@ -3783,7 +5313,7 @@
           
           React.createElement('div', { className: 'study-plan-countdown' },
             React.createElement('p', { className: 'study-plan-countdown-value' }, daysUntilExam),
-            React.createElement('p', { className: 'study-plan-countdown-label' }, 'dias até a prova (09/11/2026)')
+            React.createElement('p', { className: 'study-plan-countdown-label' }, `dias até ${user.examLabel} (${user.examDateStr})`)
           ),
           
           recommendations.map((rec, i) => 
@@ -3852,102 +5382,178 @@
       onDeleteSession,
       addToast 
     }) => {
-      const [filter, setFilter] = useState('all');
-      const [searchTerm, setSearchTerm] = useState('');
-      
       const user = USERS[userId];
-      
-      const subjects = [...new Set(sessions.map(s => s.subject))];
-      
-      const filteredSessions = useMemo(() => {
-        let result = [...sessions].sort((a, b) => new Date(b.date) - new Date(a.date));
-        
-        if (filter !== 'all') {
-          result = result.filter(s => s.subject === filter);
-        }
-        
-        if (searchTerm) {
-          const term = searchTerm.toLowerCase();
-          result = result.filter(s => 
-            s.subject.toLowerCase().includes(term) ||
-            (s.body && s.body.toLowerCase().includes(term))
-          );
-        }
-        
-        return result;
-      }, [sessions, filter, searchTerm]);
-      
+      const subjectList = user.exam === 'oab' ? SUBJECTS_OAB : SUBJECTS_ENEM;
+      const [view, setView] = useState('folders'); // 'folders' | 'list'
+      const [openFolder, setOpenFolder] = useState(null);
+      const [searchTerm, setSearchTerm] = useState('');
+
+      // Build folder structure: group sessions by subject
+      const folders = useMemo(() => {
+        const map = {};
+        sessions.forEach(s => {
+          const key = s.subject;
+          if (!map[key]) map[key] = [];
+          map[key].push(s);
+        });
+        // Sort each folder by date desc
+        Object.values(map).forEach(arr => arr.sort((a, b) => new Date(b.date) - new Date(a.date)));
+        return map;
+      }, [sessions]);
+
+      // Get emoji for a subject name from the list
+      const getEmoji = (subjectName) => {
+        const found = subjectList.find(s => s.name === subjectName);
+        return found ? found.emoji : '📚';
+      };
+
+      // Stats per folder
+      const folderStats = (sArr) => ({
+        total: sArr.length,
+        hours: (sArr.reduce((a, s) => a + (s.h || 0) + (s.m || 0) / 60, 0)).toFixed(1),
+        questions: sArr.reduce((a, s) => a + (s.qT || 0), 0),
+        accuracy: (() => {
+          const withQ = sArr.filter(s => s.qT > 0);
+          if (!withQ.length) return null;
+          return Math.round(withQ.reduce((a, s) => a + (s.qC / s.qT) * 100, 0) / withQ.length);
+        })(),
+        lastDate: sArr[0]?.date || ''
+      });
+
       const handleDelete = (session) => {
-        if (confirm(`Tem certeza que deseja excluir a sessão "${session.subject}"?`)) {
+        if (confirm(`Excluir sessão de "${session.subject}"?`)) {
           onDeleteSession(session.id);
-          addToast('Sessão excluída com sucesso', 'success');
+          addToast('Sessão excluída', 'success');
         }
       };
-      
+
+      // Flat list for search/list view
+      const filteredList = useMemo(() => {
+        let res = [...sessions].sort((a, b) => new Date(b.date) - new Date(a.date));
+        if (searchTerm) {
+          const t = searchTerm.toLowerCase();
+          res = res.filter(s => s.subject.toLowerCase().includes(t) || (s.body || '').toLowerCase().includes(t));
+        }
+        return res;
+      }, [sessions, searchTerm]);
+
+      const folderNames = Object.keys(folders).sort();
+
       return React.createElement('div', null,
-        React.createElement('div', { className: 'mb-6' },
-          React.createElement('h2', { className: 'text-2xl font-bold mb-1' }, 'Histórico'),
-          React.createElement('p', { className: 'text-white-60' }, 'Todas as suas sessões de estudo')
-        ),
-        
+
+        // Header
         React.createElement('div', { className: 'mb-4' },
-          React.createElement('div', { style: { position: 'relative' } },
-            React.createElement('input', {
-              type: 'text',
-              value: searchTerm,
-              onChange: (e) => setSearchTerm(e.target.value),
-              placeholder: 'Buscar por matéria ou conteúdo...',
-              className: 'input',
-              style: { paddingLeft: '44px' }
-            }),
-            React.createElement('div', { 
-              style: { 
-                position: 'absolute', 
-                left: '14px', 
-                top: '50%', 
-                transform: 'translateY(-50%)',
-                color: 'rgba(255,255,255,0.4)'
-              } 
-            }, Icons.search({ width: 18, height: 18 }))
+          React.createElement('h2', { className: 'text-2xl font-bold mb-1' }, 'Histórico'),
+          React.createElement('p', { className: 'text-white-60' },
+            `${sessions.length} sessões em ${folderNames.length} matérias`
           )
         ),
-        
-        subjects.length > 0 && React.createElement('div', { className: 'filter-bar' },
+
+        // View toggle + search
+        React.createElement('div', { style: { display: 'flex', gap: '10px', marginBottom: '16px', alignItems: 'center' } },
           React.createElement('button', {
-            className: `filter-btn ${filter === 'all' ? 'active' : ''}`,
-            onClick: () => setFilter('all')
-          }, 'Todas'),
-          subjects.map(subject => 
-            React.createElement('button', {
-              key: subject,
-              className: `filter-btn ${filter === subject ? 'active' : ''}`,
-              onClick: () => setFilter(subject)
-            }, subject)
+            onClick: () => { setView('folders'); setOpenFolder(null); },
+            style: {
+              padding: '8px 16px', borderRadius: '20px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '600',
+              background: view === 'folders' ? 'var(--violet)' : 'rgba(255,255,255,0.07)',
+              color: 'white'
+            }
+          }, '📁 Pastas'),
+          React.createElement('button', {
+            onClick: () => setView('list'),
+            style: {
+              padding: '8px 16px', borderRadius: '20px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '600',
+              background: view === 'list' ? 'var(--violet)' : 'rgba(255,255,255,0.07)',
+              color: 'white'
+            }
+          }, '📋 Lista'),
+          view === 'list' && React.createElement('input', {
+            type: 'text', value: searchTerm,
+            onChange: e => setSearchTerm(e.target.value),
+            placeholder: 'Buscar...', className: 'input',
+            style: { flex: 1, padding: '8px 14px' }
+          })
+        ),
+
+        // ---- PASTA ABERTA ----
+        view === 'folders' && openFolder && React.createElement('div', null,
+          React.createElement('button', {
+            onClick: () => setOpenFolder(null),
+            style: { display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', marginBottom: '16px', fontSize: '14px' }
+          }, '← Voltar para pastas'),
+          React.createElement('div', {
+            style: { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', padding: '14px 16px', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: '14px' }
+          },
+            React.createElement('span', { style: { fontSize: '28px' } }, getEmoji(openFolder)),
+            React.createElement('div', null,
+              React.createElement('p', { style: { fontWeight: '700', fontSize: '16px' } }, openFolder),
+              React.createElement('p', { style: { fontSize: '12px', color: 'rgba(255,255,255,0.5)' } },
+                `${(folders[openFolder] || []).length} sessões · ${folderStats(folders[openFolder] || []).hours}h estudadas`
+              )
+            )
+          ),
+          React.createElement('div', { className: 'session-list' },
+            (folders[openFolder] || []).map(session =>
+              React.createElement(SessionItem, { key: session.id, session, userColor: user.color, onEdit: onEditSession, onDelete: handleDelete })
+            )
           )
         ),
-        
-        filteredSessions.length === 0 
-          ? React.createElement(GlassCard, null,
-              React.createElement('div', { className: 'empty-state' },
-                React.createElement('div', { className: 'icon' }, '📚'),
-                React.createElement('h3', null, searchTerm || filter !== 'all' ? 'Nenhuma sessão encontrada' : 'Nenhuma sessão registrada'),
-                React.createElement('p', null, searchTerm || filter !== 'all' 
-                  ? 'Tente ajustar os filtros de busca' 
-                  : 'Adicione sua primeira sessão de estudo'
+
+        // ---- GRID DE PASTAS ----
+        view === 'folders' && !openFolder && React.createElement('div', null,
+          sessions.length === 0
+            ? React.createElement(GlassCard, null,
+                React.createElement('div', { className: 'empty-state' },
+                  React.createElement('div', { className: 'icon' }, '📂'),
+                  React.createElement('h3', null, 'Nenhuma sessão ainda'),
+                  React.createElement('p', null, 'Adicione sua primeira sessão de estudo')
                 )
               )
-            )
-          : React.createElement('div', { className: 'session-list' },
-              filteredSessions.map(session => 
-                React.createElement(SessionItem, {
-                  key: session.id,
-                  session,
-                  userColor: user.color,
-                  onEdit: onEditSession,
-                  onDelete: handleDelete
+            : React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' } },
+                folderNames.map(subjectName => {
+                  const sArr = folders[subjectName];
+                  const st = folderStats(sArr);
+                  return React.createElement('div', {
+                    key: subjectName,
+                    onClick: () => setOpenFolder(subjectName),
+                    style: {
+                      background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)',
+                      borderRadius: '18px', padding: '16px', cursor: 'pointer', transition: 'all 0.2s'
+                    },
+                    onMouseEnter: e => { e.currentTarget.style.background = 'rgba(139,92,246,0.12)'; e.currentTarget.style.borderColor = 'rgba(139,92,246,0.35)'; },
+                    onMouseLeave: e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)'; }
+                  },
+                    React.createElement('div', { style: { fontSize: '28px', marginBottom: '8px' } }, getEmoji(subjectName)),
+                    React.createElement('p', { style: { fontWeight: '700', fontSize: '13px', marginBottom: '6px', lineHeight: 1.3 } }, subjectName),
+                    React.createElement('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '4px' } },
+                      React.createElement('span', { style: { fontSize: '10px', padding: '2px 7px', borderRadius: '10px', background: 'rgba(139,92,246,0.2)', color: '#a78bfa' } }, `${st.total} sessões`),
+                      React.createElement('span', { style: { fontSize: '10px', padding: '2px 7px', borderRadius: '10px', background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.5)' } }, `${st.hours}h`),
+                      st.accuracy !== null && React.createElement('span', { style: { fontSize: '10px', padding: '2px 7px', borderRadius: '10px', background: 'rgba(34,197,94,0.15)', color: '#4ade80' } }, `${st.accuracy}%`)
+                    ),
+                    React.createElement('p', { style: { fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '6px' } },
+                      st.lastDate ? `Última: ${new Date(st.lastDate).toLocaleDateString('pt-BR')}` : ''
+                    )
+                  );
                 })
               )
-            )
+        ),
+
+        // ---- VISTA LISTA ----
+        view === 'list' && React.createElement('div', null,
+          filteredList.length === 0
+            ? React.createElement(GlassCard, null,
+                React.createElement('div', { className: 'empty-state' },
+                  React.createElement('div', { className: 'icon' }, '📋'),
+                  React.createElement('h3', null, searchTerm ? 'Nada encontrado' : 'Nenhuma sessão ainda'),
+                  React.createElement('p', null, searchTerm ? 'Tente outro termo' : 'Adicione sua primeira sessão de estudo')
+                )
+              )
+            : React.createElement('div', { className: 'session-list' },
+                filteredList.map(session =>
+                  React.createElement(SessionItem, { key: session.id, session, userColor: user.color, onEdit: onEditSession, onDelete: handleDelete })
+                )
+              )
+        )
       );
     };
     
@@ -4113,14 +5719,14 @@
       }, [sessions, partnerSessions]);
       
       const currentLevel = LEVELS.find(l => l.level === level) || LEVELS[0];
-      const daysUntilExam = getDaysUntilExam();
+      const daysUntilExam = getDaysUntilExam(userId);
       
       return React.createElement('div', { className: 'dashboard-grid' },
         React.createElement('div', null,
         React.createElement('div', { className: `hero-card ${user.color}` },
           React.createElement('p', { className: 'text-white-80 mb-1' }, `Olá, ${user.name}! 💕`),
           React.createElement('h2', { className: 'text-3xl font-bold mb-2' }, 
-            currentLevel.emoji, ' ', currentLevel.name
+            currentLevel.emoji, ' ', (currentLevel.level === 50 ? `🎓 APROVADO — ${USERS[userId].examLabel}` : currentLevel.name)
           ),
           React.createElement('p', { className: 'text-white-70 mb-3' }, 
             `Nível ${level} • ${xp.toLocaleString()} XP`
@@ -4133,9 +5739,38 @@
               '✅ Estudou hoje'
             ),
             React.createElement('span', { className: 'tag' }, 
-              '📅 ', daysUntilExam, ' dias para prova'
+              '📅 ', daysUntilExam, ` dias · ${user.examLabel}`
             )
           )
+        ),
+
+        // Versículo do dia
+        React.createElement('div', {
+          style: {
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '16px',
+            padding: '16px 18px',
+            marginBottom: '16px',
+            position: 'relative',
+            overflow: 'hidden'
+          }
+        },
+          React.createElement('div', {
+            style: {
+              position: 'absolute', top: 0, left: 0, width: '3px', height: '100%',
+              background: 'linear-gradient(180deg, #8b5cf6, #ec4899)'
+            }
+          }),
+          React.createElement('p', {
+            style: { fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'rgba(255,255,255,0.4)', marginBottom: '8px' }
+          }, '✝️ Palavra do Dia'),
+          React.createElement('p', {
+            style: { fontSize: '13px', color: 'rgba(255,255,255,0.85)', lineHeight: 1.6, fontStyle: 'italic', marginBottom: '8px' }
+          }, `"${VERSICULO_HOJE.texto}"`),
+          React.createElement('p', {
+            style: { fontSize: '11px', fontWeight: '700', color: '#a78bfa' }
+          }, VERSICULO_HOJE.ref)
         ),
         
         React.createElement('div', { className: 'stats-grid mb-4' },
@@ -4225,6 +5860,7 @@
       const [currentScreen, setCurrentScreen] = useState('dashboard');
       const [toasts, setToasts] = useState([]);
       const [editingSession, setEditingSession] = useState(null);
+      const [showLogoutModal, setShowLogoutModal] = useState(false);
       
       // Estado para status online do parceiro
       const [partnerOnlineStatus, setPartnerOnlineStatus] = useState({
@@ -4243,19 +5879,30 @@
       const [userData, setUserData] = useState(() => {
         try {
           const saved = localStorage.getItem('manaKelinha_userData');
-          return saved ? JSON.parse(saved) : {
-            mana: { xp: 0, level: 1, streak: 0, unlockedBadges: [] },
-            kelinha: { xp: 0, level: 1, streak: 0, unlockedBadges: [] }
+          const base = saved ? JSON.parse(saved) : null;
+          const defaultUser = { xp: 0, level: 1, streak: 0, unlockedBadges: [], weeklyBadges: [], weeklyBadgeCounts: {}, lastWeekKey: '' };
+          if (!base) return { mana: { ...defaultUser }, kelinha: { ...defaultUser } };
+          return {
+            mana: { ...defaultUser, ...base.mana },
+            kelinha: { ...defaultUser, ...base.kelinha }
           };
         } catch(e) {
-          return {
-            mana: { xp: 0, level: 1, streak: 0, unlockedBadges: [] },
-            kelinha: { xp: 0, level: 1, streak: 0, unlockedBadges: [] }
-          };
+          const d = { xp: 0, level: 1, streak: 0, unlockedBadges: [], weeklyBadges: [], weeklyBadgeCounts: {}, lastWeekKey: '' };
+          return { mana: { ...d }, kelinha: { ...d } };
         }
       });
 
-      // Ref para evitar loop nos listeners do parceiro
+      // Controla classe logged-in no div #app para CSS da sidebar
+      useEffect(() => {
+        const appEl = document.getElementById('app');
+        if (appEl) {
+          if (currentUser) {
+            appEl.classList.add('logged-in');
+          } else {
+            appEl.classList.remove('logged-in');
+          }
+        }
+      }, [currentUser]);
       const partnerUnsubRef = useRef(null);
       const onlineUnsubRef = useRef(null);
       const prevPartnerBadgesRef = useRef([]);
@@ -4331,6 +5978,37 @@
         };
       }, [currentUser]);
       
+      // Escuta evento de badges semanais concedidas
+      useEffect(() => {
+        const handler = (e) => {
+          const { champ, weekKey } = e.detail;
+          if (!champ || !champ.badges) return;
+          // Para cada badge semanal, incrementa o contador do vencedor e reseta o do outro
+          setUserData(prev => {
+            const next = { ...prev };
+            ['mana', 'kelinha'].forEach(uid => {
+              const userBadges = [];
+              const counts = { ...(prev[uid].weeklyBadgeCounts || {}) };
+              Object.entries(champ.badges).forEach(([badgeId, winnerId]) => {
+                if (winnerId === uid || winnerId === 'both') {
+                  userBadges.push(badgeId);
+                  counts[badgeId] = (counts[badgeId] || 0) + 1;
+                }
+              });
+              next[uid] = {
+                ...prev[uid],
+                weeklyBadges: userBadges,        // reset a cada semana
+                weeklyBadgeCounts: counts,        // acumula para sempre
+                lastWeekKey: weekKey
+              };
+            });
+            return next;
+          });
+        };
+        window.addEventListener('weeklyBadgesAwarded', handler);
+        return () => window.removeEventListener('weeklyBadgesAwarded', handler);
+      }, []);
+
       const addToast = (message, type = 'info', xp = 0) => {
         const id = Date.now();
         setToasts(prev => [...prev, { id, message, type, xp }]);
@@ -4449,10 +6127,80 @@
       };
       
       const handleDeleteSession = (sessionId) => {
-        setSessions(prev => ({
+        // Sessões restantes após a remoção
+        const remaining = (sessions[currentUser] || []).filter(s => s.id !== sessionId);
+
+        // Recalcular XP total do zero com as sessões restantes
+        const newTotalXP = remaining.reduce((total, s) => total + calculateXP(s), 0);
+
+        // Recalcular quais badges ainda são válidas com as sessões restantes
+        const stats = {
+          totalSessions: remaining.length,
+          totalMinutes: remaining.reduce((acc, s) => acc + (s.h || 0) * 60 + (s.m || 0), 0),
+          totalQuestions: remaining.reduce((acc, s) => acc + (s.qT || 0), 0),
+          uniqueSubjects: new Set(remaining.map(s => s.subject)).size,
+          bestAccuracy: remaining.filter(s => s.qT > 0).length > 0
+            ? Math.max(...remaining.filter(s => s.qT > 0).map(s => (s.qC / s.qT) * 100))
+            : 0,
+          easySessions: remaining.filter(s => s.diff === 'facil').length,
+          mediumSessions: remaining.filter(s => s.diff === 'medio').length,
+          hardSessions: remaining.filter(s => s.diff === 'dificil').length,
+          longestSession: remaining.length > 0
+            ? Math.max(...remaining.map(s => (s.h || 0) * 60 + (s.m || 0)))
+            : 0,
+          shortSessions: remaining.filter(s => {
+            const mins = (s.h || 0) * 60 + (s.m || 0);
+            return mins >= 15 && mins <= 25;
+          }).length,
+          streak: userData[currentUser].streak,
+          hasStudiedLateNight: false,
+          hasStudiedWeekend: false,
+          maxHoursInDay: 0,
+          maxHoursInWeek: 0,
+          bothStudiedSameDay: false,
+          duelsWon: userData[currentUser].weeklyBadgeCounts?.venceu_duelo || 0,
+          totalBadges: 0
+        };
+        // totalBadges baseado nas badges que ainda são válidas
+        const validBadgeIds = Object.values(BADGES)
+          .filter(b => b.condition({ ...stats, totalBadges: 0 }))
+          .map(b => b.id);
+        // Segunda passagem com totalBadges correto
+        stats.totalBadges = validBadgeIds.length;
+        const finalValidBadgeIds = Object.values(BADGES)
+          .filter(b => b.condition(stats))
+          .map(b => b.id);
+
+        // Verificar quais badges foram perdidas
+        const currentBadgeList = userData[currentUser].unlockedBadges || [];
+        const lostBadges = currentBadgeList.filter(id => !finalValidBadgeIds.includes(id));
+        const badgesLostXP = lostBadges.reduce((acc, id) => {
+          const badge = BADGES[id];
+          return acc + (badge ? badge.xpReward : 0);
+        }, 0);
+
+        // Aplicar remoção
+        setSessions(prev => ({ ...prev, [currentUser]: remaining }));
+        setUserData(prev => ({
           ...prev,
-          [currentUser]: prev[currentUser].filter(s => s.id !== sessionId)
+          [currentUser]: {
+            ...prev[currentUser],
+            xp: Math.max(0, newTotalXP),
+            unlockedBadges: finalValidBadgeIds
+          }
         }));
+
+        // Notificações
+        const deletedXP = (userData[currentUser].xp || 0) - Math.max(0, newTotalXP);
+        if (deletedXP > 0) {
+          addToast(`-${deletedXP} XP removidos`, 'error');
+        }
+        if (lostBadges.length > 0) {
+          lostBadges.forEach(id => {
+            const badge = BADGES[id];
+            if (badge) addToast(`Badge perdido: ${badge.name}`, 'error');
+          });
+        }
       };
       
       const handleEditSession = (session) => {
@@ -4460,12 +6208,13 @@
         setCurrentScreen('session');
       };
       
-      const handleLogout = () => {
-        if (currentUser) {
-          window.DataLayer.saveOnlineStatus(currentUser, false);
-        }
+      const handleLogout = () => setShowLogoutModal(true);
+
+      const confirmLogout = () => {
+        if (currentUser) window.DataLayer.saveOnlineStatus(currentUser, false);
         if (partnerUnsubRef.current) partnerUnsubRef.current();
         if (onlineUnsubRef.current) onlineUnsubRef.current();
+        setShowLogoutModal(false);
         setCurrentUser(null);
         setCurrentScreen('dashboard');
         setEditingSession(null);
@@ -4479,7 +6228,7 @@
       const user = USERS[currentUser];
       const userSessions = sessions[currentUser] || [];
       const partnerSessions = sessions[user.partner] || [];
-      const { xp, level, streak, unlockedBadges } = userData[currentUser];
+      const { xp, level, streak, unlockedBadges, weeklyBadges = [], weeklyBadgeCounts = {} } = userData[currentUser];
       const partnerData = userData[user.partner];
       
       // Toast container
@@ -4502,13 +6251,12 @@
         { id: 'badges', label: 'Badges', icon: Icons.award },
         { id: 'level', label: 'Nível', icon: Icons['trending-up'] },
         { id: 'challenges', label: 'Desafios', icon: Icons.trophy },
-        { id: 'plan', label: 'Plano', icon: Icons['cpu'] },
         { id: 'history', label: 'Histórico', icon: Icons.calendar }
       ];
       
       const bottomNav = React.createElement('nav', { className: 'nav-bottom' },
         React.createElement('div', { className: 'nav-items' },
-          navItems.slice(0, 5).map(item => 
+          navItems.map(item => 
             React.createElement('button', {
               key: item.id,
               className: `nav-item ${currentScreen === item.id ? 'active ' + user.color : ''}`,
@@ -4581,6 +6329,8 @@
             userId: currentUser,
             sessions: userSessions,
             unlockedBadges,
+            weeklyBadges,
+            weeklyBadgeCounts,
             addToast
           });
           break;
@@ -4596,16 +6346,11 @@
             userId: currentUser,
             sessions: userSessions,
             partnerSessions,
+            userData,
             addToast
           });
           break;
-        case 'plan':
-          mainContent = React.createElement(StudyPlanScreen, {
-            userId: currentUser,
-            sessions: userSessions,
-            addToast
-          });
-          break;
+
         case 'history':
           mainContent = React.createElement(HistoryScreen, {
             userId: currentUser,
@@ -4631,9 +6376,83 @@
           });
       }
       
+      // Sidebar desktop
+      const sidebar = React.createElement('nav', { className: 'nav-sidebar' },
+        React.createElement('div', { className: 'logo text-gradient' }, 'Mana e Kelinha 💕'),
+        React.createElement('div', { className: 'nav-items' },
+          navItems.map(item =>
+            React.createElement('button', {
+              key: item.id,
+              className: `nav-item ${currentScreen === item.id ? 'active ' + user.color : ''}`,
+              onClick: () => {
+                if (item.id === 'session') setEditingSession(null);
+                setCurrentScreen(item.id);
+              }
+            },
+              item.icon({ width: 22, height: 22 }),
+              React.createElement('span', null, item.label)
+            )
+          )
+        ),
+        React.createElement('div', { className: 'user-section' },
+          React.createElement('div', { className: 'user-card', onClick: handleLogout },
+            React.createElement('span', { className: 'emoji' }, user.emoji),
+            React.createElement('div', { className: 'info' },
+              React.createElement('p', { className: 'name' }, user.name),
+              React.createElement('p', { className: 'profile' }, 'Sair')
+            )
+          )
+        )
+      );
+
+      // Modal de Logout
+      const logoutModal = showLogoutModal && React.createElement('div', {
+        style: {
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
+        },
+        onClick: () => setShowLogoutModal(false)
+      },
+        React.createElement('div', {
+          style: {
+            background: 'linear-gradient(135deg, rgba(20,15,30,0.98) 0%, rgba(15,10,25,0.98) 100%)',
+            border: '1px solid rgba(139,92,246,0.3)', borderRadius: '24px',
+            padding: '32px 28px', width: '100%', maxWidth: '340px', textAlign: 'center',
+            boxShadow: '0 32px 80px rgba(0,0,0,0.6)'
+          },
+          onClick: (e) => e.stopPropagation()
+        },
+          React.createElement('div', { style: { fontSize: '52px', marginBottom: '12px' } }, user.emoji),
+          React.createElement('h3', { style: { fontSize: '20px', fontWeight: '800', marginBottom: '8px' } }, `Sair, ${user.name}?`),
+          React.createElement('p', { style: { fontSize: '14px', color: 'rgba(255,255,255,0.5)', marginBottom: '24px' } },
+            'Seu progresso está salvo. Até logo! 💕'
+          ),
+          React.createElement('div', { style: { display: 'flex', gap: '12px' } },
+            React.createElement('button', {
+              onClick: () => setShowLogoutModal(false),
+              style: {
+                flex: 1, padding: '14px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.12)',
+                background: 'rgba(255,255,255,0.05)', color: 'white', fontWeight: '600', fontSize: '14px', cursor: 'pointer'
+              }
+            }, 'Cancelar'),
+            React.createElement('button', {
+              onClick: confirmLogout,
+              style: {
+                flex: 1, padding: '14px', borderRadius: '14px', border: 'none', cursor: 'pointer',
+                background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+                color: 'white', fontWeight: '700', fontSize: '14px'
+              }
+            }, 'Sair')
+          )
+        )
+      );
+
       return React.createElement(React.Fragment, null,
         toastContainer,
+        logoutModal,
         topBar,
+        sidebar,
         React.createElement('main', { className: 'content' }, mainContent),
         bottomNav
       );
