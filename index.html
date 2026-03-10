@@ -5444,179 +5444,224 @@
     }) => {
       const user = USERS[userId];
       const subjectList = user.exam === 'oab' ? SUBJECTS_OAB : SUBJECTS_ENEM;
-      const [view, setView] = useState('folders'); // 'folders' | 'list'
+      const [view, setView] = useState('folders'); // 'folders' | 'list' | 'charts'
       const [openFolder, setOpenFolder] = useState(null);
       const [searchTerm, setSearchTerm] = useState('');
+      const [chartMetric, setChartMetric] = useState('hours'); // 'hours' | 'sessions' | 'accuracy'
 
-      // Build folder structure: group sessions by subject
+      // Build folder structure
       const folders = useMemo(() => {
         const map = {};
-        sessions.forEach(s => {
-          const key = s.subject;
-          if (!map[key]) map[key] = [];
-          map[key].push(s);
-        });
-        // Sort each folder by date desc
+        sessions.forEach(s => { if (!map[s.subject]) map[s.subject] = []; map[s.subject].push(s); });
         Object.values(map).forEach(arr => arr.sort((a, b) => new Date(b.date) - new Date(a.date)));
         return map;
       }, [sessions]);
 
-      // Get emoji for a subject name from the list
-      const getEmoji = (subjectName) => {
-        const found = subjectList.find(s => s.name === subjectName);
-        return found ? found.emoji : '📚';
-      };
+      const getEmoji = (subjectName) => { const f = subjectList.find(s => s.name === subjectName); return f ? f.emoji : '📚'; };
 
-      // Stats per folder
       const folderStats = (sArr) => ({
         total: sArr.length,
-        hours: (sArr.reduce((a, s) => a + (s.h || 0) + (s.m || 0) / 60, 0)).toFixed(1),
-        questions: sArr.reduce((a, s) => a + (s.qT || 0), 0),
-        accuracy: (() => {
-          const withQ = sArr.filter(s => s.qT > 0);
-          if (!withQ.length) return null;
-          return Math.round(withQ.reduce((a, s) => a + (s.qC / s.qT) * 100, 0) / withQ.length);
-        })(),
+        hours: (sArr.reduce((a, s) => a + (s.h||0) + (s.m||0)/60, 0)).toFixed(1),
+        questions: sArr.reduce((a, s) => a + (s.qT||0), 0),
+        accuracy: (() => { const w = sArr.filter(s => s.qT > 0); if (!w.length) return null; return Math.round(w.reduce((a, s) => a + (s.qC/s.qT)*100, 0) / w.length); })(),
         lastDate: sArr[0]?.date || ''
       });
 
       const handleDelete = (session) => {
-        if (confirm(`Excluir sessão de "${session.subject}"?`)) {
-          onDeleteSession(session.id);
-          addToast('Sessão excluída', 'success');
-        }
+        if (confirm(`Excluir sessão de "${session.subject}"?`)) { onDeleteSession(session.id); addToast('Sessão excluída', 'success'); }
       };
 
-      // Flat list for search/list view
       const filteredList = useMemo(() => {
         let res = [...sessions].sort((a, b) => new Date(b.date) - new Date(a.date));
-        if (searchTerm) {
-          const t = searchTerm.toLowerCase();
-          res = res.filter(s => s.subject.toLowerCase().includes(t) || (s.body || '').toLowerCase().includes(t));
-        }
+        if (searchTerm) { const t = searchTerm.toLowerCase(); res = res.filter(s => s.subject.toLowerCase().includes(t) || (s.body||'').toLowerCase().includes(t)); }
         return res;
       }, [sessions, searchTerm]);
 
       const folderNames = Object.keys(folders).sort();
 
-      return React.createElement('div', null,
+      // ---- CHART DATA ----
+      const chartData = useMemo(() => {
+        const colors = ['#8b5cf6','#ec4899','#22c55e','#eab308','#3b82f6','#f97316','#06b6d4','#a855f7','#ef4444','#14b8a6','#f59e0b','#6366f1','#84cc16','#e879f9','#fb7185','#38bdf8','#4ade80','#fbbf24','#c084fc','#67e8f9'];
+        return folderNames.map((name, i) => { const st = folderStats(folders[name]); return { name, emoji: getEmoji(name), hours: parseFloat(st.hours), sessions: st.total, accuracy: st.accuracy, questions: st.questions, color: colors[i % colors.length] }; });
+      }, [folders, folderNames]);
 
-        // Header
+      const sortedChartData = useMemo(() => {
+        return [...chartData].sort((a, b) => chartMetric === 'accuracy' ? (b.accuracy||0)-(a.accuracy||0) : b[chartMetric]-a[chartMetric]);
+      }, [chartData, chartMetric]);
+
+      const renderBarChart = () => {
+        if (sortedChartData.length === 0) return React.createElement('p', { style: { color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: '40px' } }, 'Nenhuma sessão registrada ainda');
+        const top = sortedChartData.slice(0, 12);
+        const maxVal = Math.max(...top.map(d => chartMetric === 'accuracy' ? (d.accuracy||0) : d[chartMetric]), 1);
+        const barH = 32, gap = 10, labelW = 130, chartW = 300;
+        const totalH = top.length * (barH + gap);
+        return React.createElement('svg', { viewBox: `0 0 ${labelW+chartW+60} ${totalH+20}`, style: { width: '100%', height: 'auto', overflow: 'visible' } },
+          top.map((d, i) => {
+            const val = chartMetric === 'accuracy' ? (d.accuracy||0) : d[chartMetric];
+            const barWidth = Math.max((val/maxVal)*chartW, val > 0 ? 4 : 0);
+            const y = i*(barH+gap)+10;
+            const displayVal = chartMetric === 'hours' ? `${val}h` : chartMetric === 'accuracy' ? `${val}%` : val;
+            return React.createElement('g', { key: d.name },
+              React.createElement('text', { x: labelW-8, y: y+barH/2+5, textAnchor: 'end', fontSize: '12', fill: 'rgba(255,255,255,0.75)', style: { fontFamily: 'inherit' } }, `${d.emoji} ${d.name.length>14 ? d.name.slice(0,13)+'…' : d.name}`),
+              React.createElement('rect', { x: labelW, y, width: chartW, height: barH, rx: 8, fill: 'rgba(255,255,255,0.05)' }),
+              val > 0 && React.createElement('rect', { x: labelW, y, width: barWidth, height: barH, rx: 8, fill: `url(#grad${i})` }),
+              React.createElement('defs', null, React.createElement('linearGradient', { id: `grad${i}`, x1:'0',y1:'0',x2:'1',y2:'0' }, React.createElement('stop', { offset:'0%', stopColor: d.color, stopOpacity:'0.9' }), React.createElement('stop', { offset:'100%', stopColor: d.color, stopOpacity:'0.5' }))),
+              val > 0 && React.createElement('text', { x: labelW+barWidth+6, y: y+barH/2+5, fontSize: '12', fontWeight: '700', fill: d.color, style: { fontFamily: 'inherit' } }, displayVal)
+            );
+          })
+        );
+      };
+
+      const renderDonutChart = () => {
+        const top5 = [...chartData].sort((a,b) => b.hours-a.hours).slice(0,5);
+        const totalHours = top5.reduce((s,d) => s+d.hours, 0);
+        if (totalHours === 0) return null;
+        const cx=80, cy=80, r=65, innerR=38;
+        let startAngle = -Math.PI/2;
+        const slices = top5.map(d => { const angle=(d.hours/totalHours)*2*Math.PI; const sl={...d,startAngle,angle}; startAngle+=angle; return sl; });
+        const P = (cx,cy,r,a) => ({ x: cx+r*Math.cos(a), y: cy+r*Math.sin(a) });
+        return React.createElement('div', { style: { display:'flex', alignItems:'center', gap:'20px', flexWrap:'wrap' } },
+          React.createElement('svg', { viewBox:'0 0 160 160', style: { width:'160px', height:'160px', flexShrink:0 } },
+            slices.map((s,i) => {
+              const st=P(cx,cy,r,s.startAngle), en=P(cx,cy,r,s.startAngle+s.angle), ist=P(cx,cy,innerR,s.startAngle), ien=P(cx,cy,innerR,s.startAngle+s.angle);
+              const la=s.angle>Math.PI?1:0;
+              const path=`M ${st.x} ${st.y} A ${r} ${r} 0 ${la} 1 ${en.x} ${en.y} L ${ien.x} ${ien.y} A ${innerR} ${innerR} 0 ${la} 0 ${ist.x} ${ist.y} Z`;
+              return React.createElement('path', { key:i, d:path, fill:s.color, opacity:0.85 });
+            }),
+            React.createElement('text', { x:cx, y:cy-6, textAnchor:'middle', fontSize:'14', fontWeight:'800', fill:'white' }, `${totalHours.toFixed(0)}h`),
+            React.createElement('text', { x:cx, y:cy+10, textAnchor:'middle', fontSize:'9', fill:'rgba(255,255,255,0.5)' }, 'total')
+          ),
+          React.createElement('div', { style: { flex:1, minWidth:'120px' } },
+            slices.map((s,i) => React.createElement('div', { key:i, style: { display:'flex', alignItems:'center', gap:'8px', marginBottom:'8px' } },
+              React.createElement('div', { style: { width:'10px', height:'10px', borderRadius:'3px', background:s.color, flexShrink:0 } }),
+              React.createElement('span', { style: { fontSize:'12px', color:'rgba(255,255,255,0.75)', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' } }, s.name),
+              React.createElement('span', { style: { fontSize:'11px', fontWeight:'700', color:s.color } }, `${Math.round((s.hours/totalHours)*100)}%`)
+            ))
+          )
+        );
+      };
+
+      const renderLineChart = () => {
+        const weeks = [];
+        for (let i=7; i>=0; i--) {
+          const d=new Date(); d.setDate(d.getDate()-i*7);
+          const ws=new Date(d); ws.setDate(d.getDate()-d.getDay()); ws.setHours(0,0,0,0);
+          const we=new Date(ws); we.setDate(ws.getDate()+6); we.setHours(23,59,59,999);
+          const ws2=sessions.filter(s => { const sd=new Date(s.date||s.createdAt||0); return sd>=ws&&sd<=we; });
+          weeks.push({ label: ws.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}), hours: parseFloat((ws2.reduce((a,s)=>a+(s.h||0)+(s.m||0)/60,0)).toFixed(1)) });
+        }
+        const vals=weeks.map(w=>w.hours), maxVal=Math.max(...vals,1), W=300, H=100;
+        const pts=weeks.map((w,i) => ({ x:(i/(weeks.length-1))*W, y:H-(w.hours/maxVal)*(H-10) }));
+        const pathD=pts.map((p,i)=>`${i===0?'M':'L'} ${p.x} ${p.y}`).join(' ');
+        const areaD=`${pathD} L ${W} ${H} L 0 ${H} Z`;
+        return React.createElement('svg', { viewBox:`0 0 ${W+40} ${H+30}`, style: { width:'100%', height:'auto' } },
+          React.createElement('defs', null, React.createElement('linearGradient', { id:'lineArea', x1:'0',y1:'0',x2:'0',y2:'1' }, React.createElement('stop',{offset:'0%',stopColor:'#8b5cf6',stopOpacity:'0.4'}), React.createElement('stop',{offset:'100%',stopColor:'#8b5cf6',stopOpacity:'0'}))),
+          React.createElement('path', { d:areaD, fill:'url(#lineArea)', transform:'translate(20,0)' }),
+          React.createElement('path', { d:pathD, fill:'none', stroke:'#8b5cf6', strokeWidth:'2.5', strokeLinecap:'round', strokeLinejoin:'round', transform:'translate(20,0)' }),
+          pts.map((p,i) => React.createElement('g', { key:i, transform:'translate(20,0)' },
+            React.createElement('circle', { cx:p.x, cy:p.y, r:4, fill:'#8b5cf6', stroke:'white', strokeWidth:'1.5' }),
+            weeks[i].hours>0 && React.createElement('text', { x:p.x, y:p.y-8, textAnchor:'middle', fontSize:'9', fill:'#a78bfa', fontWeight:'700' }, `${weeks[i].hours}h`),
+            React.createElement('text', { x:p.x, y:H+20, textAnchor:'middle', fontSize:'9', fill:'rgba(255,255,255,0.35)' }, weeks[i].label)
+          ))
+        );
+      };
+
+      return React.createElement('div', null,
         React.createElement('div', { className: 'mb-4' },
           React.createElement('h2', { className: 'text-2xl font-bold mb-1' }, 'Histórico'),
-          React.createElement('p', { className: 'text-white-60' },
-            `${sessions.length} sessões em ${folderNames.length} matérias`
-          )
+          React.createElement('p', { className: 'text-white-60' }, `${sessions.length} sessões em ${folderNames.length} matérias`)
         ),
 
-        // View toggle + search
-        React.createElement('div', { style: { display: 'flex', gap: '10px', marginBottom: '16px', alignItems: 'center' } },
-          React.createElement('button', {
-            onClick: () => { setView('folders'); setOpenFolder(null); },
-            style: {
-              padding: '8px 16px', borderRadius: '20px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '600',
-              background: view === 'folders' ? 'var(--violet)' : 'rgba(255,255,255,0.07)',
-              color: 'white'
-            }
-          }, '📁 Pastas'),
-          React.createElement('button', {
-            onClick: () => setView('list'),
-            style: {
-              padding: '8px 16px', borderRadius: '20px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '600',
-              background: view === 'list' ? 'var(--violet)' : 'rgba(255,255,255,0.07)',
-              color: 'white'
-            }
-          }, '📋 Lista'),
-          view === 'list' && React.createElement('input', {
-            type: 'text', value: searchTerm,
-            onChange: e => setSearchTerm(e.target.value),
-            placeholder: 'Buscar...', className: 'input',
-            style: { flex: 1, padding: '8px 14px' }
-          })
+        // Tabs
+        React.createElement('div', { style: { display:'flex', gap:'8px', marginBottom:'16px', alignItems:'center', flexWrap:'wrap' } },
+          React.createElement('button', { onClick: () => { setView('folders'); setOpenFolder(null); }, style: { padding:'8px 14px', borderRadius:'20px', border:'none', cursor:'pointer', fontSize:'13px', fontWeight:'600', background: view==='folders'?'var(--violet)':'rgba(255,255,255,0.07)', color:'white' } }, '📁 Pastas'),
+          React.createElement('button', { onClick: () => setView('charts'), style: { padding:'8px 14px', borderRadius:'20px', border:'none', cursor:'pointer', fontSize:'13px', fontWeight:'600', background: view==='charts'?'var(--violet)':'rgba(255,255,255,0.07)', color:'white' } }, '📊 Gráficos'),
+          React.createElement('button', { onClick: () => setView('list'), style: { padding:'8px 14px', borderRadius:'20px', border:'none', cursor:'pointer', fontSize:'13px', fontWeight:'600', background: view==='list'?'var(--violet)':'rgba(255,255,255,0.07)', color:'white' } }, '📋 Lista'),
+          view === 'list' && React.createElement('input', { type:'text', value:searchTerm, onChange:e=>setSearchTerm(e.target.value), placeholder:'Buscar...', className:'input', style:{ flex:1, padding:'8px 14px' } })
         ),
 
-        // ---- PASTA ABERTA ----
-        view === 'folders' && openFolder && React.createElement('div', null,
-          React.createElement('button', {
-            onClick: () => setOpenFolder(null),
-            style: { display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', marginBottom: '16px', fontSize: '14px' }
-          }, '← Voltar para pastas'),
-          React.createElement('div', {
-            style: { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', padding: '14px 16px', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: '14px' }
-          },
-            React.createElement('span', { style: { fontSize: '28px' } }, getEmoji(openFolder)),
-            React.createElement('div', null,
-              React.createElement('p', { style: { fontWeight: '700', fontSize: '16px' } }, openFolder),
-              React.createElement('p', { style: { fontSize: '12px', color: 'rgba(255,255,255,0.5)' } },
-                `${(folders[openFolder] || []).length} sessões · ${folderStats(folders[openFolder] || []).hours}h estudadas`
-              )
-            )
-          ),
-          React.createElement('div', { className: 'session-list' },
-            (folders[openFolder] || []).map(session =>
-              React.createElement(SessionItem, { key: session.id, session, userColor: user.color, onEdit: onEditSession, onDelete: handleDelete })
-            )
-          )
-        ),
-
-        // ---- GRID DE PASTAS ----
-        view === 'folders' && !openFolder && React.createElement('div', null,
-          sessions.length === 0
-            ? React.createElement(GlassCard, null,
-                React.createElement('div', { className: 'empty-state' },
-                  React.createElement('div', { className: 'icon' }, '📂'),
-                  React.createElement('h3', null, 'Nenhuma sessão ainda'),
-                  React.createElement('p', null, 'Adicione sua primeira sessão de estudo')
+        // GRÁFICOS
+        view === 'charts' && (sessions.length === 0
+          ? React.createElement(GlassCard, null, React.createElement('div', { className:'empty-state' }, React.createElement('div',{className:'icon'},'📊'), React.createElement('h3',null,'Sem dados ainda'), React.createElement('p',null,'Adicione sessões para ver seus gráficos')))
+          : React.createElement('div', null,
+              React.createElement(GlassCard, { className:'mb-4' },
+                React.createElement('div', { className:'p-5' },
+                  React.createElement('h3', { style:{ fontSize:'15px', fontWeight:'700', marginBottom:'4px' } }, '📈 Horas por semana'),
+                  React.createElement('p', { style:{ fontSize:'12px', color:'rgba(255,255,255,0.4)', marginBottom:'16px' } }, 'Últimas 8 semanas'),
+                  renderLineChart()
+                )
+              ),
+              React.createElement(GlassCard, { className:'mb-4' },
+                React.createElement('div', { className:'p-5' },
+                  React.createElement('h3', { style:{ fontSize:'15px', fontWeight:'700', marginBottom:'4px' } }, '🍩 Distribuição de horas'),
+                  React.createElement('p', { style:{ fontSize:'12px', color:'rgba(255,255,255,0.4)', marginBottom:'16px' } }, 'Top 5 matérias mais estudadas'),
+                  renderDonutChart()
+                )
+              ),
+              React.createElement(GlassCard, { className:'mb-4' },
+                React.createElement('div', { className:'p-5' },
+                  React.createElement('div', { style:{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'14px', flexWrap:'wrap', gap:'8px' } },
+                    React.createElement('div', null,
+                      React.createElement('h3', { style:{ fontSize:'15px', fontWeight:'700' } }, '🏆 Ranking por matéria'),
+                      React.createElement('p', { style:{ fontSize:'12px', color:'rgba(255,255,255,0.4)' } }, 'Top 12')
+                    ),
+                    React.createElement('div', { style:{ display:'flex', gap:'6px' } },
+                      [['hours','⏱️ Horas'],['sessions','📚 Sessões'],['accuracy','🎯 Acerto']].map(([m,label]) =>
+                        React.createElement('button', { key:m, onClick:()=>setChartMetric(m), style:{ padding:'5px 10px', borderRadius:'10px', border:'none', cursor:'pointer', fontSize:'11px', fontWeight:'600', background: chartMetric===m?'var(--violet)':'rgba(255,255,255,0.07)', color:'white' } }, label)
+                      )
+                    )
+                  ),
+                  renderBarChart()
                 )
               )
-            : React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' } },
+            )
+        ),
+
+        // PASTA ABERTA
+        view === 'folders' && openFolder && React.createElement('div', null,
+          React.createElement('button', { onClick:()=>setOpenFolder(null), style:{ display:'flex', alignItems:'center', gap:'8px', background:'none', border:'none', color:'rgba(255,255,255,0.6)', cursor:'pointer', marginBottom:'16px', fontSize:'14px' } }, '← Voltar para pastas'),
+          React.createElement('div', { style:{ display:'flex', alignItems:'center', gap:'12px', marginBottom:'16px', padding:'14px 16px', background:'rgba(139,92,246,0.1)', border:'1px solid rgba(139,92,246,0.3)', borderRadius:'14px' } },
+            React.createElement('span', { style:{ fontSize:'28px' } }, getEmoji(openFolder)),
+            React.createElement('div', null,
+              React.createElement('p', { style:{ fontWeight:'700', fontSize:'16px' } }, openFolder),
+              React.createElement('p', { style:{ fontSize:'12px', color:'rgba(255,255,255,0.5)' } }, `${(folders[openFolder]||[]).length} sessões · ${folderStats(folders[openFolder]||[]).hours}h`)
+            )
+          ),
+          React.createElement('div', { className:'session-list' },
+            (folders[openFolder]||[]).map(session => React.createElement(SessionItem, { key:session.id, session, userColor:user.color, onEdit:onEditSession, onDelete:handleDelete }))
+          )
+        ),
+
+        // GRID DE PASTAS
+        view === 'folders' && !openFolder && React.createElement('div', null,
+          sessions.length === 0
+            ? React.createElement(GlassCard, null, React.createElement('div',{className:'empty-state'}, React.createElement('div',{className:'icon'},'📂'), React.createElement('h3',null,'Nenhuma sessão ainda'), React.createElement('p',null,'Adicione sua primeira sessão')))
+            : React.createElement('div', { style:{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:'12px' } },
                 folderNames.map(subjectName => {
-                  const sArr = folders[subjectName];
-                  const st = folderStats(sArr);
-                  return React.createElement('div', {
-                    key: subjectName,
-                    onClick: () => setOpenFolder(subjectName),
-                    style: {
-                      background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)',
-                      borderRadius: '18px', padding: '16px', cursor: 'pointer', transition: 'all 0.2s'
-                    },
-                    onMouseEnter: e => { e.currentTarget.style.background = 'rgba(139,92,246,0.12)'; e.currentTarget.style.borderColor = 'rgba(139,92,246,0.35)'; },
-                    onMouseLeave: e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)'; }
-                  },
-                    React.createElement('div', { style: { fontSize: '28px', marginBottom: '8px' } }, getEmoji(subjectName)),
-                    React.createElement('p', { style: { fontWeight: '700', fontSize: '13px', marginBottom: '6px', lineHeight: 1.3 } }, subjectName),
-                    React.createElement('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '4px' } },
-                      React.createElement('span', { style: { fontSize: '10px', padding: '2px 7px', borderRadius: '10px', background: 'rgba(139,92,246,0.2)', color: '#a78bfa' } }, `${st.total} sessões`),
-                      React.createElement('span', { style: { fontSize: '10px', padding: '2px 7px', borderRadius: '10px', background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.5)' } }, `${st.hours}h`),
-                      st.accuracy !== null && React.createElement('span', { style: { fontSize: '10px', padding: '2px 7px', borderRadius: '10px', background: 'rgba(34,197,94,0.15)', color: '#4ade80' } }, `${st.accuracy}%`)
+                  const sArr=folders[subjectName], st=folderStats(sArr);
+                  return React.createElement('div', { key:subjectName, onClick:()=>setOpenFolder(subjectName), style:{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:'18px', padding:'16px', cursor:'pointer', transition:'all 0.2s' }, onMouseEnter:e=>{e.currentTarget.style.background='rgba(139,92,246,0.12)';e.currentTarget.style.borderColor='rgba(139,92,246,0.35)';}, onMouseLeave:e=>{e.currentTarget.style.background='rgba(255,255,255,0.04)';e.currentTarget.style.borderColor='rgba(255,255,255,0.09)';} },
+                    React.createElement('div',{style:{fontSize:'28px',marginBottom:'8px'}},getEmoji(subjectName)),
+                    React.createElement('p',{style:{fontWeight:'700',fontSize:'13px',marginBottom:'6px',lineHeight:1.3}},subjectName),
+                    React.createElement('div',{style:{display:'flex',flexWrap:'wrap',gap:'4px'}},
+                      React.createElement('span',{style:{fontSize:'10px',padding:'2px 7px',borderRadius:'10px',background:'rgba(139,92,246,0.2)',color:'#a78bfa'}},`${st.total} sessões`),
+                      React.createElement('span',{style:{fontSize:'10px',padding:'2px 7px',borderRadius:'10px',background:'rgba(255,255,255,0.07)',color:'rgba(255,255,255,0.5)'}},`${st.hours}h`),
+                      st.accuracy!==null&&React.createElement('span',{style:{fontSize:'10px',padding:'2px 7px',borderRadius:'10px',background:'rgba(34,197,94,0.15)',color:'#4ade80'}},`${st.accuracy}%`)
                     ),
-                    React.createElement('p', { style: { fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '6px' } },
-                      st.lastDate ? `Última: ${new Date(st.lastDate).toLocaleDateString('pt-BR')}` : ''
-                    )
+                    React.createElement('p',{style:{fontSize:'10px',color:'rgba(255,255,255,0.3)',marginTop:'6px'}}, st.lastDate?`Última: ${new Date(st.lastDate).toLocaleDateString('pt-BR')}`:'')
                   );
                 })
               )
         ),
 
-        // ---- VISTA LISTA ----
+        // LISTA
         view === 'list' && React.createElement('div', null,
           filteredList.length === 0
-            ? React.createElement(GlassCard, null,
-                React.createElement('div', { className: 'empty-state' },
-                  React.createElement('div', { className: 'icon' }, '📋'),
-                  React.createElement('h3', null, searchTerm ? 'Nada encontrado' : 'Nenhuma sessão ainda'),
-                  React.createElement('p', null, searchTerm ? 'Tente outro termo' : 'Adicione sua primeira sessão de estudo')
-                )
-              )
-            : React.createElement('div', { className: 'session-list' },
-                filteredList.map(session =>
-                  React.createElement(SessionItem, { key: session.id, session, userColor: user.color, onEdit: onEditSession, onDelete: handleDelete })
-                )
-              )
+            ? React.createElement(GlassCard, null, React.createElement('div',{className:'empty-state'}, React.createElement('div',{className:'icon'},'📋'), React.createElement('h3',null,searchTerm?'Nada encontrado':'Nenhuma sessão ainda'), React.createElement('p',null,searchTerm?'Tente outro termo':'Adicione sua primeira sessão')))
+            : React.createElement('div',{className:'session-list'}, filteredList.map(session=>React.createElement(SessionItem,{key:session.id,session,userColor:user.color,onEdit:onEditSession,onDelete:handleDelete})))
         )
       );
     };
-    
+
     // ============================================
     // COMPONENTE: RELATÓRIO DO PARCEIRO
     // ============================================
@@ -5918,12 +5963,13 @@
     const App = () => {
       const [currentUser, setCurrentUser] = useState(null);
       const [currentScreen, setCurrentScreen] = useState('dashboard');
-      const [toasts, setToasts] = useState([]);           // apenas erros inline
-      const [notifications, setNotifications] = useState([]); // painel de notificações
+      const [toasts, setToasts] = useState([]);
+      const [notifications, setNotifications] = useState([]);
       const [notifUnread, setNotifUnread] = useState(0);
       const [showNotifPanel, setShowNotifPanel] = useState(false);
       const [editingSession, setEditingSession] = useState(null);
       const [showLogoutModal, setShowLogoutModal] = useState(false);
+      const [showResetModal, setShowResetModal] = useState(false);
       
       // Estado para status online do parceiro
       const [partnerOnlineStatus, setPartnerOnlineStatus] = useState({
@@ -6169,6 +6215,16 @@
         return newBadges;
       };
       
+      // Recalcula XP total do zero: sessões + badges desbloqueadas
+      const recalcXP = (userSessions, badgeIds) => {
+        const sessionXP = userSessions.reduce((total, s) => total + calculateXP(s), 0);
+        const badgeXP = badgeIds.reduce((total, id) => {
+          const b = BADGES[id];
+          return total + (b ? b.xpReward : 0);
+        }, 0);
+        return sessionXP + badgeXP;
+      };
+
       const handleSaveSession = (session) => {
         const userSessions = sessions[currentUser] || [];
         let newSessions;
@@ -6181,97 +6237,69 @@
         
         setSessions(prev => ({ ...prev, [currentUser]: newSessions }));
         
-        // Calcular e adicionar XP
-        const xpGained = editingSession ? 0 : calculateXP(session);
-        if (xpGained > 0) {
-          setUserData(prev => ({
-            ...prev,
-            [currentUser]: {
-              ...prev[currentUser],
-              xp: prev[currentUser].xp + xpGained
-            }
-          }));
-          addToast('XP ganho!', 'xp', xpGained);
+        // Verificar badges novos
+        const newBadges = checkBadges(currentUser, newSessions);
+        const currentBadges = userData[currentUser].unlockedBadges || [];
+        const allBadges = [...currentBadges, ...newBadges.map(b => b.id)];
+        
+        // Recalcular XP do zero para ser sempre consistente
+        const newTotalXP = recalcXP(newSessions, allBadges);
+        
+        setUserData(prev => ({
+          ...prev,
+          [currentUser]: {
+            ...prev[currentUser],
+            xp: newTotalXP,
+            unlockedBadges: allBadges
+          }
+        }));
+
+        if (!editingSession) {
+          const gained = calculateXP(session);
+          if (gained > 0) addToast('XP ganho!', 'xp', gained);
         }
         
-        // Verificar badges
-        const newBadges = checkBadges(currentUser, newSessions);
-        if (newBadges.length > 0) {
-          const badgeXP = newBadges.reduce((acc, b) => acc + b.xpReward, 0);
-          setUserData(prev => ({
-            ...prev,
-            [currentUser]: {
-              ...prev[currentUser],
-              unlockedBadges: [...prev[currentUser].unlockedBadges, ...newBadges.map(b => b.id)],
-              xp: prev[currentUser].xp + badgeXP
-            }
-          }));
-          
-          newBadges.forEach((badge, i) => {
-            setTimeout(() => {
-              addToast(`🏆 Badge desbloqueado: ${badge.name}!`, 'badge', badge.xpReward);
-            }, i * 500);
-          });
-        }
+        newBadges.forEach((badge, i) => {
+          setTimeout(() => {
+            addToast(`🏆 Badge desbloqueado: ${badge.name}!`, 'badge', badge.xpReward);
+          }, i * 500);
+        });
         
         setEditingSession(null);
         setCurrentScreen('dashboard');
       };
       
       const handleDeleteSession = (sessionId) => {
-        // Sessões restantes após a remoção
         const remaining = (sessions[currentUser] || []).filter(s => s.id !== sessionId);
 
-        // Recalcular XP total do zero com as sessões restantes
-        const newTotalXP = remaining.reduce((total, s) => total + calculateXP(s), 0);
-
-        // Recalcular quais badges ainda são válidas com as sessões restantes
+        // Recalcular badges válidas
         const stats = {
           totalSessions: remaining.length,
-          totalMinutes: remaining.reduce((acc, s) => acc + (s.h || 0) * 60 + (s.m || 0), 0),
-          totalQuestions: remaining.reduce((acc, s) => acc + (s.qT || 0), 0),
+          totalMinutes: remaining.reduce((acc, s) => acc + (s.h||0)*60 + (s.m||0), 0),
+          totalQuestions: remaining.reduce((acc, s) => acc + (s.qT||0), 0),
           uniqueSubjects: new Set(remaining.map(s => s.subject)).size,
           bestAccuracy: remaining.filter(s => s.qT > 0).length > 0
-            ? Math.max(...remaining.filter(s => s.qT > 0).map(s => (s.qC / s.qT) * 100))
-            : 0,
+            ? Math.max(...remaining.filter(s => s.qT > 0).map(s => (s.qC/s.qT)*100)) : 0,
           easySessions: remaining.filter(s => s.diff === 'facil').length,
           mediumSessions: remaining.filter(s => s.diff === 'medio').length,
           hardSessions: remaining.filter(s => s.diff === 'dificil').length,
-          longestSession: remaining.length > 0
-            ? Math.max(...remaining.map(s => (s.h || 0) * 60 + (s.m || 0)))
-            : 0,
-          shortSessions: remaining.filter(s => {
-            const mins = (s.h || 0) * 60 + (s.m || 0);
-            return mins >= 15 && mins <= 25;
-          }).length,
+          longestSession: remaining.length > 0 ? Math.max(...remaining.map(s => (s.h||0)*60+(s.m||0))) : 0,
+          shortSessions: remaining.filter(s => { const m=(s.h||0)*60+(s.m||0); return m>=15&&m<=25; }).length,
           streak: userData[currentUser].streak,
-          hasStudiedLateNight: false,
-          hasStudiedWeekend: false,
-          maxHoursInDay: 0,
-          maxHoursInWeek: 0,
-          bothStudiedSameDay: false,
-          duelsWon: userData[currentUser].weeklyBadgeCounts?.venceu_duelo || 0,
-          totalBadges: 0
+          hasStudiedLateNight: false, hasStudiedWeekend: false,
+          maxHoursInDay: 0, maxHoursInWeek: 0,
+          bothStudiedSameDay: false, duelsWon: 0, totalBadges: 0
         };
-        // totalBadges baseado nas badges que ainda são válidas
-        const validBadgeIds = Object.values(BADGES)
-          .filter(b => b.condition({ ...stats, totalBadges: 0 }))
-          .map(b => b.id);
-        // Segunda passagem com totalBadges correto
-        stats.totalBadges = validBadgeIds.length;
-        const finalValidBadgeIds = Object.values(BADGES)
-          .filter(b => b.condition(stats))
-          .map(b => b.id);
+        const pass1 = Object.values(BADGES).filter(b => b.condition(stats)).map(b => b.id);
+        stats.totalBadges = pass1.length;
+        const finalValidBadgeIds = Object.values(BADGES).filter(b => b.condition(stats)).map(b => b.id);
 
-        // Verificar quais badges foram perdidas
+        // XP recalculado do zero com sessões restantes + badges ainda válidas
+        const newTotalXP = recalcXP(remaining, finalValidBadgeIds);
+
         const currentBadgeList = userData[currentUser].unlockedBadges || [];
         const lostBadges = currentBadgeList.filter(id => !finalValidBadgeIds.includes(id));
-        const badgesLostXP = lostBadges.reduce((acc, id) => {
-          const badge = BADGES[id];
-          return acc + (badge ? badge.xpReward : 0);
-        }, 0);
 
-        // Aplicar remoção
         setSessions(prev => ({ ...prev, [currentUser]: remaining }));
         setUserData(prev => ({
           ...prev,
@@ -6282,17 +6310,28 @@
           }
         }));
 
-        // Notificações
-        const deletedXP = (userData[currentUser].xp || 0) - Math.max(0, newTotalXP);
-        if (deletedXP > 0) {
-          addToast(`-${deletedXP} XP removidos`, 'error');
-        }
-        if (lostBadges.length > 0) {
-          lostBadges.forEach(id => {
-            const badge = BADGES[id];
-            if (badge) addToast(`Badge perdido: ${badge.name}`, 'error');
-          });
-        }
+        const oldXP = userData[currentUser].xp || 0;
+        const xpLost = oldXP - Math.max(0, newTotalXP);
+        if (xpLost > 0) addToast(`-${xpLost} XP removidos`, 'error');
+        lostBadges.forEach(id => {
+          const badge = BADGES[id];
+          if (badge) addToast(`Badge perdido: ${badge.name}`, 'error');
+        });
+      };
+
+      // Reset completo de emergência
+      const handleResetProgress = () => {
+        setUserData(prev => ({
+          ...prev,
+          [currentUser]: {
+            xp: 0, level: 1, streak: 0,
+            unlockedBadges: [], weeklyBadges: [],
+            weeklyBadgeCounts: {}, lastWeekKey: ''
+          }
+        }));
+        setSessions(prev => ({ ...prev, [currentUser]: [] }));
+        addToast('Progresso zerado com sucesso', 'info');
+        setShowResetModal(false);
       };
       
       const handleEditSession = (session) => {
@@ -6504,7 +6543,16 @@
               React.createElement('p', { className: 'name' }, user.name),
               React.createElement('p', { className: 'profile' }, 'Sair')
             )
-          )
+          ),
+          React.createElement('button', {
+            onClick: () => setShowResetModal(true),
+            style: {
+              marginTop: '8px', width: '100%', padding: '10px', borderRadius: '12px',
+              border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)',
+              color: 'rgba(239,68,68,0.7)', fontSize: '12px', fontWeight: '600', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
+            }
+          }, '⚠️ Zerar meu progresso')
         )
       );
 
@@ -6551,7 +6599,40 @@
         )
       );
 
-      // Painel de Notificações
+      // Modal de Reset
+      const resetModal = showResetModal && React.createElement('div', {
+        style: { position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' },
+        onClick: () => setShowResetModal(false)
+      },
+        React.createElement('div', {
+          style: { background: 'linear-gradient(135deg, rgba(25,10,10,0.99) 0%, rgba(15,8,8,0.99) 100%)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '24px', padding: '32px 28px', width: '100%', maxWidth: '340px', textAlign: 'center', boxShadow: '0 32px 80px rgba(239,68,68,0.2)' },
+          onClick: e => e.stopPropagation()
+        },
+          React.createElement('div', { style: { fontSize: '52px', marginBottom: '12px' } }, '⚠️'),
+          React.createElement('h3', { style: { fontSize: '20px', fontWeight: '800', marginBottom: '8px', color: '#f87171' } }, 'Zerar Progresso'),
+          React.createElement('p', { style: { fontSize: '13px', color: 'rgba(255,255,255,0.55)', marginBottom: '8px' } },
+            `Isso irá apagar TODO o progresso de ${user.name}:`
+          ),
+          React.createElement('div', { style: { background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '12px', padding: '12px', marginBottom: '24px', textAlign: 'left' } },
+            ['XP e Nível', 'Todas as sessões', 'Todas as badges', 'Streak'].map(item =>
+              React.createElement('p', { key: item, style: { fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginBottom: '4px' } }, `❌ ${item}`)
+            )
+          ),
+          React.createElement('p', { style: { fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginBottom: '20px', fontStyle: 'italic' } },
+            'Esta ação não pode ser desfeita.'
+          ),
+          React.createElement('div', { style: { display: 'flex', gap: '12px' } },
+            React.createElement('button', {
+              onClick: () => setShowResetModal(false),
+              style: { flex: 1, padding: '14px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)', color: 'white', fontWeight: '600', fontSize: '14px', cursor: 'pointer' }
+            }, 'Cancelar'),
+            React.createElement('button', {
+              onClick: handleResetProgress,
+              style: { flex: 1, padding: '14px', borderRadius: '14px', border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: 'white', fontWeight: '700', fontSize: '14px' }
+            }, '🗑️ Zerar tudo')
+          )
+        )
+      );
       const notifPanel = showNotifPanel && React.createElement(React.Fragment, null,
         React.createElement('div', { className: 'notif-panel-overlay', onClick: () => setShowNotifPanel(false) }),
         React.createElement('div', { className: 'notif-panel' },
@@ -6600,6 +6681,7 @@
       return React.createElement(React.Fragment, null,
         toastContainer,
         logoutModal,
+        resetModal,
         notifPanel,
         topBar,
         sidebar,
