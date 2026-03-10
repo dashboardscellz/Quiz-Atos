@@ -4636,7 +4636,7 @@
     // ============================================
     // COMPONENTE: SISTEMA DE NÍVEIS E XP
     // ============================================
-    const LevelScreen = ({ userId, xp, addToast }) => {
+    const LevelScreen = ({ userId, xp, sessions, unlockedBadges, onRecalcXP, addToast }) => {
       const user = USERS[userId];
       const daysUntilExam = getDaysUntilExam(userId);
       const [animPct, setAnimPct] = React.useState(0);
@@ -4882,6 +4882,24 @@
                 React.createElement('span', { className: 'text-yellow font-semibold' }, '+25 XP')
               )
             )
+          )
+        ),
+
+        // Botão de recalcular XP
+        React.createElement('div', { style: { marginTop: '24px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px' } },
+          React.createElement('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' } },
+            React.createElement('div', null,
+              React.createElement('p', { style: { fontSize: '13px', fontWeight: '600', marginBottom: '3px' } }, '🔧 Recalcular XP'),
+              React.createElement('p', { style: { fontSize: '11px', color: 'rgba(255,255,255,0.4)' } }, 'Corrige inconsistências sem apagar nada')
+            ),
+            React.createElement('button', {
+              onClick: onRecalcXP,
+              style: {
+                padding: '10px 18px', borderRadius: '12px', border: '1px solid rgba(139,92,246,0.4)',
+                background: 'rgba(139,92,246,0.12)', color: '#a78bfa',
+                fontSize: '13px', fontWeight: '700', cursor: 'pointer', flexShrink: 0
+              }
+            }, 'Sincronizar')
           )
         )
       );
@@ -5969,7 +5987,6 @@
       const [showNotifPanel, setShowNotifPanel] = useState(false);
       const [editingSession, setEditingSession] = useState(null);
       const [showLogoutModal, setShowLogoutModal] = useState(false);
-      const [showResetModal, setShowResetModal] = useState(false);
       
       // Estado para status online do parceiro
       const [partnerOnlineStatus, setPartnerOnlineStatus] = useState({
@@ -6319,20 +6336,6 @@
         });
       };
 
-      // Reset completo de emergência
-      const handleResetProgress = () => {
-        setUserData(prev => ({
-          ...prev,
-          [currentUser]: {
-            xp: 0, level: 1, streak: 0,
-            unlockedBadges: [], weeklyBadges: [],
-            weeklyBadgeCounts: {}, lastWeekKey: ''
-          }
-        }));
-        setSessions(prev => ({ ...prev, [currentUser]: [] }));
-        addToast('Progresso zerado com sucesso', 'info');
-        setShowResetModal(false);
-      };
       
       const handleEditSession = (session) => {
         setEditingSession(session);
@@ -6480,6 +6483,17 @@
           mainContent = React.createElement(LevelScreen, {
             userId: currentUser,
             xp,
+            sessions: userSessions,
+            unlockedBadges,
+            onRecalcXP: () => {
+              const corrected = recalcXP(userSessions, unlockedBadges);
+              if (corrected !== xp) {
+                setUserData(prev => ({ ...prev, [currentUser]: { ...prev[currentUser], xp: corrected } }));
+                addToast(`XP corrigido: ${corrected.toLocaleString('pt-BR')} XP`, 'success');
+              } else {
+                addToast('XP já está correto! ✅', 'info');
+              }
+            },
             addToast
           });
           break;
@@ -6543,16 +6557,7 @@
               React.createElement('p', { className: 'name' }, user.name),
               React.createElement('p', { className: 'profile' }, 'Sair')
             )
-          ),
-          React.createElement('button', {
-            onClick: () => setShowResetModal(true),
-            style: {
-              marginTop: '8px', width: '100%', padding: '10px', borderRadius: '12px',
-              border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)',
-              color: 'rgba(239,68,68,0.7)', fontSize: '12px', fontWeight: '600', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
-            }
-          }, '⚠️ Zerar meu progresso')
+          )
         )
       );
 
@@ -6599,40 +6604,6 @@
         )
       );
 
-      // Modal de Reset
-      const resetModal = showResetModal && React.createElement('div', {
-        style: { position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' },
-        onClick: () => setShowResetModal(false)
-      },
-        React.createElement('div', {
-          style: { background: 'linear-gradient(135deg, rgba(25,10,10,0.99) 0%, rgba(15,8,8,0.99) 100%)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '24px', padding: '32px 28px', width: '100%', maxWidth: '340px', textAlign: 'center', boxShadow: '0 32px 80px rgba(239,68,68,0.2)' },
-          onClick: e => e.stopPropagation()
-        },
-          React.createElement('div', { style: { fontSize: '52px', marginBottom: '12px' } }, '⚠️'),
-          React.createElement('h3', { style: { fontSize: '20px', fontWeight: '800', marginBottom: '8px', color: '#f87171' } }, 'Zerar Progresso'),
-          React.createElement('p', { style: { fontSize: '13px', color: 'rgba(255,255,255,0.55)', marginBottom: '8px' } },
-            `Isso irá apagar TODO o progresso de ${user.name}:`
-          ),
-          React.createElement('div', { style: { background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '12px', padding: '12px', marginBottom: '24px', textAlign: 'left' } },
-            ['XP e Nível', 'Todas as sessões', 'Todas as badges', 'Streak'].map(item =>
-              React.createElement('p', { key: item, style: { fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginBottom: '4px' } }, `❌ ${item}`)
-            )
-          ),
-          React.createElement('p', { style: { fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginBottom: '20px', fontStyle: 'italic' } },
-            'Esta ação não pode ser desfeita.'
-          ),
-          React.createElement('div', { style: { display: 'flex', gap: '12px' } },
-            React.createElement('button', {
-              onClick: () => setShowResetModal(false),
-              style: { flex: 1, padding: '14px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)', color: 'white', fontWeight: '600', fontSize: '14px', cursor: 'pointer' }
-            }, 'Cancelar'),
-            React.createElement('button', {
-              onClick: handleResetProgress,
-              style: { flex: 1, padding: '14px', borderRadius: '14px', border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: 'white', fontWeight: '700', fontSize: '14px' }
-            }, '🗑️ Zerar tudo')
-          )
-        )
-      );
       const notifPanel = showNotifPanel && React.createElement(React.Fragment, null,
         React.createElement('div', { className: 'notif-panel-overlay', onClick: () => setShowNotifPanel(false) }),
         React.createElement('div', { className: 'notif-panel' },
@@ -6681,7 +6652,6 @@
       return React.createElement(React.Fragment, null,
         toastContainer,
         logoutModal,
-        resetModal,
         notifPanel,
         topBar,
         sidebar,
