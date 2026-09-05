@@ -39,3 +39,8 @@ Esta versão usa login local no navegador para manter a instalação simples. A 
 ## Identidade visual
 
 A foto oficial do grupo foi incorporada ao banner principal do site, com tratamento visual responsivo e integração ao painel de saldo.
+
+
+## Ajuste visual
+
+A abertura foi simplificada e a foto do grupo passou a aparecer como imagem visível no banner principal, sem slogan institucional.

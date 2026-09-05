@@ -40,43 +40,32 @@
   </header>
 
   <main id="inicio">
-    <section class="hero hero-with-photo">
-      <div class="hero-photo" aria-hidden="true"></div>
-      <div class="hero-overlay" aria-hidden="true"></div>
-
-      <div class="container hero-grid">
-        <div class="hero-copy">
-          <div class="hero-kicker">
-            <span class="hero-kicker-line"></span>
-            <span>GRUPO ATOS</span>
-          </div>
-
-          <h1>Transparência que faz parte da nossa caminhada.</h1>
-          <p>
-            Um espaço aberto para acompanhar, de forma simples e clara,
-            cada entrada, cada saída e a evolução financeira do grupo.
-          </p>
+    <section class="hero simple-hero">
+      <div class="container hero-simple-grid">
+        <div class="hero-simple-copy">
+          <span class="hero-simple-label">GRUPO ATOS</span>
+          <h1>Financeiro do ATOS</h1>
+          <p>Entradas, saídas e saldo do grupo em um só lugar.</p>
 
           <div class="hero-actions">
-            <a href="#movimentacoes" class="btn btn-hero">Ver movimentações</a>
-            <div class="hero-badges">
+            <a href="#movimentacoes" class="btn btn-primary">Ver movimentações</a>
+            <div class="hero-badges hero-badges-dark">
               <span class="status-dot"></span>
-              <span>Dados atualizados em tempo real</span>
+              <span>Atualização em tempo real</span>
             </div>
           </div>
         </div>
 
-        <article class="balance-card balance-card-on-photo" aria-label="Saldo atual">
-          <span class="balance-label">SALDO ATUAL DO GRUPO</span>
+        <div class="hero-photo-card">
+          <img src="./assets/grupo-atos.png" alt="Foto do grupo ATOS" class="hero-group-image" />
+        </div>
+
+        <article class="balance-card hero-balance-card" aria-label="Saldo atual">
+          <span class="balance-label">SALDO ATUAL</span>
           <strong id="currentBalance">R$ 0,00</strong>
           <span id="balanceTrend" class="balance-trend neutral">Sem movimentações</span>
           <small id="lastUpdated">Aguardando dados...</small>
         </article>
-      </div>
-
-      <div class="hero-photo-caption">
-        <span>ATOS</span>
-        <small>Comunhão • Serviço • Transparência</small>
       </div>
     </section>
 

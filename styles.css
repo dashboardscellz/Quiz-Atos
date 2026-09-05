@@ -152,137 +152,69 @@ img {
 }
 
 .hero {
-  position: relative;
-  min-height: 610px;
-  overflow: hidden;
-  display: flex;
-  align-items: stretch;
-  background: #062f2a;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 34px 0 26px;
+  background: #f5f8f8;
+  border-bottom: 1px solid var(--line);
 }
 
-.hero-photo {
-  position: absolute;
-  inset: 0;
-  background-image: url("./assets/grupo-atos.png");
-  background-size: cover;
-  background-position: center 43%;
-  transform: scale(1.015);
-}
-
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(
-      90deg,
-      rgba(5, 46, 40, 0.97) 0%,
-      rgba(5, 46, 40, 0.92) 25%,
-      rgba(5, 46, 40, 0.73) 45%,
-      rgba(5, 46, 40, 0.24) 67%,
-      rgba(5, 46, 40, 0.08) 100%
-    ),
-    linear-gradient(
-      0deg,
-      rgba(3, 31, 27, 0.55) 0%,
-      transparent 36%
-    );
-}
-
-.hero::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 7px;
-  background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
-  z-index: 3;
-}
-
-.hero-grid {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  min-height: 610px;
-  padding-top: 70px;
-  padding-bottom: 74px;
+.hero-simple-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.72fr);
-  align-items: end;
-  gap: 58px;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  grid-template-areas:
+    "copy photo"
+    "balance photo";
+  gap: 20px;
+  align-items: start;
 }
 
-.hero-copy {
-  max-width: 720px;
-  align-self: center;
-  padding-bottom: 26px;
+.hero-simple-copy {
+  grid-area: copy;
+  padding-top: 18px;
 }
 
-.hero-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 11px;
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 0.76rem;
+.hero-simple-label {
+  display: inline-block;
+  margin-bottom: 10px;
+  color: var(--primary);
+  font-size: 0.78rem;
   font-weight: 800;
-  letter-spacing: 0.18em;
-}
-
-.hero-kicker-line {
-  width: 34px;
-  height: 3px;
-  border-radius: 99px;
-  background: var(--accent);
+  letter-spacing: 0.14em;
 }
 
 .hero h1 {
-  max-width: 710px;
-  margin: 16px 0 20px;
-  color: #fff;
-  font-size: clamp(2.8rem, 5.7vw, 5.25rem);
-  line-height: 0.98;
-  letter-spacing: -0.052em;
-  text-wrap: balance;
-  text-shadow: 0 4px 28px rgba(0, 0, 0, 0.18);
+  margin: 0 0 10px;
+  color: var(--text);
+  font-size: clamp(2.4rem, 5vw, 4.2rem);
+  line-height: 1.02;
+  letter-spacing: -0.045em;
 }
 
-.hero-copy > p {
-  max-width: 610px;
+.hero-simple-copy > p {
+  max-width: 520px;
   margin: 0;
-  color: rgba(255, 255, 255, 0.83);
-  font-size: 1.04rem;
-  line-height: 1.7;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.65;
 }
 
 .hero-actions {
-  margin-top: 28px;
+  margin-top: 22px;
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
   flex-wrap: wrap;
-}
-
-.btn-hero {
-  min-height: 48px;
-  padding-inline: 20px;
-  color: #062e28;
-  background: #ffffff;
-  border-color: rgba(255,255,255,0.88);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14);
-}
-
-.btn-hero:hover {
-  background: #f3f8f6;
 }
 
 .hero-badges {
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  color: rgba(255, 255, 255, 0.86);
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   font-weight: 650;
+}
+
+.hero-badges-dark {
+  color: #48625d;
 }
 
 .status-dot {
@@ -291,27 +223,44 @@ img {
   flex: 0 0 auto;
   border-radius: 999px;
   background: var(--accent);
-  box-shadow: 0 0 0 5px rgba(156, 189, 24, 0.17);
+  box-shadow: 0 0 0 5px rgba(156, 189, 24, 0.13);
+}
+
+.hero-photo-card {
+  grid-area: photo;
+  overflow: hidden;
+  min-height: 470px;
+  border-radius: 28px;
+  background: #eaf1ef;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.hero-group-image {
+  width: 100%;
+  height: 100%;
+  min-height: 470px;
+  object-fit: cover;
+  object-position: center 35%;
+  display: block;
 }
 
 .balance-card {
   position: relative;
-  min-height: 250px;
+  min-height: 205px;
   padding: 28px;
   border-radius: 24px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.62);
-  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.20);
+  background: #ffffff;
+  border: 1px solid rgba(216, 232, 228, 0.95);
+  box-shadow: 0 12px 36px rgba(18, 64, 57, 0.07);
 }
 
-.balance-card-on-photo {
-  align-self: end;
-  margin-bottom: 8px;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+.hero-balance-card {
+  grid-area: balance;
+  max-width: 430px;
 }
 
 .balance-card::after {
@@ -363,29 +312,6 @@ img {
 .balance-card small {
   margin-top: 20px;
   color: var(--muted);
-}
-
-.hero-photo-caption {
-  position: absolute;
-  right: 30px;
-  bottom: 28px;
-  z-index: 2;
-  display: flex;
-  align-items: baseline;
-  gap: 9px;
-  color: rgba(255, 255, 255, 0.92);
-  text-shadow: 0 2px 12px rgba(0,0,0,0.35);
-}
-
-.hero-photo-caption span {
-  font-size: 0.9rem;
-  font-weight: 850;
-  letter-spacing: 0.12em;
-}
-
-.hero-photo-caption small {
-  color: rgba(255,255,255,0.75);
-  font-size: 0.72rem;
 }
 
 .section {
@@ -919,36 +845,25 @@ tbody tr:last-child td {
 }
 
 @media (max-width: 980px) {
-  .hero-grid,
   .admin-grid {
     grid-template-columns: 1fr;
   }
 
-  .hero-grid {
-    min-height: 680px;
-    padding-top: 220px;
-    align-content: end;
+  .hero-simple-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "copy"
+      "photo"
+      "balance";
   }
 
-  .hero-overlay {
-    background:
-      linear-gradient(
-        180deg,
-        rgba(4, 38, 33, 0.18) 0%,
-        rgba(4, 38, 33, 0.48) 42%,
-        rgba(4, 38, 33, 0.92) 72%,
-        rgba(4, 38, 33, 0.98) 100%
-      );
+  .hero-balance-card {
+    max-width: 100%;
   }
 
-  .hero-copy {
-    max-width: 760px;
-    padding-bottom: 0;
-  }
-
-  .balance-card-on-photo {
-    width: min(520px, 100%);
-    margin-bottom: 0;
+  .hero-photo-card,
+  .hero-group-image {
+    min-height: 420px;
   }
 
   .stats-grid {
@@ -996,57 +911,25 @@ tbody tr:last-child td {
   }
 
   .hero {
-    min-height: 760px;
-  }
-
-  .hero-photo {
-    background-position: 56% center;
-  }
-
-  .hero-overlay {
-    background:
-      linear-gradient(
-        180deg,
-        rgba(4, 37, 32, 0.30) 0%,
-        rgba(4, 37, 32, 0.60) 43%,
-        rgba(4, 37, 32, 0.98) 72%,
-        rgba(4, 37, 32, 1) 100%
-      );
-  }
-
-  .hero-grid {
-    min-height: 760px;
-    padding-top: 300px;
-    padding-bottom: 42px;
-    gap: 24px;
-    align-items: end;
-  }
-
-  .hero-copy {
-    padding-bottom: 0;
+    padding: 22px 0 18px;
   }
 
   .hero h1 {
-    max-width: 620px;
-    font-size: clamp(2.35rem, 11vw, 3.75rem);
+    font-size: clamp(2.1rem, 11vw, 3.35rem);
   }
 
-  .hero-copy > p {
-    font-size: 0.96rem;
-    line-height: 1.62;
+  .hero-simple-copy > p {
+    font-size: 0.95rem;
   }
 
-  .hero-actions {
-    margin-top: 21px;
+  .hero-photo-card,
+  .hero-group-image {
+    min-height: 300px;
   }
 
   .balance-card {
-    min-height: 205px;
+    min-height: 190px;
     padding: 22px;
-  }
-
-  .hero-photo-caption {
-    display: none;
   }
 
   .section {
