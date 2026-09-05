@@ -34,3 +34,8 @@ Os registros ficam em:
 ## Atenção sobre segurança
 
 Esta versão usa login local no navegador para manter a instalação simples. A interface restringe edição aos dois logins, mas as regras de escrita do Realtime Database precisam aceitar gravações do site público. Portanto, isso não equivale a autenticação de servidor.
+
+
+## Identidade visual
+
+A foto oficial do grupo foi incorporada ao banner principal do site, com tratamento visual responsivo e integração ao painel de saldo.

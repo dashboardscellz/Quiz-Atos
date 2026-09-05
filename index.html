@@ -40,27 +40,43 @@
   </header>
 
   <main id="inicio">
-    <section class="hero">
+    <section class="hero hero-with-photo">
+      <div class="hero-photo" aria-hidden="true"></div>
+      <div class="hero-overlay" aria-hidden="true"></div>
+
       <div class="container hero-grid">
         <div class="hero-copy">
-          <span class="eyebrow">GRUPO ATOS</span>
-          <h1>Prestação de contas clara, pública e em tempo real.</h1>
+          <div class="hero-kicker">
+            <span class="hero-kicker-line"></span>
+            <span>GRUPO ATOS</span>
+          </div>
+
+          <h1>Transparência que faz parte da nossa caminhada.</h1>
           <p>
-            Acompanhe entradas, saídas, saldo atual e a evolução financeira do grupo.
-            Todos os lançamentos exibem seus respectivos motivos.
+            Um espaço aberto para acompanhar, de forma simples e clara,
+            cada entrada, cada saída e a evolução financeira do grupo.
           </p>
-          <div class="hero-badges">
-            <span class="status-dot"></span>
-            <span>Dados sincronizados com Firebase</span>
+
+          <div class="hero-actions">
+            <a href="#movimentacoes" class="btn btn-hero">Ver movimentações</a>
+            <div class="hero-badges">
+              <span class="status-dot"></span>
+              <span>Dados atualizados em tempo real</span>
+            </div>
           </div>
         </div>
 
-        <article class="balance-card" aria-label="Saldo atual">
-          <span class="balance-label">SALDO ATUAL</span>
+        <article class="balance-card balance-card-on-photo" aria-label="Saldo atual">
+          <span class="balance-label">SALDO ATUAL DO GRUPO</span>
           <strong id="currentBalance">R$ 0,00</strong>
           <span id="balanceTrend" class="balance-trend neutral">Sem movimentações</span>
           <small id="lastUpdated">Aguardando dados...</small>
         </article>
+      </div>
+
+      <div class="hero-photo-caption">
+        <span>ATOS</span>
+        <small>Comunhão • Serviço • Transparência</small>
       </div>
     </section>
 
