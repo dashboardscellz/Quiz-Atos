@@ -1,0 +1,15 @@
+{
+  "rules": {
+    "movimentacoes": {
+      ".read": true,
+      ".write": true,
+      "$id": {
+        ".validate": "newData.hasChildren(['type','amount','category','reason','date']) && (newData.child('type').val() === 'entrada' || newData.child('type').val() === 'saida') && newData.child('amount').isNumber() && newData.child('amount').val() > 0 && newData.child('category').isString() && newData.child('reason').isString() && newData.child('date').isString()"
+      }
+    },
+    "$other": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}

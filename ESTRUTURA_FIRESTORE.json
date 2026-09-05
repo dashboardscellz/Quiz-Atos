@@ -1,0 +1,22 @@
+{
+  "collections": {
+    "transactions": {
+      "example": {
+        "type": "entrada",
+        "amount": 50.0,
+        "category": "Venda",
+        "reason": "Venda de cachorros-quentes",
+        "date": "Firestore Timestamp",
+        "createdAt": "serverTimestamp",
+        "createdBy": "UID_DO_ADM",
+        "updatedAt": "serverTimestamp",
+        "updatedBy": "UID_DO_ADM"
+      }
+    },
+    "admins": {
+      "UID_DO_USUARIO": {
+        "name": "Administrador ATOS"
+      }
+    }
+  }
+}
